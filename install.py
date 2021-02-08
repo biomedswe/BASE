@@ -10,11 +10,11 @@ def main_menu():
     '''Prints an introduction to the program where you can choose what to do'''
 
     print("\nThis script lets you install Anaconda3 and set up an environment with the required software packages.\n")
-    print("1. Download and install Anaconda3 with python 3.8")
-    print("2. Set up a new environment for DNA and RNA-sequence analysis")
+    print("1. Download and install Anaconda3 with python 3.8 (if it's not allready installed)")
+    print("2. Set up a new environment for DNA and RNA-sequence analysis\n")
 
 
-    return input("(leave blank to exit): \n")
+    return input("(leave blank to exit): ")
 
 def install_anaconda():
     '''This function downloads anaconda via wget and the link-adress to the linux installer from anaconda.com.
@@ -23,30 +23,34 @@ def install_anaconda():
     print("Downloading and installing anaconda...\n")
 
     # downloads anaconda
-    cmd_download = "wget https://repo.anaconda.com/archive/Anaconda3-2020.11-Linux-x86_64.sh"
-    # subprocess.run(cmd_download, shell=True)
+    cmd_download = "wget https://repo.anaconda.com/archive/Anaconda3-2020.11-Linux-x86_64.sh -P $HOME"
+    subprocess.run(cmd_download, shell=True)
 
     # applies read, write and execute permission for all users to the file
-    cmd_chmod = "chmod a=xrw Anaconda3-2020.11-Linux-x86_64.sh"
-    # subprocess.run(cmd_chmod, shell=True)
+    cmd_chmod = "chmod a=xrw $HOME/Anaconda3-2020.11-Linux-x86_64.sh"
+    subprocess.run(cmd_chmod, shell=True)
 
     # installs anaconda
-    cmd_install = "bash Anaconda3-2020.11-Linux-x86_64.sh"
-    # subprocess.run(cmd_install, shell=True)
+    cmd_install = "bash $HOME/Anaconda3-2020.11-Linux-x86_64.sh"
+    subprocess.run(cmd_install, shell=True)
 
     print("Anaconda is now successfully installed\n")
     return input("Now please close your shell and start a new shell for anaconda3 to work")
 
 def create_environment():
-    cmd_env = "conda create --name DNA_RNA_analysis -c bioconda bwa picard gatk4 delly manta bcftools"
+    cmd_env = "conda create --name sequencing -c bioconda bwa picard gatk4 manta bcftools"
     subprocess.run(cmd_env, shell=True)
 
-    cmd_softlink = ""
-    subprocess.call(cmd_softlink, shell=True)
-
+    cmd_delly = "wget https://github.com/dellytools/delly/releases/download/v0.8.7/delly_v0.8.7_linux_x86_64bit -P $HOME/anaconda3/envs/sequencing/bin"
+    subprocess.call(cmd_delly, shell=True)
+    cmd_chmod = "chmod a=xrw $HOME/anaconda3/envs/sequencing/bin/delly_v0.8.7_linux_x86_64bit"
+    subprocess.run(cmd_chmod, shell=True)
+    cmd_mv = "mv $HOME/anaconda3/envs/sequencing/bin/delly_v0.8.7_linux_x86_64bit $HOME/anaconda3/envs/sequencing/bin/delly"
+    subprocess.run(cmd_mv, shell=True)
 
 
     print("Environment is successfully created\n")
+    print("Type \"conda activate sequencing\" in the shell to activate the environment before continuing to the next step\n")
     return input("Press any key to return to main menu...")
 
 # ----------------------------------------------------- Main program starts -----------------------------------------------------------------
@@ -73,7 +77,7 @@ def main():
 
         else:
             print("Invalid choice, please try again!")
-            menu_choice = print_intro()
+            menu_choice = main_menu()
 
     print("exiting program...")
     sys.exit()
