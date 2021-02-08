@@ -4,7 +4,7 @@ This package will simplify your DNA and RNA-sequening.
 
 1. Set-up this git repository in your $HOME folder (eg. Home/biomedswe/) 
 
-1. Run install.py to install all neccessary software packages
+1. Navigate to the sequencing_project folder and run install.py to install all neccessary software packages
 
 
 
