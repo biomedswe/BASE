@@ -41,6 +41,7 @@ def create_environment():
     cmd_env = "conda create --name sequencing -c bioconda bwa picard gatk4 manta bcftools"
     # subprocess.run(cmd_env, shell=True)
 
+    # delly in bioconda didn't work so I had to do a workaround
     cmd_delly = "wget https://github.com/dellytools/delly/releases/download/v0.8.7/delly_v0.8.7_linux_x86_64bit -P $HOME/anaconda3/envs/sequencing/bin"
     subprocess.call(cmd_delly, shell=True)
     cmd_chmod = "chmod a=xrw $HOME/anaconda3/envs/sequencing/bin/delly_v0.8.7_linux_x86_64bit"
