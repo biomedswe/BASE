@@ -1,4 +1,6 @@
-from os import listdir, sys, mkdir
+from misc import *
+
+from os import listdir, sys, mkdir, getenv
 # listdir lets you list the files in a directory, sys lets you exit program with sys.exit()
 
 import subprocess
@@ -10,67 +12,20 @@ import argparse
 import csv
 # lets you create a tsv-file
 
+global path_reads
+global path_reference
+path_reads  = getenv("HOME")+"/sequencing_project/dna_seq/reads/"
+path_reference = getenv("HOME")+"/sequencing_project/reference_genome/GRCh38.p13.genome.fa"
 
 
-
-def validate_paths(options):
-    '''give paths to required files (the result of running the command is saved in the variables'''
-
-    global path_gatk
-    global path_exclude_template
-    global path_reads
-    global path_reference
-
-    path_reads = subprocess.run(f"find .. -type d -name {options.reads}", shell=True, capture_output=True, text=True).stdout.strip()
-    path_reference = subprocess.run(f"find .. -type f -name {options.reference_genome}", shell=True, capture_output=True, text=True).stdout.strip()
-    path_exclude_template = subprocess.run(["find", ".", "-type", "f", "-name", "human.hg38.excl.tsv"], capture_output=True, text=True).stdout.strip()
-    path_gatk = subprocess.run(["find", "..", "-name", "gatk"], capture_output=True, text=True).stdout.strip()
+global path_exclude_template
+path_exclude_template = subprocess.run(["find", ".", "-type", "f", "-name", "human.hg38.excl.tsv"], capture_output=True, text=True).stdout.strip()
 
 
 
 
 '''INSTRUCTIONS
 ------------------------------------------------------------------------------------------------------------------------------
-
-PREPARATIONS
-------------
-
-You should have a directory tree setup similar to that shown below before running the script.
-
-DNA_seq
-    |
-    |-----Reference_genome
-    |               |
-    |               |-------Reference_genome.fa
-    |-----Reads
-    |       |
-    |       |-----read1.fastq
-    |             read2.fastq
-    |             ...
-    |
-    |-----dna_se.py
-    |
-    |
-    |-----Software (optional)
-            |
-            |-------bwa
-                    picard tools
-                    GATK
-                    delly
-                    bfctools
-
-SOFTWARE NEEDED - make sure they are accessable from PATH!
----------------
-bwa
-picard tools
-GATK
-delly
-bfctools
-
-
-
-RUNNING THE SCRIPT
-------------------
 
 The script will automatically:
 
@@ -131,7 +86,7 @@ def index_reference():
     bwa_index = f"bwa index {path_reference}"
     # subprocess.run(bwa_index, shell=True)
     create_dict = f"samtools dict {path_reference} -o {path_reference[:-2]}dict"
-    # subprocess.run(create_dict, shell=True)
+    subprocess.run(create_dict, shell=True)
     print("\nIndexing reference genome completed...\n")
     input("Press any key to return to main menu...")
 
@@ -175,12 +130,8 @@ def build_library(options):
         build_library()
 
 
-def confirm_choice():
-    choice = input("Are you sure? y or n: ")
-    if choice.lower() == "y":
-        return True
-    else:
-        return False
+
+
 
 def validate_bam(align_list):
     '''This function runs picard ValidateSamFile to check if any errors are present in the aligned files.
@@ -391,11 +342,11 @@ def main():
     parser.add_argument("-t", "--tumor_id", metavar="", required=True, help="Input clinical id of tumor samples")
     parser.add_argument("-n", "--normal_id", metavar="", required=True, help="Input clinical id of normal samples")
     parser.add_argument("-i", "--intervals", metavar="", required=False, help="Input path to reference-genome interval if you have any (for use in SNV calling)")
-    parser.add_argument("-R", "--reference_genome", metavar="", required=True, help="Input name of the reference genome, eg. GRCh38.p13.genome.fa")
-    parser.add_argument("-r", "--reads", metavar="", required=True, help="Input name of directory containing sequencing reads")
+    # parser.add_argument("-R", "--reference_genome", metavar="", required=True, help="Input name of the reference genome, eg. GRCh38.p13.genome.fa")
+    # parser.add_argument("-r", "--reads", metavar="", required=True, help="Input name of directory containing sequencing reads")
     options = parser.parse_args() # all arguments will be passed to the functions
 
-    validate_paths(options)
+
     validate_id(options)
 
 
