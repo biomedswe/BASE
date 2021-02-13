@@ -5,8 +5,9 @@ def download_ref():
 
     while True:
         if confirm_choice():
-
-            print("\nDownloading GRCh38.p13.genome.fa from https://www.gencodegenes.org/human/...\n")
+            clear_screen()
+            print("Download reference genome\n\n")
+            print("Downloading GRCh38.p13.genome.fa from https://www.gencodegenes.org/human/...\n")
 
             cmd_download = "wget ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_36/GRCh38.p13.genome.fa.gz -P $HOME/sequencing_project/reference_genome/"
             # subprocess.run(cmd_download, shell=True)
