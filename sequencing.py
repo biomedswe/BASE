@@ -107,16 +107,15 @@ def main():
                         realign_output = realign(rd_list)
                         snv_calling(options, realign_output)
                         delly(options, realign_output)
+                        manta(realign_output)
                         print("All completed succesfully")
+                        break
+
+
                     else:
                         input("An error was found, see the output in the shell for more information!\n\nPress any key to exit program")
                         sys.exit()
-
-
-        else:
-            continue
-
-
+        break
 
 
 

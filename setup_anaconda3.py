@@ -25,7 +25,8 @@ def anaconda_menu():
 
 def install_anaconda():
     '''This function downloads anaconda via wget and the link-adress to the linux installer from anaconda.com.
-       It then installs anaconda and creates an environment with the required software packages'''
+       It then installs anaconda and creates an environment with the required software packages.
+       Finally creates the directory three in the sequencing_project folder'''
 
     clear_screen()
     print("""Download and install Anaconda3 with python 3.8.
@@ -45,6 +46,7 @@ Downloading and installing anaconda from https://repo.anaconda.com/archive/Anaco
     cmd_install = "bash $HOME/Anaconda3-2020.11-Linux-x86_64.sh"
     # subprocess.run(cmd_install, shell=True)
 
+    # create directory three
     create_dir()
 
     print("\nAnaconda is now successfully installed\n\n")

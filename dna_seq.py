@@ -184,7 +184,6 @@ def alignment():
                         align_list.append(f"{library_id}.bam")
 
             print("\nBurrows wheeler aligner completed!\n")
-            time.sleep(1)
             return align_list
 
         else:
@@ -220,7 +219,6 @@ def sort(options, align_list):
     sort_list.extend((tumor_sort_str, normal_sort_str))
 
     print("\nPicard SortSam completed!\n")
-    print(sort_list)
     return sort_list
 
 
@@ -250,7 +248,6 @@ def merge(sort_list, options):
 
 
     print("\nPicard MergeSamFiles completed!\n")
-    print(merge_list)
     return merge_list
 
 def remove_duplicate(merge_list):
@@ -269,7 +266,6 @@ def remove_duplicate(merge_list):
         # subprocess.run(cmd, shell=True)
         rd_list.append(f"dna_seq/Removed_duplicates/{sample_input[18:]}")
     print("\nPicard MarkDuplicates completed!\n")
-    print("rdlist:",rd_list)
     return rd_list
 
 def realign(rd_list):
@@ -285,11 +281,9 @@ def realign(rd_list):
         index = f"samtools index {sample_input}"
         # subprocess.run(index, shell=True)
         cmd = f"gatk LeftAlignIndels -R {path_reference} -I {sample_input} -O dna_seq/Realigned/{sample_input[27:]}"
-        print(cmd)
         # subprocess.run(cmd, shell=True)
         realign_output.append(f"dna_seq/Realigned/{sample_input[27:]}")
     print("\nGATK LeftAlignIndels completed!\n")
-    print(realign_output)
     return realign_output
 
 def snv_calling(options, realign_output):
@@ -302,15 +296,15 @@ def snv_calling(options, realign_output):
         pass
 
     if options.intervals:
-        snv = f"gatk HaplotypeCaller -R {path_reference} -I {realign_output[0]} -I {realign_output[1]} -O dna_seq/GATK_haplotypecaller/{options.tumor_id}.vcf -L {options.intervals}"
-        # subprocess.run(snv, shell=True)
+        cmd_call = f"gatk HaplotypeCaller -R {path_reference} -I {realign_output[0]} -I {realign_output[1]} -O dna_seq/GATK_haplotypecaller/{options.tumor_id}.vcf -L {options.intervals}"
+        subprocess.run(cmd_call, shell=True)
     else:
-        snv = f"gatk HaplotypeCaller -R {path_reference} -I {realign_output[0]} -I {realign_output[1]} -O dna_seq/GATK_haplotypecaller/{options.tumor_id}.vcf"
-        # subprocess.run(snv, shell=True)
+        cmd_call = f"gatk HaplotypeCaller -R {path_reference} -I {realign_output[0]} -I {realign_output[1]} -O dna_seq/GATK_haplotypecaller/{options.tumor_id}.vcf"
+        subprocess.run(cmd_call, shell=True)
 
     # Remove all reads with read depth less than 10
     cmd_filter_read_depth = f"bcftools view -i 'MIN(FMT/DP)>10' dna_seq/GATK_haplotypecaller/2064-01.vcf > dna_seq/GATK_haplotypecaller/2064-01_filter_RD>10.vcf"
-    # subprocess.run(cmd_filter_read_depth, shell=True)
+    subprocess.run(cmd_filter_read_depth, shell=True)
     print("\nGATK HaplotypeCaller completed!\n")
 
 
@@ -326,7 +320,7 @@ def delly(options, realign_output):
         pass
 
     cmd_call = f"delly call -x {path_exclude_template} -g {path_reference} -o dna_seq/Delly/delly.bcf {realign_output[0]} {realign_output[1]}"
-    subprocess.run(cmd_call, shell=True)
+    # subprocess.run(cmd_call, shell=True)
 
 
     with open('dna_seq/Delly/sample.tsv', 'w', newline='') as tsv:
@@ -335,23 +329,32 @@ def delly(options, realign_output):
         tsv_output.writerow([f"{options.normal_id}", 'control'])
 
     cmd_dos2unix = "dos2unix dna_seq/Delly/sample.tsv"
-    subprocess.run(cmd_dos2unix, shell=True)
+    # subprocess.run(cmd_dos2unix, shell=True)
 
     cmd_filter = "delly filter -f somatic -o dna_seq/Delly/delly_filter.bcf -s dna_seq/Delly/sample.tsv dna_seq/Delly/delly.bcf"
-    subprocess.run(cmd_filter, shell=True)
+    # subprocess.run(cmd_filter, shell=True)
 
     cmd_convert = "bcftools view dna_seq/Delly/delly_filter.bcf > dna_seq/Delly/delly_filter.vcf"
-    subprocess.run(cmd_convert, shell=True)
+    # subprocess.run(cmd_convert, shell=True)
 
 
 
 def manta(realign_output):
-    cmd_create_config_file = f"$HOME/anaconda3/envs/sequencing/bin/configManta.py  --tumorBam={realign_output[0]} --bam={realign_output[1]} --referenceFasta={path_reference}"
-    subprocess.run(cmd_create_config_file, shell=True)
+    '''This function creates an output directory and runs manta to call for somatic SNV's'''
 
-    cmd_runWorkflow = f"My_location/MantaWorkflow/runWorkflow.py -m local -j 4"
-    subprocess.run(cmd_runWorkflow, shell=True)
-    pass
+    print("\nLooking for somatic SNV's using manta\n")
+    try:
+        # create target directory
+        mkdir("dna_seq/Manta")
+    except FileExistsError:
+        pass
+
+    cmd_create_config_file = f"$HOME/anaconda3/envs/sequencing/bin/configManta.py  --tumorBam={realign_output[0]} --bam={realign_output[1]} --referenceFasta={path_reference} --runDir=dna_seq/Manta"
+    # subprocess.run(cmd_create_config_file, shell=True)
+
+    cmd_runWorkflow = f"dna_seq/Manta/runWorkflow.py -m local -j 4"
+    # subprocess.run(cmd_runWorkflow, shell=True)
+
 
 # ----------------------------------------------------- Main program starts -----------------------------------------------------------------
 def main():

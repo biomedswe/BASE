@@ -29,7 +29,7 @@ def info_script():
 
 def create_dir():
     try:
-        # create output directory
+        # create directory three
         makedirs(getenv("HOME")+"/sequencing_project/dna_seq/reads")
         mkdir(getenv("HOME")+"/sequencing_project/reference_genome")
         makedirs(getenv("HOME")+"/sequencing_project/rna_seq/reads")
@@ -47,8 +47,6 @@ def validate_choice(choices,text):
 
         elif choice not in [str(i) for i in range(1,choices+1)]:
             print("Invalid choice, try again!")
-            # time.sleep(1)
-            # clear_screen()
 
         else:
             return choice
