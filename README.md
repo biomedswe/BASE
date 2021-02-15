@@ -1,5 +1,5 @@
 # sequencing_project
-A pipeline that will simplify your DNA and RNA-sequening. (what should we call it Minjun?, can you write something?)
+A pipeline that will simplify your DNA and RNA-sequening. (what should we call it Minjun?, any suggestions?)
 
 ## Requirements
 - Platform: 
