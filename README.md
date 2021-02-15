@@ -26,4 +26,4 @@ python $HOME/sequencing_project/sequencing.py
 ```
 
 ### 3. Copy your DNA-seq reads (in fasta/fastq format) into $HOME/sequencing_project/dna_seq/reads and/or RNA-seq reads into $HOME/sequencing_project/rna_seq/reads
-   
+    
