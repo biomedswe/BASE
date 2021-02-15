@@ -1,49 +1,28 @@
 # sequencing_project
+A pipeline that will simplify your DNA and RNA-sequening. (what should we call it Minjun?, can you write something?)
 
+## Requirements
+- Platform: 
+    - linux-64
+    
+    
+## Installation and setup instructions
 
+### 1. Clone the git archive:
 
-Requirements
-Platform:
-linux-64
-Software:
-python >= 3.6
-conda >= 4.8.2
-Installation and setup instructions
-From source code
-Clone the git archive:
+```
+git clone https://github.com/biomedswe/sequencing_project.git $HOME
+```
 
-git clone https://github.com/bioinformatics-polito/PhyliCS.git
+### 2. Run sequencing.py and follow instructions in program
 
-This package will simplify your DNA and RNA-sequening.
+```
+python sequencing.py (after navigating to $HOME/sequencing_project)
+```
+or
+```
+python $HOME/sequencing_project/sequencing.py
+```
 
-Follow stese steps:
-
-1. Set-up this git repository in your $HOME folder (eg. Home/biomedswe/) 
-	you can for example type "git clone <link to git repository>" in your $HOME folder
-
-
-2. Navigate to the sequencing_project folder and run setup_anaconda.py to install all neccessary software packages
-
-	a) Install anaconda and the restart your shell. (If you allready have installed anaconda, proceed with step c)
-	b) Navigate back to the sequencing_project folder
-	c) Choose: Set up a new conda environment for DNA and RNA-sequence analysis
-	d) Exit the script and type "conda activate sequencing"
-
-3. In the sequencing_project folder, run download_reference_genome.py to download and save GRCh38.p13.genome.fa.
-	
-	It will be saved in sequencing_project/reference_genome/GRCh38.p13.genome.fa
-
-
-
-4. Copy your folder with WGS reads into seqquencing_project/dna_seq/reads/
-
-
-5. In the sequencing_project folder, run dna_seq.py to start DNA analysis
-
-
-
-
-
-
-3. Copy your folder with RNA-sequencing reads into the RNA folder.
-   Run RNA/rna_se.py to start RNA analysis
+### 3. Copy your DNA-seq reads (in fasta/fastq format) into $HOME/sequencing_project/dna_seq/reads and/or RNA-seq reads into $HOME/sequencing_project/rna_seq/reads
+   
