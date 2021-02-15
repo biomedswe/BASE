@@ -1,5 +1,19 @@
 # sequencing_project
 
+
+
+Requirements
+Platform:
+linux-64
+Software:
+python >= 3.6
+conda >= 4.8.2
+Installation and setup instructions
+From source code
+Clone the git archive:
+
+git clone https://github.com/bioinformatics-polito/PhyliCS.git
+
 This package will simplify your DNA and RNA-sequening.
 
 Follow stese steps:
