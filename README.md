@@ -4,6 +4,7 @@ A pipeline that will simplify your DNA and RNA-sequening. (what should we call i
 ## Requirements
 - Platform: 
     - linux-64
+    - python >= 3.7
     
     
 ## Installation and setup instructions
