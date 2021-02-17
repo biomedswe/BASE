@@ -18,11 +18,11 @@ git clone https://github.com/biomedswe/sequencing_project.git $HOME
 ### 2. Run sequencing.py and follow instructions in program
 
 ```
-python sequencing.py (after navigating to $HOME/sequencing_project)
+python3 sequencing.py (after navigating to $HOME/sequencing_project)
 ```
 or
 ```
-python $HOME/sequencing_project/sequencing.py
+python3 $HOME/sequencing_project/sequencing.py
 ```
 
 ### 3. Copy your DNA-seq/RNA-seq reads into the right folders
