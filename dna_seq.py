@@ -1,10 +1,11 @@
 from misc import *
 
+
 import multiprocessing # lets you find out how many threads your cpu has
 
 
 
-from os import listdir, sys, mkdir, getenv
+from os import listdir, sys, mkdir, getenv, path
 # listdir lets you list the files in a directory, sys lets you exit program with sys.exit()
 
 import subprocess
@@ -16,16 +17,38 @@ import argparse
 import csv
 # lets you create a tsv-file
 
-global path_reads
-global path_reference
-global path_exclude_template
+
 path_reads  = getenv("HOME")+"/sequencing_project/dna_seq/reads/"
 path_reference = getenv("HOME")+"/sequencing_project/reference_genome/GRCh38.p13.genome.fa"
 path_exclude_template = getenv("HOME")+"/sequencing_project/excludeTemplate/human.hg38.excl.tsv"
+configManta_path = getenv("HOME")+"anaconda3/envs/sequencing/bin/configManta.py"
+runWorkflow_path = getenv("HOME")+"dna_seq/Manta/runWorkflow.py"
 
 import time
 
+# Global shortcuts to output paths
+output_aligned = getenv("HOME")+"/sequencing_project/dna_seq/Aligned/"
+output_sorted = getenv("HOME")+"/sequencing_project/dna_seq/Sorted/"
+output_merged = getenv("HOME")+"/sequencing_project/dna_seq/Merged/"
+output_removedDuplicates = getenv("HOME")+"/sequencing_project/dna_seq/Removed_duplicates/"
+output_realigned = getenv("HOME")+"/sequencing_project/dna_seq/Realigned/"
+output_haplotypecaller = getenv("HOME")+"/sequencing_project/dna_seq/GATK_haplotypecaller/"
+output_delly = getenv("HOME")+"/sequencing_project/dna_seq/Delly/"
+output_manta = getenv("HOME")+"/sequencing_project/dna_seq/Manta/"
+# print(output_aligned, output_sorted, output_merged, output_removed_duplicates, output_realigned,output_haplotypecaller, output_delly, output_manta)
+# time.sleep(3)
 
+# Global variables for output lists
+align_list = f"{output_aligned}align.txt"
+sort_list = f"{output_sorted}sort.txt"
+merge_list = f"{output_merged}merge.txt"
+removeDuplicates_list = f"{output_removedDuplicates}remove_duplicate.txt"
+haplotypeCaller_list = f"{output_haplotypecaller}haplotypeCaller.txt"
+realign_list = f"{output_realigned}realign.txt"
+validateBam_file = f"{output_aligned}validateBam.file"
+haplotypeCaller_file = f"{output_haplotypecaller}haplotypeCaller.file"
+delly_file = f"{output_delly}delly.file"
+manta_file = f"{output_manta}manta.file"
 
 
 
@@ -125,20 +148,27 @@ def build_library(options):
 
 
 
-def validate_bam(align_list):
+def validate_bam(): # add align.txt
     '''This function runs picard ValidateSamFile to check if any errors are present in the aligned files.
        returns True if no errors are found or False if errors are found'''
 
-    print("Validating .bam files...\n")
-    # for file in align_list:
-    #     validate = f"picard ValidateSamFile -I dna_seq/Aligned/{file} -MODE SUMMARY"
-    #     process = subprocess.run(validate, shell=True, capture_output=True, text=True)
-    #     if "No errors found" in process.stdout:
-    #         pass
-    #     else:
-    #         return False
+    if path.isfile(f'{output_aligned}validateBam.file'):
+        print("Validating bam allready completed, skips step...\n")
+        return True
 
-    return True
+    else:
+        print("Validating .bam files...\n")
+        for file in align_list:
+            validate = f"picard ValidateSamFile -I dna_seq/Aligned/{file} -MODE SUMMARY"
+            process = subprocess.run(validate, shell=True, capture_output=True, text=True)
+            if "No errors found" in process.stdout:
+                pass
+            else:
+                return False
+        with open(validateBam_file, 'a'):
+            pass
+        print("Validation completed without errors, continuing with next step...")
+        return True
 
 
 
@@ -146,281 +176,270 @@ def validate_bam(align_list):
 
 def alignment():
     '''This function loops through a library list containing either single-end or paired-end protocol, it will automatically detect what protocol it is.
-       For every loop, the bwa mem command will be run and the library_name for each run will be saved to a list which is returned for use in the next step.'''
+       For every loop, the bwa mem command will be run and the output name for each run will be saved to a txt-file for use in the next step if the command finnish without errors.'''
 
-    while True:
-        print("3. Run analysis\n\n\n")
-        print("Burrows Wheeler aligner\n")
-        threads_text = ("Input number of CPU threads you want to use (Avaliable threads: " + str(multiprocessing.cpu_count()) + "): ")
-        available_threads = multiprocessing.cpu_count()
-        threads = validate_choice(available_threads, threads_text)
 
-        if threads == "":
-            return ""
+    if path.isfile(align_list):
+        print("Burrown Wheeler aligner allready completed, skips step... ")
 
-        elif confirm_choice():
-            clear_screen()
-            print(f"Aligning reads using {threads} CPU threads out of {available_threads}...\n")
-            time.sleep(1)
-            try:
+    else:
+        while True:
+            print("3. Run analysis\n\n\n")
+            print("Burrows Wheeler aligner\n")
+            # Checks nr of available threads on pc and asks for input
+            threads_text = ("Input number of CPU threads you want to use (Avaliable threads: " + str(multiprocessing.cpu_count()) + "): ")
+            available_threads = multiprocessing.cpu_count()
+            threads = validate_choice(available_threads, threads_text)
+
+
+            if threads == "":
+                return ""
+
+            elif confirm_choice():
+                clear_screen()
+                print(f"Aligning reads using {threads} CPU threads out of {available_threads}...\n")
+                time.sleep(1)
+
                 # create output directory
-                mkdir("dna_seq/Aligned")
-            except FileExistsError:
-                pass
-
-            # Creates an empty list to store the names of the output files
-            align_list = []
-
-            with open('dna_seq/library.txt', 'r') as fastq_list:
-                for line in fastq_list.readlines():
-                    clinical_id, library_id, read1, read2 = line.split()
-                    if read2 == 'N/A': # single-end
-                        run_bwa = f"bwa mem -R '@RG\\tID:{library_id}\\tSM:{clinical_id}\\tLB:{library_id}\\tPL:ILLUMINA\\tPU:{library_id}' {path_reference} {path_reads}/{read1} -t {threads} | samtools view -bS -o dna_seq/Aligned/{library_id}.bam -"
-                        # subprocess.run(run_bwa, shell=True)
-                        align_list.append(f"{library_name}.bam")
-                    else: # paired-end
-                        run_bwa = f"bwa mem -R '@RG\\tID:{library_id}\\tSM:{clinical_id}\\tLB:{library_id}\\tPL:ILLUMINA\\tPU:{library_id}' {path_reference} {path_reads}/{read1} {path_reads}/{read2} -t {threads} | samtools view -bS -o dna_seq/Aligned/{library_id}.bam -"
-                        # subprocess.run(run_bwa, shell=True)
-                        align_list.append(f"{library_id}.bam")
-
-            print("\nBurrows wheeler aligner completed!\n")
-            return align_list
-
-        else:
-            clear_screen()
-            continue
+                try:
+                    mkdir(output_aligned)
+                except FileExistsError:
+                    pass
 
 
 
-def sort(options, align_list):
-    '''This function loops through the list of aligned samples and sort them by executing the picard sortsam
-       algoritm as a shell command.
+
+
+                with open('dna_seq/library.txt', 'r') as fastq_list:
+                    for line in fastq_list.readlines():
+                        clinical_id, library_id, read1, read2 = line.split()
+                        read_group_header = f'@RG\\tID:{library_id}\\tSM:{clinical_id}\\tLB:{library_id}\\tPL:ILLUMINA\\tPU:{library_id}'
+
+                        if read2 == 'N/A': # single-end
+                            cmd_bwa = f"1: bwa mem -R {read_group_header} {path_reference} {path_reads}/{read1} -t {threads} -o {output_aligned}"
+                        else: # paired-end
+                            cmd_bwa = f"bwa mem -R {read_group_header} {path_reference} {path_reads}/{read1} {path_reads}/{read2} -t {threads} -o {output_aligned}"
+                        run_command(cmd_bwa, 'Alignment with Burrows Wheeler aligner')
+                        create_outputList(align_list, f"{library_id}.bam")
+                print("Burrows Wheeler aligner completed!")
+                return
+
+            else:
+                clear_screen()
+                continue
+
+
+
+def sort(options):
+    '''This function reads the completed_steps.txt to check if the previous step was completed without errors.
+
        The function returns a list of string containg the filenames of the sorted tumor samples and normal samples separated.
        The string is needed because you have several inputs in the next function and can therefore not run a for loop'''
 
-    print("\nSorting SAM/BAM files using Picard Sortsam...\n")
-    sort_list = []
-    tumor_sort_str = ""
-    normal_sort_str = ""
-    try:
-        # create target directory
-        mkdir("dna_seq/Sorted")
-    except FileExistsError:
-        pass
+    if path.isfile(sort_list):
+        print("Picard sortsam allready completed, skips step... ")
 
-    for sample in align_list:
-        cmd = f"picard SortSam -I dna_seq/Aligned/{sample} -O dna_seq/Sorted/{sample} -SORT_ORDER coordinate"
-        # subprocess.call(cmd, shell=True)
-        if options.tumor_id in sample:
-            tumor_sort_str += f"-I dna_seq/Sorted/{sample} "
-        else:
-            normal_sort_str += f"-I dna_seq/Sorted/{sample} "
+    else:
+        print("\nSorting SAM/BAM files using Picard Sortsam...\n")
+        tumor_sort_str = ""
+        normal_sort_str = ""
+        write_to_file = ""
+        try:
+            # create target directory
+            mkdir(output_sorted)
+        except FileExistsError:
+            pass
 
-    sort_list.extend((tumor_sort_str, normal_sort_str))
+        with open(align_list, 'r') as list:
+            for sample in list.readlines():
+                cmd_sortsam = f"picard SortSam -I dna_seq/Aligned/{sample} -O dna_seq/Sorted/{sample} -SORT_ORDER coordinate"
+                run_command(cmd_sortsam, 'Sorting files with Picard SortSam')
+                if options.tumor_id in sample:
+                    tumor_sort_str += f" -I dna_seq/Sorted/{sample}".rstrip()
+                else:
+                    normal_sort_str += f" -I dna_seq/Sorted/{sample}".rstrip()
 
-    print("\nPicard SortSam completed!\n")
-    return sort_list
+            write_to_file = tumor_sort_str.lstrip() + '\n' + normal_sort_str.lstrip()
+            print(write_to_file)
+            create_outputList(sort_list, write_to_file)
+
+            print("\nPicard SortSam completed!\n")
 
 
-def merge(sort_list, options):
+
+def merge(options):
     '''This function merges all the input files in the sort_list to one output file'''
 
-    print("\nMerging SAM/BAM files using Picard MergeSamFiles...\n")
-    merge_list = []
-    try:
-        # create target directory
-        mkdir("dna_seq/Merged")
-    except FileExistsError:
-        pass
+    if path.isfile(merge_list):
+        print("Picard MergeSamFiles allready completed, skips step... ")
+
+    else:
+        print("\nMerging SAM/BAM files using Picard MergeSamFiles...\n")
+
+        try:
+            # create target directory
+            mkdir(output_merged)
+        except FileExistsError:
+            pass
+
+        with open(sort_list, 'r') as list:
+            for sample in list.readlines():
+                if options.tumor_id in sample.lstrip():
+                    cmd_merge = f"picard MergeSamFiles {sample} -O dna_seq/Merged/{options.tumor_id}.bam"
+                    run_command(cmd_merge, f"Merging {sample} with Picard MergeSamFiles")
+                    create_outputList(merge_list, f"{options.tumor_id}.bam")
+                else:
+                    cmd_merge = f"picard MergeSamFiles {sample} -O dna_seq/Merged/{options.normal_id}.bam"
+                    run_command(cmd_merge, f"Merging {sample} with Picard MergeSamFiles")
+                    create_outputList(merge_list, f"{options.normal_id}.bam")
+
+            print("\nPicard MergeSamFiles completed!\n")
 
 
-    for sample_input in sort_list:
-        if options.tumor_id in sample_input:
-            cmd = f"picard MergeSamFiles {sample_input} -O dna_seq/Merged/{options.tumor_id}.bam"
-            # subprocess.run(cmd, shell=True)
-            merge_list.append(f"-I dna_seq/Merged/{options.tumor_id}.bam")
-
-        else:
-            cmd = f"picard MergeSamFiles {sample_input} -O dna_seq/Merged/{options.normal_id}.bam"
-            # subprocess.run(cmd, shell=True)
-            merge_list.append(f"-I dna_seq/Merged/{options.normal_id}.bam")
-
-
-
-    print("\nPicard MergeSamFiles completed!\n")
-    return merge_list
-
-def remove_duplicate(merge_list):
+def remove_duplicate():
     '''This function removes duplicates '''
 
-    print("\nRemoving duplicates in SAM/BAM files using Picard MarkDuplicates...\n")
-    rd_list = []
-    try:
-        # create target directory
-        mkdir("dna_seq/Removed_duplicates")
-    except FileExistsError:
-        pass
+    if path.isfile(removeDuplicates_list):
+        print("Picard MarkDuplicates allready completed, skips step... ")
 
-    for sample_input in merge_list:
-        cmd = f"picard MarkDuplicates {sample_input} -O dna_seq/Removed_duplicates/{sample_input[18:]} -M dna_seq/Removed_duplicates/marked_dup_metrics_{sample_input[18:]}.txt"
-        # subprocess.run(cmd, shell=True)
-        rd_list.append(f"dna_seq/Removed_duplicates/{sample_input[18:]}")
-    print("\nPicard MarkDuplicates completed!\n")
-    return rd_list
-
-def realign(rd_list):
-    print("\nRealigning SAM/BAM files using GATK LeftAlignIndels...\n")
-    realign_output = []
-    try:
-        # create target directory
-        mkdir("dna_seq/Realigned")
-    except FileExistsError:
-        pass
-
-    for sample_input in rd_list:
-        index = f"samtools index {sample_input}"
-        # subprocess.run(index, shell=True)
-        cmd = f"gatk LeftAlignIndels -R {path_reference} -I {sample_input} -O dna_seq/Realigned/{sample_input[27:]}"
-        # subprocess.run(cmd, shell=True)
-        realign_output.append(f"dna_seq/Realigned/{sample_input[27:]}")
-    print("\nGATK LeftAlignIndels completed!\n")
-    return realign_output
-
-def snv_calling(options, realign_output):
-    print("\nLooking for SNV's using GATK HaplotypeCaller...\n")
-
-    try:
-        # create target directory
-        mkdir("dna_seq/GATK_haplotypecaller")
-    except FileExistsError:
-        pass
-
-    if options.intervals:
-        cmd_call = f"gatk HaplotypeCaller -R {path_reference} -I {realign_output[0]} -I {realign_output[1]} -O dna_seq/GATK_haplotypecaller/{options.tumor_id}.vcf -L {options.intervals}"
-        subprocess.run(cmd_call, shell=True)
     else:
-        cmd_call = f"gatk HaplotypeCaller -R {path_reference} -I {realign_output[0]} -I {realign_output[1]} -O dna_seq/GATK_haplotypecaller/{options.tumor_id}.vcf"
-        subprocess.run(cmd_call, shell=True)
 
-    # Remove all reads with read depth less than 10
-    cmd_filter_read_depth = f"bcftools view -i 'MIN(FMT/DP)>10' dna_seq/GATK_haplotypecaller/2064-01.vcf > dna_seq/GATK_haplotypecaller/2064-01_filter_RD>10.vcf"
-    subprocess.run(cmd_filter_read_depth, shell=True)
-    print("\nGATK HaplotypeCaller completed!\n")
+        print("\nRemoving duplicates in SAM/BAM files using Picard MarkDuplicates...\n")
+
+        try:
+            # create target directory
+            mkdir(output_removedDuplicates)
+        except FileExistsError:
+            pass
+
+        with open(merge_list, 'r') as list:
+            for sample in list.readlines():
+                cmd_rd = f"picard MarkDuplicates {sample} -O {output_removedDuplicates}{sample} -M {output_removedDuplicates}marked_dup_metrics_{sample}.txt"
+                run_command(cmd_rd, f'Removing duplicates in {sample.rstrip()} with Picard MarkDuplicates')
+                create_outputList(removeDuplicates_list, f"{sample.rstrip()}")
+
+            print("\nPicard MarkDuplicates completed!\n")
 
 
-def delly(options, realign_output):
+def realign():
+    '''This function realigns the bam files'''
+
+    if path.isfile(realign_list):
+        print("GATK LeftAlignIndels allready completed, skips step... ")
+
+    else:
+        print("\nRealigning SAM/BAM files using GATK LeftAlignIndels...\n")
+
+        try:
+            # create target directory
+            mkdir(output_realigned)
+        except FileExistsError:
+            pass
+
+        with open(removeDuplicates_list, 'r') as list:
+            for sample in list.readlines():
+                cmd_index = f"samtools index {sample}"
+                run_command(cmd_index, f'Indexing {sample.rstrip()} with samtools index')
+                cmd_leftAlignIndels = f"gatk LeftAlignIndels -R {path_reference} -I {sample} -O dna_seq/Realigned/{sample}"
+                run_command(cmd_leftAlignIndels, f'Realigning {sample.rstrip()} with GATK LeftAlignIndels')
+                create_outputList(realign_list, f"{sample.rstrip()}")
+
+            print("\nGATK LeftAlignIndels completed!\n")
+
+
+def gatk_snv(options):
+
+    if path.isfile(haplotypeCaller_file):
+        print("GATK haplotypeCaller allready completed, skips step... ")
+
+    else:
+        print("\nLooking for SNV's using GATK HaplotypeCaller...\n")
+
+        try:
+            # create target directory
+            mkdir(output_haplotypecaller)
+        except FileExistsError:
+            pass
+
+        with open(realign_list, 'r') as list:
+            sample_1, sample_2 = list.readlines()
+            if options.intervals:
+                cmd_call = f"gatk HaplotypeCaller -R {path_reference} -I {sample_1.rstrip()} -I {sample_2.rstrip()} -O {output_haplotypecaller}{options.tumor_id}.vcf -L {options.intervals}"
+            else:
+                cmd_call = f"gatk HaplotypeCaller -R {path_reference} -I {sample_1.rstrip()} -I {sample_2.rstrip()} -O {output_haplotypecaller}{options.tumor_id}.vcf"
+            run_command(cmd_call, f'Looking for SNV\'s in {sample_1.rstrip()} and {sample_2.rstrip()} with GATK haplotypeCaller')
+
+
+            # Remove all reads with read depth less than 10
+            cmd_filter_read_depth = f"bcftools view -i 'MIN(FMT/DP)>10' dna_seq/GATK_haplotypecaller/2064-01.vcf > dna_seq/GATK_haplotypecaller/2064-01_filter_RD10.vcf"
+            subprocess.run(cmd_filter_read_depth, shell=True)
+            with open(haplotypeCaller_file, 'a'):
+                pass
+            print("\nGATK HaplotypeCaller completed!\n")
+
+
+def delly(options):
     '''This function creates an output directory and runs delly to call for somatic SNV's'''
 
-    print("\nLooking for somatic SNV's using delly\n")
+    if path.isfile(delly_file):
+        print("Delly allready completed, skips step... ")
 
-    try:
-        # create target directory
-        mkdir("dna_seq/Delly")
-    except FileExistsError:
-        pass
+    else:
+        print("\nLooking for somatic SNV's using delly\n")
 
-    cmd_call = f"delly call -x {path_exclude_template} -g {path_reference} -o dna_seq/Delly/delly.bcf {realign_output[0]} {realign_output[1]}"
-    # subprocess.run(cmd_call, shell=True)
+        try:
+            # create target directory
+            mkdir(output_delly)
+        except FileExistsError:
+            pass
 
-
-    with open('dna_seq/Delly/sample.tsv', 'w', newline='') as tsv:
-        tsv_output = csv.writer(tsv, delimiter='\t')
-        tsv_output.writerow([f"{options.tumor_id}", 'tumor'])
-        tsv_output.writerow([f"{options.normal_id}", 'control'])
-
-    cmd_dos2unix = "dos2unix dna_seq/Delly/sample.tsv"
-    # subprocess.run(cmd_dos2unix, shell=True)
-
-    cmd_filter = "delly filter -f somatic -o dna_seq/Delly/delly_filter.bcf -s dna_seq/Delly/sample.tsv dna_seq/Delly/delly.bcf"
-    # subprocess.run(cmd_filter, shell=True)
-
-    cmd_convert = "bcftools view dna_seq/Delly/delly_filter.bcf > dna_seq/Delly/delly_filter.vcf"
-    # subprocess.run(cmd_convert, shell=True)
+        with open(realign_list, 'r') as list:
+            sample_1, sample_2 = list.readlines()
+            cmd_delly_call = f"delly call -x {path_exclude_template} -g {path_reference} -o {output_delly}delly.bcf {sample_1} {sample_2}"
+            run_command(cmd_delly_call, f'Looking for somatic SNV\'s in {sample_1.rstrip()} and {sample_2.rstrip()} using delly')
 
 
+            with open(f'{output_delly}sample.tsv', 'w', newline='') as tsv:
+                tsv_output = csv.writer(tsv, delimiter='\t')
+                tsv_output.writerow([f"{options.tumor_id}", 'tumor'])
+                tsv_output.writerow([f"{options.normal_id}", 'control'])
 
-def manta(realign_output):
+            cmd_dos2unix = f"dos2unix {output_delly}sample.tsv"
+            run_command(cmd_dos2unix, '')
+
+            cmd_filter = f"delly filter -f somatic -o {output_delly}delly_filter.bcf -s {output_delly}sample.tsv {output_delly}delly.bcf"
+            run_command(cmd_filter, 'Filtering variants...')
+
+            cmd_convert = f"bcftools view {output_delly}delly_filter.bcf > {output_delly}delly_filter.vcf"
+            run_command(cmd_convert, '')
+            with open(delly_file, 'a'):
+                pass
+            print("\nDelly variant caller completed!\n")
+
+
+def manta():
     '''This function creates an output directory and runs manta to call for somatic SNV's'''
 
-    print("\nLooking for somatic SNV's using manta\n")
-    try:
-        # create target directory
-        mkdir("dna_seq/Manta")
-    except FileExistsError:
-        pass
+    if path.isfile(manta_file):
+        print("Manta allready completed, skips step... ")
 
-    cmd_create_config_file = f"$HOME/anaconda3/envs/sequencing/bin/configManta.py  --tumorBam={realign_output[0]} --bam={realign_output[1]} --referenceFasta={path_reference} --runDir=dna_seq/Manta"
-    # subprocess.run(cmd_create_config_file, shell=True)
+    else:
+        print("\nLooking for somatic SNV's using manta\n")
+        try:
+            # create target directory
+            mkdir(output_manta)
+        except FileExistsError:
+            pass
 
-    cmd_runWorkflow = f"dna_seq/Manta/runWorkflow.py -m local -j 4"
-    # subprocess.run(cmd_runWorkflow, shell=True)
+        with open(realign_list, 'r') as list:
+            sample_1, sample_2 = list.readlines()
 
+            cmd_create_config_file = f"{configManta_path} --tumorBam={sample_1.rstrip()} --bam={sample_2.rstrip()} --referenceFasta={path_reference} --runDir={output_manta}"
+            run_command(cmd_create_config_file, '')
 
-# ----------------------------------------------------- Main program starts -----------------------------------------------------------------
-def main():
+            cmd_runWorkflow = f"{runWorkflow_path} -m local -j 4"
+            run_command(cmd_runWorkflow, '')
 
-    # metavar makes the help text more tidy
-    parser = argparse.ArgumentParser(description='''Automated GDC DNA-seq analysis script for 1 patient sample at a time. Before running, see instructions in dna_seq.py for more information''')
-    parser.add_argument("-t", "--tumor_id", metavar="", required=True, help="Input clinical id of tumor samples")
-    parser.add_argument("-n", "--normal_id", metavar="", required=True, help="Input clinical id of normal samples")
-    parser.add_argument("-i", "--intervals", metavar="", required=False, help="Input path to reference-genome interval if you have any (for use in SNV calling)")
-    # parser.add_argument("-R", "--reference_genome", metavar="", required=True, help="Input name of the reference genome, eg. GRCh38.p13.genome.fa")
-    # parser.add_argument("-r", "--reads", metavar="", required=True, help="Input name of directory containing sequencing reads")
-    options = parser.parse_args() # all arguments will be passed to the functions
-
-
-    validate_id(options)
-
-
-
-    start_choice = print_intro() # return choice
-    while start_choice != "":
-        if start_choice == '1':
-            if confirm_choice():
-                index_reference()
-                start_choice = print_intro()
-            else:
-                start_choice = print_intro()
-
-
-        elif start_choice == '2':
-            if confirm_choice():
-                build_library(options)
-                start_choice = print_intro()
-            else:
-                start_choice = print_intro()
-
-        elif start_choice == '3':
-            # GDC DNA-Seq analysis pipeline
-            if confirm_choice():
-                align_list = alignment()
-                if validate_bam(align_list):
-                    print("Validation completed without errors")
-                    sort_list = sort(options, align_list)
-                    # merge_list = merge(sort_list, options)
-                    # rd_list = remove_duplicate(merge_list)
-                    # realign_output = realign(rd_list)
-                    # snv_calling(options, realign_output)
-                    # delly(options, realign_output)
-                else:
-                    print("An error was found, terminating process!")
-                    start_choice = ''
-            else:
-                start_choice = print_intro()
-
-
-
-        else:
-            print("Invalid choice, please try again!")
-            start_choice = print_intro()
-
-    print("exiting program...")
-    sys.exit()
-
-
-
-
-
-
-if __name__ == '__main__':
-    main()
+        with open(manta_file, 'a'):
+            pass
+        print("\nManta variant caller completed!\n")

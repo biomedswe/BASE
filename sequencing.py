@@ -97,17 +97,16 @@ def main():
                 elif dna_choice == '3':
                     clear_screen()
                     validate_id(options)
-                    align_list = alignment()
-                    if validate_bam(align_list):
-                        print("Validation completed without errors")
+                    alignment()
+                    if validate_bam():
                         time.sleep(1)
-                        sort_list = sort(options, align_list)
-                        merge_list = merge(sort_list, options)
-                        rd_list = remove_duplicate(merge_list)
-                        realign_output = realign(rd_list)
-                        snv_calling(options, realign_output)
-                        delly(options, realign_output)
-                        manta(realign_output)
+                        sort(options)
+                        merge(options)
+                        remove_duplicate()
+                        realign()
+                        gatk_snv(options)
+                        delly(options)
+                        manta()
                         print("All completed succesfully")
                         break
 

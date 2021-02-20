@@ -70,16 +70,16 @@ Samtools
 Manta (structural variant caller)
 Delly (structural variant caller)""")
 
-    cmd_env = "conda create --name sequencing -c bioconda bwa picard gatk4 manta bcftools samtools"
-    # subprocess.run(cmd_env, shell=True)
+    cmd_env = "conda create --name sequencing -c bioconda bwa picard gatk4 manta bcftools samtools star"
+    subprocess.run(cmd_env, shell=True)
 
     # delly in bioconda didn't work so I had to do a workaround
     cmd_delly = "wget https://github.com/dellytools/delly/releases/download/v0.8.7/delly_v0.8.7_linux_x86_64bit -P $HOME/anaconda3/envs/sequencing/bin"
-    # subprocess.call(cmd_delly, shell=True)
+    subprocess.call(cmd_delly, shell=True)
     cmd_chmod = "chmod a=xrw $HOME/anaconda3/envs/sequencing/bin/delly_v0.8.7_linux_x86_64bit"
-    # subprocess.run(cmd_chmod, shell=True)
+    subprocess.run(cmd_chmod, shell=True)
     cmd_mv = "mv $HOME/anaconda3/envs/sequencing/bin/delly_v0.8.7_linux_x86_64bit $HOME/anaconda3/envs/sequencing/bin/delly"
-    # subprocess.run(cmd_mv, shell=True)
+    subprocess.run(cmd_mv, shell=True)
 
 
     print("\n\n\nEnvironment named \"sequencing\" was successfully created\n")
