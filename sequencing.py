@@ -1,3 +1,4 @@
+# Packages used in script
 import subprocess
 import argparse
 from setup_anaconda3 import *
@@ -8,15 +9,6 @@ from os import sys
 
 
 ############################################################# Functions ################################################################################
-
-
-
-
-
-
-
-
-
 
 def main_menu():
     '''Prints an introduction to the program where you can choose what to do'''
@@ -34,17 +26,17 @@ def main_menu():
 
 
 
-# metavar makes the help text more tidy
-parser = argparse.ArgumentParser(description='''This script is used to simplify installation and set up of Anaconda, download reference genome and perform DNA and RNA analysis. Please read the README file first!''')
-parser.add_argument("-t", "--tumor_id", metavar="", required=True, help="Input clinical id of tumor samples")
-parser.add_argument("-n", "--normal_id", metavar="", required=True, help="Input clinical id of normal samples")
-parser.add_argument("-i", "--intervals", metavar="", required=False, help="Input path to reference-genome interval if you have any (for use in SNV calling)")
-options = parser.parse_args() # all arguments will be passed to the functions
 
 
+########################################################### Main program starts #######################################################################
 def main():
 
-
+    # metavar makes the help text more tidy
+    parser = argparse.ArgumentParser(description='''This script is used to simplify installation and set up of Anaconda, download reference genome and perform DNA and RNA analysis. Please read the README file first!''')
+    parser.add_argument("-t", "--tumor_id", metavar="", required=True, help="Input clinical id of tumor samples")
+    parser.add_argument("-n", "--normal_id", metavar="", required=True, help="Input clinical id of normal samples")
+    parser.add_argument("-i", "--intervals", metavar="", required=False, help="Input path to reference-genome interval if you have any (for use in SNV calling)")
+    options = parser.parse_args() # all arguments will be passed to the functions
 
     # main menu is shown untill choice is left blank
     while True:
@@ -52,6 +44,7 @@ def main():
         menu_choice = main_menu() # Shows main menu and returns choice
 
         if menu_choice == "":
+            print("exiting program...")
             break
 
         # Anaconda menu option
@@ -97,35 +90,26 @@ def main():
                 elif dna_choice == '3':
                     clear_screen()
                     validate_id(options)
-                    alignment()
-                    if validate_bam():
-                        time.sleep(1)
-                        sort(options)
-                        merge(options)
-                        remove_duplicate()
-                        realign()
-                        gatk_snv(options)
-                        delly(options)
-                        manta()
-                        print("All completed succesfully")
-                        break
-
-
+                    dna_choice = alignment()
+                    if dna_choice == "":
+                        continue
                     else:
-                        input("An error was found, see the output in the shell for more information!\n\nPress any key to exit program")
-                        sys.exit()
-        break
+                        if validate_bam():
+                            time.sleep(1)
+                            sort(options)
+                            merge(options)
+                            remove_duplicate()
+                            realign()
+                            gatk_snv(options)
+                            delly(options)
+                            manta()
+                            print("DNA-Seq analysis pipeline completed succesfully")
+                            sys.exit()
 
 
-
-    print("exiting program...")
-    sys.exit()
-
-
-
-
-
-
+                        else:
+                            input("An error was found, see the output in the shell for more information!\n\nPress any key to exit program")
+                            sys.exit()
 
 if __name__ == '__main__':
     main()

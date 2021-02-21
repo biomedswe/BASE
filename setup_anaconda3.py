@@ -17,7 +17,7 @@ def anaconda_menu():
     print("1. Download and install Anaconda3 with python 3.8")
     print("2. Set up a new conda environment for DNA and RNA-sequence analysis\n")
     choices = 2
-    text = "(leave blank to exit)"
+    text = "(leave blank to return to main menu)"
     choice = validate_choice(choices, text)
     return choice
 
@@ -36,15 +36,15 @@ Downloading and installing anaconda from https://repo.anaconda.com/archive/Anaco
 
     # downloads anaconda
     cmd_download = "wget https://repo.anaconda.com/archive/Anaconda3-2020.11-Linux-x86_64.sh -P $HOME"
-    # subprocess.run(cmd_download, shell=True)
+    run_command(cmd_download, "")
 
     # applies read, write and execute permission for all users to the file
     cmd_chmod = "chmod a=xrw $HOME/Anaconda3-2020.11-Linux-x86_64.sh"
-    # subprocess.run(cmd_chmod, shell=True)
+    run_command(cmd_chmod, "")
 
     # installs anaconda
     cmd_install = "bash $HOME/Anaconda3-2020.11-Linux-x86_64.sh"
-    # subprocess.run(cmd_install, shell=True)
+    run_command(cmd_install, "")
 
     # create directory three
     create_dir()
@@ -68,18 +68,19 @@ Genome analysis tool kit 4 (gatk),
 Bcftools
 Samtools
 Manta (structural variant caller)
-Delly (structural variant caller)""")
+Delly (structural variant caller)
+STAR""")
 
-    cmd_env = "conda create --name sequencing -c bioconda bwa picard gatk4 manta bcftools samtools star"
-    subprocess.run(cmd_env, shell=True)
+    cmd_env = "conda create --name sequencing -c bioconda bwa picard gatk4 manta bcftools=1.9 samtools=1.7-1 star"
+    run_command(cmd_env, "")
 
     # delly in bioconda didn't work so I had to do a workaround
     cmd_delly = "wget https://github.com/dellytools/delly/releases/download/v0.8.7/delly_v0.8.7_linux_x86_64bit -P $HOME/anaconda3/envs/sequencing/bin"
-    subprocess.call(cmd_delly, shell=True)
+    run_command(cmd_delly, "")
     cmd_chmod = "chmod a=xrw $HOME/anaconda3/envs/sequencing/bin/delly_v0.8.7_linux_x86_64bit"
-    subprocess.run(cmd_chmod, shell=True)
+    run_command(cmd_env, "")
     cmd_mv = "mv $HOME/anaconda3/envs/sequencing/bin/delly_v0.8.7_linux_x86_64bit $HOME/anaconda3/envs/sequencing/bin/delly"
-    subprocess.run(cmd_mv, shell=True)
+    run_command(cmd_env, "")
 
 
     print("\n\n\nEnvironment named \"sequencing\" was successfully created\n")
