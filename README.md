@@ -1,10 +1,12 @@
 # sequencing_project
 Allele-specific expression (ase) analysis pipeline
 
+This script automates everything from setting up anaconda to downloading reference genome and performing DNA and RNA analysis to get a result about ase
+
 ## Requirements
 - Platform: 
     - linux-64
-    - python >= 3.7
+    - python >= 3.6
     
     
 ## Installation and setup instructions
