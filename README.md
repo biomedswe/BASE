@@ -31,6 +31,6 @@ python3 $HOME/sequencing_project/sequencing.py
 
 DNA-seq reads: (in fasta/fastq format) into $HOME/sequencing_project/dna_seq/reads 
 
-RNA-seq reads: into $HOME/sequencing_project/rna_seq/reads
+RNA-seq reads: (in fasta.gz) into $HOME/sequencing_project/rna_seq/reads
     
  
