@@ -13,6 +13,7 @@ This script automates everything from setting up anaconda to downloading referen
 
 ### 1. Clone the git archive:
 
+Open the bash shell and type the following:
 ```
 git clone https://github.com/biomedswe/sequencing_project.git $HOME
 ```
