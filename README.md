@@ -10,22 +10,23 @@ This script automates everything from setting up anaconda to downloading referen
     
     
 ## Installation and setup instructions
+Open the bash shell and type the following:
 
 ### 1. Clone the git archive:
 
-Open the bash shell and type the following:
+
 ```
 git clone https://github.com/biomedswe/sequencing_project.git $HOME
 ```
 
-### 2. Run sequencing.py and follow instructions in program
+### 2. Run main.py and follow instructions in program
 
 ```
-python3 sequencing.py (after navigating to $HOME/sequencing_project)
+python3 main.py (after navigating to $HOME/sequencing_project)
 ```
 or
 ```
-python3 $HOME/sequencing_project/sequencing.py
+python3 $HOME/sequencing_project/main.py
 ```
 
 ### 3. Copy your DNA-seq/RNA-seq reads into the right folders
