@@ -10,7 +10,7 @@ This script automates everything from setting up anaconda to downloading referen
     
     
 ## Installation and setup instructions
-Open the bash shell and type the following:
+Open bash (Unix shell) and type the following:
 
 ### 1. Clone the git archive:
 
