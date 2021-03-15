@@ -16,7 +16,7 @@ Open bash (Unix shell) and type the following:
 
 
 ```
-git clone https://github.com/biomedswe/sequencing_project.git $HOME
+git clone https://github.com/biomedswe/sequencing_project.git $HOME/sequencing_project
 ```
 
 ### 2. Run main.py and follow instructions in program
