@@ -224,14 +224,14 @@ e.g. "chr11 chr12"
         ref_file = shortcuts.reference_genome_file
         ref_dir = shortcuts.reference_genome_dir
 
-        filename = "".join(chromosomes)
-        if self.step_completed(f'{ref_dir}{filename}_index/{filename}.fa', f'Fasta for {filename} allready created, skips step...'):
+        filename = "".join(chromosomes) + "_GRCh38"
+        if self.step_completed(f'{ref_dir}{filename}/{filename}.fa', f'Fasta for {filename} allready created, skips step...'):
             pass
         else:
             print('Creating a new fasta file...')
-            self.create_directory([f'{ref_dir}{filename}_index'])
+            self.create_directory([f'{ref_dir}{filename}'])
             sequences = SeqIO.parse(ref_file, 'fasta')
-            with open(f'{ref_dir}{filename}_index/{filename}.fa', 'w+') as fa:
+            with open(f'{ref_dir}{filename}/{filename}.fa', 'w+') as fa:
                 for chr in chromosomes:
                     for line in sequences:
                         if line.id == chr:
@@ -247,12 +247,12 @@ e.g. "chr11 chr12"
 
         ref_dir = shortcuts.reference_genome_dir
 
-        if self.step_completed(f'{ref_dir}{filename}_index/{filename}.gtf', f'Gtf for {filename} allready created, skips step...'):
+        if self.step_completed(f'{ref_dir}{filename}/{filename}.gtf', f'Gtf for {filename} allready created, skips step...'):
             pass
         else:
             print('Creating a new gtf file...')
             sequences = SeqIO.parse(shortcuts.reference_genome_file, 'fasta')
-            with open(f'{shortcuts.reference_genome_dir}{filename}_index/{filename}.bed', 'w') as bed:
+            with open(f'{shortcuts.reference_genome_dir}{filename}/{filename}.bed', 'w') as bed:
                 for chr in chromosomes:
                     for line in sequences:
                         if line.id == chr:
@@ -260,9 +260,9 @@ e.g. "chr11 chr12"
                             bed.write("0\t")
                             bed.write(str(len(line.seq)))
                             break
-            cmd_createGTF = f"bedtools intersect -a {shortcuts.annotation_gtf_file} -b {shortcuts.reference_genome_dir}{filename}_index/{filename}.bed > {shortcuts.reference_genome_dir}{filename}_index/{filename}.gtf"
+            cmd_createGTF = f"bedtools intersect -a {shortcuts.annotation_gtf_file} -b {shortcuts.reference_genome_dir}{filename}/{filename}.bed > {shortcuts.reference_genome_dir}{filename}/{filename}.gtf"
             misc.run_command(cmd_createGTF, '')
-            remove(f'{shortcuts.reference_genome_dir}{filename}_index/{filename}.bed')
+            remove(f'{shortcuts.reference_genome_dir}{filename}/{filename}.bed')
 
 
 class Shortcuts():
@@ -302,7 +302,7 @@ class Shortcuts():
         # Shortcuts to folders used in RNA sequencing analysis
         self.rna_reads_dir  = f"{self.rna_seq_dir}reads/"
         self.star_output_dir = f"{self.rna_seq_dir}star/"
-        self.star_index_dir =  f"{self.reference_genome_dir}star_index/"
+        self.star_index_dir =  f"{self.GRCh38_dir}star_index/"
         self.star_index_dir_whole_genome = f"{self.star_index_dir}{self.reference_genome_file[-20:-14]}_index/"
 
         # Shortcuts to files used in RNA sequencing analysis

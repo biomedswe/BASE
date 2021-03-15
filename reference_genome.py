@@ -51,30 +51,30 @@ class ReferenceGenome():
                     pass
                 else:
                     misc.clear_screen()
-                    print("\n\n\033[1mIndex whole genome\033[0m\n")
-                    cmd_bwa_index = f"bwa index {ref_file} -p bwa_index/"
+                    print("033[1mIndex whole genome\033[0m\n")
+                    cmd_bwa_index = f"bwa index {ref_file}"
                     misc.run_command(cmd_bwa_index, 'Bwa index completed')
                     cmd_create_dict = f"samtools dict {ref_file} -o {ref_file[:-2]}dict"
-                    misc.run_command(cmd_create_dict, 'Creating .dict with samtools dict')
+                    misc.run_command(cmd_create_dict, 'Creating .dict with samtools dict completed')
                     cmd_create_fai = f"samtools faidx {ref_file} -o {ref_file}.fai"
-                    misc.run_command(cmd_create_fai, 'Creating .fai with samtools faidx')
+                    misc.run_command(cmd_create_fai, 'Creating .fai with samtools faidx completed')
                     misc.create_trackFile(shortcuts.bwa_index__whole_reference_genome_complete)
                     print("\nIndexing reference genome completed!\n")
 
 
             # Index parts of genome
             if choice == 2:
-                if misc.step_completed(f'{ref_dir}{filename}_index/{filename}_bwa.complete', 'Burrows Wheeler aligner index allready completed, skips step...'):
+                if misc.step_completed(f'{ref_dir}{filename}_GRCh38/{filename}_bwa.complete', 'Burrows Wheeler aligner index allready completed, skips step...'):
                     pass
                 else:
                     print("1. Index reference genome\n")
-                    cmd_bwa_index = f"bwa index {ref_dir}{filename}_index/{filename}.fa"
-                    misc.run_command(cmd_bwa_index, 'Bwa index')
-                    cmd_create_dict = f"samtools dict {ref_dir}{filename}_index/{filename}.fa -o {ref_dir}{filename}_index/{filename}.dict"
-                    misc.run_command(cmd_create_dict, 'Creating .dict with samtools dict')
-                    cmd_create_fai = f"samtools faidx {ref_dir}{filename}_index/{filename}.fa -o {ref_file}{filename}_index/{filename}.fai"
-                    misc.run_command(cmd_create_fai, 'Creating .fai with samtools faidx')
-                    misc.create_trackFile(f'{ref_dir}{filename}_index/{filename}_bwa.complete')
+                    cmd_bwa_index = f"bwa index {ref_dir}{filename}_GRCh38/{filename}.fa"
+                    misc.run_command(cmd_bwa_index, 'Bwa index completed')
+                    cmd_create_dict = f"samtools dict {ref_dir}{filename}_GRCh38/{filename}.fa -o {ref_dir}{filename}_GRCh38/{filename}.dict"
+                    misc.run_command(cmd_create_dict, 'Creating .dict with samtools dict completed')
+                    cmd_create_fai = f"samtools faidx {ref_dir}{filename}_GRCh38/{filename}.fa -o {ref_file}{filename}_GRCh38/{filename}.fai"
+                    misc.run_command(cmd_create_fai, 'Creating .fai with samtools faidx completed')
+                    misc.create_trackFile(f'{ref_dir}{filename}_GRCh38/{filename}_bwa.complete')
                     print("\nIndexing reference genome completed!\n")
         except Exception as e:
             print(f'Error with index_genome_dna: {e}')
@@ -110,7 +110,7 @@ class ReferenceGenome():
 
             # Index parts of genome
             elif choice == 2:
-                    if misc.step_completed(f'{ref_dir}{filename}_index/{filename}_starIndex.complete', f'{filename} genome indexing allready completed, returning...'):
+                    if misc.step_completed(f'{ref_dir}{filename}_GRCh38/{filename}_starIndex.complete', f'{filename} genome indexing allready completed, returning...'):
                         time.sleep(2.5)
                         pass
                     else:
