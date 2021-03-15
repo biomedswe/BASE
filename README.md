@@ -20,7 +20,7 @@ git clone https://github.com/biomedswe/sequencing_project.git $HOME
 ```
 
 ### 2. Run main.py and follow instructions in program
-Please not that you must have python installed first.
+Please note that you must have python installed first.
 ```
 python3 main.py (after navigating to $HOME/sequencing_project)
 ```
