@@ -14,7 +14,7 @@ class Menus():
     def __init__(self):
         self.main_menu = (['Setup Anaconda3', 'Setup reference genome', 'DNA-analysis', 'RNA-analysis'], "\033[1mMain menu\033[0m" + "\n" + "-"*31 + "\nRun the options below in order:", "(leave blank to exit program)")
         self.anaconda_menu = (['Download and install Anaconda3 with python 3.7.6', 'Set up a new conda environment for DNA and RNA-sequence analysis'], "\033[1mSetup anaconda3\033[0m" + "\n" + "-"*31 + "\nRun the options below in order:", "(leave blank to return to main menu)")
-        self.reference_genome_menu = (['Download reference genome', 'Index reference genome'], "\033[1mSetup reference genome\033[0m", "(leave blank to return to main menu)")
+        self.reference_genome_menu = (['Download reference genome', 'Index reference genome'], "\033[1mSetup reference genome\033[0m" + "\n" + "-"*31 + "\nRun the options below in order:", "(leave blank to return to main menu)")
         self.reference_genome_index_menu = (['Index whole genome', 'Index parts of genome'], "\033[1mIndex reference genome\033[0m", "(leave blank to return to main menu)")
         self.dna_menu = (['Create library list file', 'Run analysis'], "\033[1mDNA menu\033[0m", "(leave blank to return to main menu)")
         self.rna_menu = (['Map reads to the genome'], "\033[1m""RNA analysis""\033[0m", "(leave blank to return to main menu)")
@@ -192,9 +192,11 @@ class Misc():
             sys.exit()
 
     #---------------------------------------------------------------------------
-    def choose_chromosomes_to_index(self, misc, shortcuts):
+    def choose_chromosomes_to_index(self, menus, misc, shortcuts):
         '''Takes one or more chromosome as input, check if syntax is valid and if so, returns chromosomes as a list'''
-        ref_dir = shortcuts.reference_genome_dir
+
+        self.clear_screen()
+        menus.info_script()
 
         print('''You can add chromosomes separated by a space.
 Use this syntax:
@@ -278,9 +280,9 @@ class Shortcuts():
         # Shortcuts to input folders
         self.dna_reads_dir  = f"{self.dna_seq_dir}reads/"
         self.reference_genome_dir = f"{self.sequencing_project_dir}reference_genome/"
+        self.GRCh38_dir = f"{self.reference_genome_dir}GRCh38/"
 
         # Shortcuts to output folders in DNA sequencing analysis
-        self.bwa_index_dir = f"{self.reference_genome_dir}bwa_index/"
         self.aligned_output_dir = f"{self.dna_seq_dir}Aligned/"
         self.sorted_output_dir = f"{self.dna_seq_dir}Sorted/"
         self.merged_output_dir = f"{self.dna_seq_dir}Merged/"
@@ -292,7 +294,7 @@ class Shortcuts():
         self.manta_variants_dir = f"{self.dna_seq_dir}Manta/results/variants/"
 
         # Shortcuts to files used in DNA sequencing analysis
-        self.reference_genome_file = f"{self.reference_genome_dir}GRCh38.p13.genome.fa"
+        self.reference_genome_file = f"{self.GRCh38_dir}GRCh38.p13.genome.fa"
         self.reference_genome_exclude_template_file = f"{self.sequencing_project_dir}excludeTemplate/human.hg38.excl.tsv"
         self.configManta_file = getenv("HOME")+"/anaconda3/envs/sequencing/bin/manta-1.6.0.release_src/src/python/bin/configManta.py"
         self.runWorkflow_file = getenv("HOME")+"/sequencing_project/dna_seq/Manta/runWorkflow.py"
@@ -304,7 +306,7 @@ class Shortcuts():
         self.star_index_dir_whole_genome = f"{self.star_index_dir}{self.reference_genome_file[-20:-14]}_index/"
 
         # Shortcuts to files used in RNA sequencing analysis
-        self.annotation_gtf_file = f"{self.reference_genome_dir}/gencode.v37.primary_assembly.annotation.gtf"
+        self.annotation_gtf_file = f"{self.GRCh38_dir}/gencode.v37.primary_assembly.annotation.gtf"
         self.gatk_vcfFile = f"{self.haplotypecaller_output_dir}{options.tumor_id}_filtered_ReadDepthOver10_het.vcf"
 
         # Shortcuts to output lists (used for input in pipeline steps) (and also for validation if pipeline step i allready completed)
@@ -315,7 +317,7 @@ class Shortcuts():
         self.realignedFiles_list = f"{self.realigned_output_dir}realignedFiles.txt"
 
         # Shortcuts to files used to validate if pipeline step is allready completed
-        self.index_reference_genome_complete = f"{self.reference_genome_dir}index.complete"
+        self.bwa_index_whole_reference_genome_complete = f"{self.GRCh38_dir}bwa.complete"
         self.validate_bam_complete = f"{self.aligned_output_dir}validateBam.complete"
         self.haplotypecaller_complete = f"{self.haplotypecaller_output_dir}haplotypeCaller.complete"
         self.delly_complete = f"{self.delly_output_dir}delly.complete"

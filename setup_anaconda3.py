@@ -52,9 +52,10 @@ class SetupAnaconda3():
             shortcuts.delly_output_dir,
             shortcuts.manta_output_dir,
             shortcuts.rna_reads_dir,
+            shortcuts.dna_reads_dir,
             shortcuts.star_output_dir,
             shortcuts.star_index_dir,
-            shortcuts.bwa_index_dir
+            shortcuts.GRCh38_dir
             ])
 
             if path.isdir(getenv("HOME")+'/anaconda3/envs/sequencing'):

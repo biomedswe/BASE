@@ -11,19 +11,6 @@ import time
 
 
 
-
-
-# Shortcuts
-
-############################################################# Functions ################################################################################
-
-
-
-
-
-
-
-
 ########################################################### Main program starts #######################################################################
 # metavar makes the help text more tidy
 
@@ -76,24 +63,20 @@ def main():
 
                 # Index whole genome
                 if index_reference_genome_choice == '1':
-                    if misc.step_completed(shortcuts.index_reference_genome_complete, 'Indexing whole reference genome allready completed, returning to main menu...'):
-                        time.sleep(2.5)
-                        continue
-                    else:
-                        ref_genome.index_genome_dna(1, None, misc, shortcuts)
-                        ref_genome.index_genome_rna(1, None, misc, shortcuts)
+                    ref_genome.index_genome_dna(1, None, misc, shortcuts)
+                    ref_genome.index_genome_rna(1, None, misc, shortcuts)
 
 
                 # Index parts of genome
                 elif index_reference_genome_choice == '2':
-                    chromosomes = misc.choose_chromosomes_to_index(misc, shortcuts)
+                    chromosomes = misc.choose_chromosomes_to_index(all_menus, misc, shortcuts)
                     if not chromosomes:
                         continue
                     else:
                         filename = misc.create_new_fasta(chromosomes, shortcuts)
                         misc.create_new_gtf(chromosomes, filename, misc, shortcuts)
-                        dna_analysis.index_reference_dna(2, filename, misc, shortcuts)
-                        rna_analysis.index_genome_rna_analysis(2, filename, misc, shortcuts)
+                        ref_genome.index_genome_dna(2, filename, misc, shortcuts)
+                        ref_genome.index_genome_rna(2, filename, misc, shortcuts)
                         input("Press any key to continue")
 
         # Dna analysis menu

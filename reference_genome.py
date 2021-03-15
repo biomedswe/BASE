@@ -1,4 +1,4 @@
-import time
+import time, multiprocessing
 
 class ReferenceGenome():
 
@@ -8,30 +8,31 @@ class ReferenceGenome():
     def download(self, misc, shortcuts):
         '''This function downloads the human reference genome GRCh38.fa and the comprehensive gene annotations gencode.v37.primary_assembly.annotation.gtf
         from https://www.gencodegenes.org/human/'''
- 
+
         try:
-            if misc.step_completed(shortcuts.reference_genome_file, 'Reference genome and annotation file allready downloaded.') and misc.step_completed(shortcuts.annotation_gtf_file, ''):
+            if misc.step_completed(shortcuts.reference_genome_file, '') and misc.step_completed(shortcuts.annotation_gtf_file, ''):
+                print('Reference genome and annotation file allready downloaded.')
                 time.sleep(2.5)
                 pass
             else:
                 misc.clear_screen()
-                print("Download reference genome\n\n")
+                print("\033[1mDownload reference genome\033[0m\n\n")
                 print("Downloading:")
                 print("GRCh38.p13.genome.fa and from Comprehensive gene annotation https://www.gencodegenes.org/human/...\n")
 
-                cmd_fasta_download = "wget ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_36/GRCh38.p13.genome.fa.gz -P $HOME/sequencing_project/reference_genome/"
-                # misc.run_command(cmd_fasta_download, 'Download of GRCh38.p13.genome.fa.gz completed')
+                cmd_fasta_download = f"wget ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_36/GRCh38.p13.genome.fa.gz -P {shortcuts.GRCh38_dir}"
+                misc.run_command(cmd_fasta_download, 'Download of GRCh38.p13.genome.fa.gz completed')
 
-                cmd_fasta_unzip = "gunzip $HOME/sequencing_project/reference_genome/GRCh38.p13.genome.fa.gz"
+                cmd_fasta_unzip = f"gunzip {shortcuts.GRCh38_dir}GRCh38.p13.genome.fa.gz"
                 misc.run_command(cmd_fasta_unzip, 'Unzip of GRCh38.p13.genome.fa.gz completed')
 
-                cmd_gtf_download = "wget ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_37/gencode.v37.primary_assembly.annotation.gtf.gz -P $HOME/sequencing_project/reference_genome/"
+                cmd_gtf_download = f"wget ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_37/gencode.v37.primary_assembly.annotation.gtf.gz -P {shortcuts.GRCh38_dir}"
                 misc.run_command(cmd_gtf_download, 'Download of gencode.v37.primary_assembly.annotation.gtf.gz completed')
 
-                cmd_gtf_unzip = "gunzip $HOME/sequencing_project/reference_genome/gencode.v37.primary_assembly.annotation.gtf.gz"
+                cmd_gtf_unzip = f"gunzip {shortcuts.GRCh38_dir}gencode.v37.primary_assembly.annotation.gtf.gz"
                 misc.run_command(cmd_gtf_unzip, 'Unzip of gencode.v37.primary_assembly.annotation.gtf.gz completed')
 
-                print("Completed!\nGRCh38.p13.genome.fa and gencode.v37.primary_assembly.annotation.gtf are saved in the reference_genome folder.\n")
+                print("Completed!\nGRCh38.p13.genome.fa and gencode.v37.primary_assembly.annotation.gtf are saved in the reference_genome/bwa_index/GRCh38 folder.\n")
                 return input("Press any key to return to main menu...")
         except Exception as e:
             print(f'Error with download(): {e}')
@@ -46,15 +47,19 @@ class ReferenceGenome():
             ref_dir = shortcuts.reference_genome_dir
             # Index whole genome
             if choice == 1:
-                print("\n\n1. Index whole genome\n")
-                cmd_bwa_index = f"bwa index {ref_file}"
-                misc.run_command(cmd_bwa_index, 'Bwa index')
-                cmd_create_dict = f"samtools dict {ref_file} -o {ref_file[:-2]}dict"
-                misc.run_command(cmd_create_dict, 'Creating .dict with samtools dict')
-                cmd_create_fai = f"samtools faidx {ref_file} -o {ref_file}.fai"
-                misc.run_command(cmd_create_fai, 'Creating .fai with samtools faidx')
-                misc.create_trackFile(shortcuts.index_reference_genome_complete)
-                print("\nIndexing reference genome completed!\n")
+                if misc.step_completed(f'{shortcuts.bwa_index_whole_reference_genome_complete}', 'Burrows Wheeler aligner index allready completed, skips step...'):
+                    pass
+                else:
+                    misc.clear_screen()
+                    print("\n\n\033[1mIndex whole genome\033[0m\n")
+                    cmd_bwa_index = f"bwa index {ref_file} -p bwa_index/"
+                    misc.run_command(cmd_bwa_index, 'Bwa index completed')
+                    cmd_create_dict = f"samtools dict {ref_file} -o {ref_file[:-2]}dict"
+                    misc.run_command(cmd_create_dict, 'Creating .dict with samtools dict')
+                    cmd_create_fai = f"samtools faidx {ref_file} -o {ref_file}.fai"
+                    misc.run_command(cmd_create_fai, 'Creating .fai with samtools faidx')
+                    misc.create_trackFile(shortcuts.bwa_index__whole_reference_genome_complete)
+                    print("\nIndexing reference genome completed!\n")
 
 
             # Index parts of genome
@@ -73,6 +78,7 @@ class ReferenceGenome():
                     print("\nIndexing reference genome completed!\n")
         except Exception as e:
             print(f'Error with index_genome_dna: {e}')
+            input("Press any key to continue")
 
     #---------------------------------------------------------------------------
     def index_genome_rna(self, choice, filename, misc, shortcuts):
@@ -122,3 +128,4 @@ class ReferenceGenome():
                         misc.create_trackFile(f'{ref_dir}{filename}_index/{filename}_starIndex.complete')
         except Exception as e:
             print(f'Error with index_genome_rna: {e}')
+            input("Press any key to continue...")
