@@ -6,7 +6,9 @@ class ReferenceGenome():
         pass
 
     def download(self, misc, shortcuts):
-
+        '''This function downloads the human reference genome GRCh38.fa and the comprehensive gene annotations gencode.v37.primary_assembly.annotation.gtf
+        from https://www.gencodegenes.org/human/'''
+ 
         try:
             if misc.step_completed(shortcuts.reference_genome_file, 'Reference genome and annotation file allready downloaded.') and misc.step_completed(shortcuts.annotation_gtf_file, ''):
                 time.sleep(2.5)
@@ -15,25 +17,25 @@ class ReferenceGenome():
                 misc.clear_screen()
                 print("Download reference genome\n\n")
                 print("Downloading:")
-                print("GRCh38.p13.genome.fa from https://www.gencodegenes.org/human/...\n")
-                print("Comprehensive gene annotation from https://www.gencodegenes.org/human/...\n")
+                print("GRCh38.p13.genome.fa and from Comprehensive gene annotation https://www.gencodegenes.org/human/...\n")
 
                 cmd_fasta_download = "wget ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_36/GRCh38.p13.genome.fa.gz -P $HOME/sequencing_project/reference_genome/"
-                misc.run_command(cmd_fasta_download, 'Download of GRCh38.p13.genome.fa.gz completed')
+                # misc.run_command(cmd_fasta_download, 'Download of GRCh38.p13.genome.fa.gz completed')
 
                 cmd_fasta_unzip = "gunzip $HOME/sequencing_project/reference_genome/GRCh38.p13.genome.fa.gz"
-                misc.run_command(cmd__fasta_unzip, 'Unzip of GRCh38.p13.genome.fa.gz completed')
+                misc.run_command(cmd_fasta_unzip, 'Unzip of GRCh38.p13.genome.fa.gz completed')
 
                 cmd_gtf_download = "wget ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_37/gencode.v37.primary_assembly.annotation.gtf.gz -P $HOME/sequencing_project/reference_genome/"
-                misc.run_command(cmd__gtf_download, 'Download of gencode.v37.primary_assembly.annotation.gtf.gz completed')
+                misc.run_command(cmd_gtf_download, 'Download of gencode.v37.primary_assembly.annotation.gtf.gz completed')
 
                 cmd_gtf_unzip = "gunzip $HOME/sequencing_project/reference_genome/gencode.v37.primary_assembly.annotation.gtf.gz"
-                misc.run_command(cmd__gtf_unzip, 'Unzip of gencode.v37.primary_assembly.annotation.gtf.gz completed')
+                misc.run_command(cmd_gtf_unzip, 'Unzip of gencode.v37.primary_assembly.annotation.gtf.gz completed')
 
                 print("Completed!\nGRCh38.p13.genome.fa and gencode.v37.primary_assembly.annotation.gtf are saved in the reference_genome folder.\n")
                 return input("Press any key to return to main menu...")
         except Exception as e:
             print(f'Error with download(): {e}')
+            input("Press any key to continue...")
 
     #---------------------------------------------------------------------------
     def index_genome_dna(self, choice, filename, misc, shortcuts):

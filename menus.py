@@ -1,17 +1,22 @@
-from os import path, getenv, listdir, makedirs, sys, remove
+from os import path, getenv, listdir, makedirs, sys, remove, kill, getppid
+import signal
 import subprocess
 import time
-from Bio import SeqIO
+
+try:
+    from Bio import SeqIO
+except Exception as e:
+    print(f'{e}')
 
 
 class Menus():
 
     def __init__(self):
-        self.main_menu = (['Setup Anaconda3', 'Setup reference genome', 'DNA-analysis', 'RNA-analysis'], "\033[1m""Main menu""\033[0m", "(leave blank to exit program)")
-        self.anaconda_menu = (['Download and install Anaconda3 with python 3.7.6', 'Set up a new conda environment for DNA and RNA-sequence analysis'], "\033[1m""Setup anaconda3""\033[0m", "(leave blank to return to main menu)")
-        self.reference_genome_menu = (['Download reference genome', 'Index reference genome'], "\033[1m""Setup reference genome""\033[0m", "(leave blank to return to main menu)")
-        self.reference_genome_index_menu = (['Index whole genome', 'Index parts of genome'], "\033[1m""Index reference genome""\033[0m", "(leave blank to return to main menu)")
-        self.dna_menu = (['Create library list file', 'Run analysis'], "\033[1m""DNA menu""\033[0m", "(leave blank to return to main menu)")
+        self.main_menu = (['Setup Anaconda3', 'Setup reference genome', 'DNA-analysis', 'RNA-analysis'], "\033[1mMain menu\033[0m" + "\n" + "-"*31 + "\nRun the options below in order:", "(leave blank to exit program)")
+        self.anaconda_menu = (['Download and install Anaconda3 with python 3.7.6', 'Set up a new conda environment for DNA and RNA-sequence analysis'], "\033[1mSetup anaconda3\033[0m" + "\n" + "-"*31 + "\nRun the options below in order:", "(leave blank to return to main menu)")
+        self.reference_genome_menu = (['Download reference genome', 'Index reference genome'], "\033[1mSetup reference genome\033[0m", "(leave blank to return to main menu)")
+        self.reference_genome_index_menu = (['Index whole genome', 'Index parts of genome'], "\033[1mIndex reference genome\033[0m", "(leave blank to return to main menu)")
+        self.dna_menu = (['Create library list file', 'Run analysis'], "\033[1mDNA menu\033[0m", "(leave blank to return to main menu)")
         self.rna_menu = (['Map reads to the genome'], "\033[1m""RNA analysis""\033[0m", "(leave blank to return to main menu)")
 
 

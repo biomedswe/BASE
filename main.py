@@ -70,7 +70,7 @@ def main():
         elif menu_choice == '2':
             reference_genome_menu_choice = all_menus.menu(misc, all_menus.reference_genome_menu)
             if reference_genome_menu_choice == '1':
-                download_ref_genome.download(misc, shortcuts)
+                ref_genome.download(misc, shortcuts)
             elif reference_genome_menu_choice == '2':
                 index_reference_genome_choice = all_menus.menu(misc, all_menus.reference_genome_index_menu)
 

@@ -1,13 +1,15 @@
 from os import listdir, getenv, sys
 import subprocess
 import multiprocessing
-from Bio import SeqIO
 import time
-import vcfpy
-import pandas as pd
-from scipy.stats import binom
-from scipy.stats import binom_test
-
+try:
+    import vcfpy
+    import pandas as pd
+    from Bio import SeqIO
+    from scipy.stats import binom
+    from scipy.stats import binom_test
+except Exception as e:
+    print(f'{e}')
 
 class RnaSeqAnalysis():
 
