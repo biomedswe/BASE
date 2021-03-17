@@ -10,10 +10,8 @@ class ReferenceGenome():
         from https://www.gencodegenes.org/human/'''
 
         try:
-            if misc.step_allready_completed(shortcuts.reference_genome_file, '') and misc.step_allready_completed(shortcuts.annotation_gtf_file, ''):
-                print('Reference genome and annotation file allready downloaded.')
-                time.sleep(2.5)
-                pass
+            if misc.step_allready_completed(shortcuts.reference_genome_file) and misc.step_allready_completed(shortcuts.annotation_gtf_file):
+                misc.logfile('Reference genome and annotation file allready downloaded.')
             else:
                 misc.clear_screen()
                 print("\033[1mDownload reference genome\033[0m\n\n")
@@ -48,9 +46,8 @@ class ReferenceGenome():
 
             # Index whole genome
             if choice == 1:
-                if misc.step_allready_completed(shortcuts.star_whole_genome_indexing_complete, 'Whole genome indexing allready completed, returning...'):
-                    time.sleep(2.5)
-                    pass
+                if misc.step_allready_completed(shortcuts.star_whole_genome_indexing_complete):
+                    misc.logfile('Whole genome indexing allready completed, returning...')
                 else:
                     threads = multiprocessing.cpu_count() - 2
                     cmd_StarIndex = f'''
@@ -67,9 +64,8 @@ class ReferenceGenome():
 
             # Index parts of genome
             elif choice == 2:
-                    if misc.step_allready_completed(f'{ref_dir}{filename}/star_index/starIndex.complete', f'{filename} genome indexing with star allready completed...'):
-                        time.sleep(2.5)
-                        pass
+                    if misc.step_allready_completed(f'{ref_dir}{filename}/star_index/starIndex.complete'):
+                        misc.logfile(f'{filename} genome indexing with star allready completed...')
                     else:
                         threads = multiprocessing.cpu_count() - 2
                         cmd_StarIndex = f'''
