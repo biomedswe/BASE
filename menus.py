@@ -2,6 +2,8 @@ from os import path, getenv, listdir, makedirs, sys, remove, kill, getppid
 import signal
 import subprocess
 import time
+import logging
+logging.basicConfig(filename='Logname.txt', filemode='a', format='%(asctime)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S', level=logging.DEBUG)
 
 try:
     from Bio import SeqIO
@@ -12,12 +14,14 @@ except Exception as e:
 class Menus():
 
     def __init__(self):
-        self.main_menu = (['Setup Anaconda3', 'Setup reference genome', 'DNA-analysis', 'RNA-analysis'], "\033[1mMain menu\033[0m" + "\n" + "-"*31 + "\nRun the options below in order:", "(leave blank to exit program)")
-        self.anaconda_menu = (['Download and install Anaconda3 with python 3.7.6', 'Set up a new conda environment for DNA and RNA-sequence analysis'], "\033[1mSetup anaconda3\033[0m" + "\n" + "-"*31 + "\nRun the options below in order:", "(leave blank to return to main menu)")
-        self.reference_genome_menu = (['Download reference genome', 'Index reference genome'], "\033[1mSetup reference genome\033[0m" + "\n" + "-"*31 + "\nRun the options below in order:", "(leave blank to return to main menu)")
-        self.reference_genome_index_menu = (['Index whole genome', 'Index parts of genome'], "\033[1mIndex reference genome\033[0m", "(leave blank to return to main menu)")
-        self.dna_menu = (['Create library list file', 'Run analysis'], "\033[1mDNA menu\033[0m", "(leave blank to return to main menu)")
-        self.rna_menu = (['Map reads to the genome'], "\033[1m""RNA analysis""\033[0m", "(leave blank to return to main menu)")
+        self.main_menu = (['Setup Anaconda3', 'DNA-analysis', 'RNA-analysis'], "\033[1mMain menu\033[0m\n" + "-"*31 + "\nRun the options below in order:", "(leave blank to exit program)")
+        self.anaconda_menu = (['Download and install Anaconda3 with python 3.7.6', 'Set up a new conda environment for DNA and RNA-sequence analysis'], "\033[1mSetup anaconda3 menu\033[0m\n" + "-"*31 + "\nRun the options below in order:", "(leave blank to return to main menu)")
+        self.reference_genome_menu = (['Download reference genome', 'Index reference genome'], "\033[1mSetup reference genome menu\033[0m\n" + "-"*31 + "\nRun the options below in order:", "(leave blank to return to main menu)")
+        self.reference_genome_index_menu = (['Index whole genome', 'Index parts of genome'], "\033[1mIndex reference genome menu\033[0m\n" + "-"*28, "(leave blank to return to main menu)")
+        self.dna_menu = (['Setup reference genome', 'Create library list file', 'Run analysis'], "\033[1mDNA-analysis menu\033[0m\n" + "-"*31 + "\nRun the options below in order:", "(leave blank to return to main menu)")
+        self.dna_analysis_menu = (['Analyze whole genome', 'Analyze parts of genome'], "\033[1mDNA analysis menu\033[0m\n" + "-"*31 + "\nRun the options below in order:", "(leave blank to return to main menu)")
+        self.rna_menu = (['Map reads to the genome'], "\033[1m""RNA-analysis menu""\033[0m\n" + "-"*31 + "\nRun the options below in order:", "(leave blank to return to main menu)")
+
 
 
     #---------------------------------------------------------------------------
@@ -106,16 +110,26 @@ class Misc():
         pass
 
     #---------------------------------------------------------------------------
+    def logfile(self, text):
+        print(f'\n{text}\n')
+        logging.info(text)
+
+    #---------------------------------------------------------------------------
     def validate_id(self,options, shortcuts):
         '''This function validates wether the tumor_id and normal_id you entered is present in your reads'''
 
-        if options.tumor_id and options.normal_id not in "".join(listdir(shortcuts.dna_reads_dir)):
-            print("You have entered a tumor_id and/or normal_id that is not present in your reads.\n")
-            print("Please restart program and verify that you have typed in the right \"clinical_id\" for both tumor (-t) and normal (-n)! ")
-            input("Press any key to exit program")
-            sys.exit()
-        else:
-            print("tumor_id and normal_id correctly validated!\n")
+        try:
+            if options.tumor_id and options.normal_id in "".join(listdir(shortcuts.dna_reads_dir)):
+                self.logfile(f"tumor_id {options.tumor_id} and normal_id {options.normal_id} correctly validated")
+
+            else:
+                self.logfile(f'You have entered a tumor_id: {options.tumor_id} and/or normal_id: {options.normal_id} that is not present in your reads.\nPlease restart program and verify that you have typed in the right \"clinical_id\" for both tumor (-t) and normal (-n)!')
+                input("Press any key to exit program")
+                sys.exit()
+        except Exception as e:
+            self.logfile(f'Error with validate_id() in menus.py: {e}')
+
+
 
     #---------------------------------------------------------------------------
     def validate_choice(self, choices, text):
@@ -164,11 +178,9 @@ class Misc():
                 pass
 
     #---------------------------------------------------------------------------
-    def step_completed(self, file, text):
+    def step_allready_completed(self, file):
         '''This function checks if an analysis step is completed by looking after a created file *.complete'''
         if path.isfile(file):
-            if text:
-                print(f"\n{text}")
             return True
         else:
             return False
@@ -176,8 +188,12 @@ class Misc():
     #---------------------------------------------------------------------------
     def create_trackFile(self, file):
         '''This function creates utput list but also a file after each step as a marker that the step is completed'''
-        with open(file, 'w'):
-            pass
+        try:
+            with open(file, 'w'):
+                pass
+        except Exception as e:
+            print(f'Error with index_genome_dna: {e}')
+
 
     #---------------------------------------------------------------------------
     def run_command(self, command, text):
@@ -192,7 +208,7 @@ class Misc():
             sys.exit()
 
     #---------------------------------------------------------------------------
-    def choose_chromosomes_to_index(self, menus, misc, shortcuts):
+    def choose_chromosomes_to_index(self, menus, shortcuts):
         '''Takes one or more chromosome as input, check if syntax is valid and if so, returns chromosomes as a list'''
 
         self.clear_screen()
@@ -242,7 +258,7 @@ e.g. "chr11 chr12"
         return filename
 
     #---------------------------------------------------------------------------
-    def create_new_gtf(self, chromosomes, filename, misc, shortcuts):
+    def create_new_gtf(self, chromosomes, filename, shortcuts):
         '''Create a new gtf file from choosed chromosomes'''
 
         ref_dir = shortcuts.reference_genome_dir
@@ -296,17 +312,17 @@ class Shortcuts():
         # Shortcuts to files used in DNA sequencing analysis
         self.reference_genome_file = f"{self.GRCh38_dir}GRCh38.p13.genome.fa"
         self.reference_genome_exclude_template_file = f"{self.sequencing_project_dir}excludeTemplate/human.hg38.excl.tsv"
-        self.configManta_file = getenv("HOME")+"/anaconda3/envs/sequencing/bin/manta-1.6.0.release_src/src/python/bin/configManta.py"
+        self.configManta_file = getenv("HOME")+"/anaconda3/envs/sequencing/bin/manta-1.6.0.centos6_x86_64/bin/configManta.py"
         self.runWorkflow_file = getenv("HOME")+"/sequencing_project/dna_seq/Manta/runWorkflow.py"
 
         # Shortcuts to folders used in RNA sequencing analysis
         self.rna_reads_dir  = f"{self.rna_seq_dir}reads/"
         self.star_output_dir = f"{self.rna_seq_dir}star/"
-        self.star_index_dir =  f"{self.GRCh38_dir}star_index/"
-        self.star_index_dir_whole_genome = f"{self.star_index_dir}{self.reference_genome_file[-20:-14]}_index/"
+        self.star_index_dir_whole_genome =  f"{self.GRCh38_dir}star_index/"
+
 
         # Shortcuts to files used in RNA sequencing analysis
-        self.annotation_gtf_file = f"{self.GRCh38_dir}/gencode.v37.primary_assembly.annotation.gtf"
+        self.annotation_gtf_file = f"{self.GRCh38_dir}gencode.v37.primary_assembly.annotation.gtf"
         self.gatk_vcfFile = f"{self.haplotypecaller_output_dir}{options.tumor_id}_filtered_ReadDepthOver10_het.vcf"
 
         # Shortcuts to output lists (used for input in pipeline steps) (and also for validation if pipeline step i allready completed)
@@ -322,4 +338,4 @@ class Shortcuts():
         self.haplotypecaller_complete = f"{self.haplotypecaller_output_dir}haplotypeCaller.complete"
         self.delly_complete = f"{self.delly_output_dir}delly.complete"
         self.manta_complete = f"{self.manta_output_dir}manta.complete"
-        self.whole_genome_indexing_complete = f"{self.star_index_dir_whole_genome}whole_index_complete"
+        self.star_whole_genome_indexing_complete = f"{self.star_index_dir_whole_genome}whole_index.complete"
