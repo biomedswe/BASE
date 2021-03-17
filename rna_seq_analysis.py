@@ -22,7 +22,7 @@ class RnaSeqAnalysis():
 
         try:
 
-            if misc.step_completed(f'{shortcuts.star_output_dir}{options.tumor_id}_{filename}_map.complete', 'Map reads to genome allready completed, skips step...'):
+            if misc.step_allready_completed(f'{shortcuts.star_output_dir}{options.tumor_id}_{filename}_map.complete', 'Map reads to genome allready completed, skips step...'):
                 time.sleep(2.5)
                 pass
             else:
@@ -88,7 +88,7 @@ class RnaSeqAnalysis():
             ref_dir = shortcuts.reference_genome_dir
 
 
-            if misc.step_completed(f'{shortcuts.star_output_dir}{options.tumor_id}_{filename}_ase.complete', 'ASEReadCounter allready completed, skips step...'):
+            if misc.step_allready_completed(f'{shortcuts.star_output_dir}{options.tumor_id}_{filename}_ase.complete', 'ASEReadCounter allready completed, skips step...'):
                 time.sleep(2.5)
                 pass
             else:
