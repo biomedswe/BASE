@@ -4,39 +4,37 @@ import time
 class SetupAnaconda3():
 
     def __init__(self):
-        self.anaconda_setup_complete = getenv("HOME")+'/anaconda3/install.complete'
+        pass
 
     def install_anaconda(self, misc, shortcuts):
         '''This function downloads anaconda via wget and the link-adress to the linux installer from anaconda.com.
            It then installs anaconda and creates an environment with the required software packages.
            Finally creates the directory three in the sequencing_project folder'''
 
-        if misc.step_allready_completed(self.anaconda_setup_complete, 'Installation of Anaconda3 allready completed.'):
-            time.sleep(2.5)
-            misc.logfile('Installation of Anaconda3 allready completed.')
-
+        if misc.step_allready_completed(shortcuts.anaconda_setup_complete):
+            misc.logfile('Installation of Anaconda3 allready completed, skips step...')
         else:
             misc.clear_screen()
-            print("Download and install Anaconda3\n\n\n")
-            print("Downloading and installing anaconda from https://repo.anaconda.com/archive/Anaconda3-2020.11-Linux-x86_64.sh...")
+            misc.logfile("Download and install Anaconda3\n\n\nDownloading and installing anaconda from https://repo.anaconda.com/archive/Anaconda3-2020.11-Linux-x86_64.sh...")
 
-            # downloads anaconda
+            # download anaconda
             cmd_download = "wget https://repo.anaconda.com/archive/Anaconda3-2020.11-Linux-x86_64.sh -P $HOME"
-            misc.run_command(cmd_download, "")
+            misc.run_command(cmd_download)
             misc.logfile('Anaconda3 succesfully downloaded')
+
             # applies read, write and execute permission for all users to the file
             cmd_chmod = "chmod a=xrw $HOME/Anaconda3-2020.11-Linux-x86_64.sh"
-            misc.run_command(cmd_chmod, "")
-            misc.logfile('succesfully applied read, write and execute permission for Anaconda3-2020.11-Linux-x86_64.sh')
+            misc.run_command(cmd_chmod)
+            misc.logfile('Read, write and execute permission for Anaconda3-2020.11-Linux-x86_64.sh succesfully applied')
 
             # installs anaconda
             cmd_install = "bash $HOME/Anaconda3-2020.11-Linux-x86_64.sh"
-            misc.run_command(cmd_install, "")
+            misc.run_command(cmd_install)
             misc.logfile('Anaconda3 succesfully installed')
 
             # create file that shows if anaconda3 is allready installed
-            misc.create_trackFile(getenv("HOME")+'/anaconda3/install.complete')
-            misc.logfile(f'Succesfully created trackfile {getenv("HOME")}/anaconda3/install.complete')
+            misc.create_trackFile(shortcuts.anaconda_setup_complete)
+            misc.logfile(f'Trackfile {shortcuts.anaconda_setup_complete} succesfully created')
             print("\nAnaconda is now successfully installed\n\n")
             input("The terminal must be restarted for anaconda3 to initialize correctly\n\nPress any key to close the terminal\nThen start it again manually")
             misc.close_terminal()

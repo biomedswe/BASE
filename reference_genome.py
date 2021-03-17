@@ -10,10 +10,8 @@ class ReferenceGenome():
         from https://www.gencodegenes.org/human/'''
 
         try:
-            if misc.step_allready_completed(shortcuts.reference_genome_file, '') and misc.step_allready_completed(shortcuts.annotation_gtf_file, ''):
-                print('Reference genome and annotation file allready downloaded.')
-                time.sleep(2.5)
-                pass
+            if misc.step_allready_completed(shortcuts.reference_genome_file) and misc.step_allready_completed(shortcuts.annotation_gtf_file):
+                misc.logfile('Reference genome and annotation file allready downloaded.')
             else:
                 misc.clear_screen()
                 print("\033[1mDownload reference genome\033[0m\n\n")
@@ -38,49 +36,4 @@ class ReferenceGenome():
             print(f'Error with download(): {e}')
             input("Press any key to continue...")
 
-    #---------------------------------------------------------------------------
-    def index_genome_rna(self, choice, filename, misc, shortcuts):
-        '''This function indexes either the whole genome or the chromosomes entered'''
-
-        try:
-
-            ref_dir = shortcuts.reference_genome_dir
-
-            # Index whole genome
-            if choice == 1:
-                if misc.step_allready_completed(shortcuts.star_whole_genome_indexing_complete, 'Whole genome indexing allready completed, returning...'):
-                    time.sleep(2.5)
-                    pass
-                else:
-                    threads = multiprocessing.cpu_count() - 2
-                    cmd_StarIndex = f'''
-                    STAR --runThreadN {threads} \\
-                    --runMode genomeGenerate \\
-                    --genomeDir {shortcuts.star_index_dir_whole_genome} \\
-                    --genomeFastaFiles {shortcuts.reference_genome_file} \\
-                    --sjdbGTFfile {shortcuts.annotation_gtf_file}'''
-                    print(cmd_StarIndex)
-                    misc.run_command(cmd_StarIndex, '\nIndexing whole genom with STAR genomeGenerate...')
-                    misc.create_trackFile(shortcuts.star_whole_genome_indexing_complete)
-                    print("\nWhole genome indexing completed!\n")
-                    time.sleep(5)
-
-            # Index parts of genome
-            elif choice == 2:
-                    if misc.step_allready_completed(f'{ref_dir}{filename}/star_index/starIndex.complete', f'{filename} genome indexing with star allready completed...'):
-                        time.sleep(2.5)
-                        pass
-                    else:
-                        threads = multiprocessing.cpu_count() - 2
-                        cmd_StarIndex = f'''
-                        STAR --runThreadN {threads} \\
-                        --genomeSAindexNbases 12 \\
-                        --runMode genomeGenerate \\
-                        --genomeDir {ref_dir}{filename}/star_index \\
-                        --genomeFastaFiles {ref_dir}{filename}/{filename}.fa \\
-                        --sjdbGTFfile {ref_dir}{filename}/{filename}.gtf'''
-                        misc.run_command(cmd_StarIndex, '\nIndexing parts of genome completed')
-                        misc.create_trackFile(f'{ref_dir}{filename}/star_index/starIndex.complete')
-        except Exception as e:
-            print(f'Error with index_genome_rna: {e}')
-            input("Press any key to continue...")
+    

@@ -16,11 +16,10 @@ class Menus():
     def __init__(self):
         self.main_menu = (['Setup Anaconda3', 'DNA-analysis', 'RNA-analysis'], "\033[1mMain menu\033[0m\n" + "-"*31 + "\nRun the options below in order:", "(leave blank to exit program)")
         self.anaconda_menu = (['Download and install Anaconda3 with python 3.7.6', 'Set up a new conda environment for DNA and RNA-sequence analysis'], "\033[1mSetup anaconda3 menu\033[0m\n" + "-"*31 + "\nRun the options below in order:", "(leave blank to return to main menu)")
-        self.reference_genome_menu = (['Download reference genome', 'Index reference genome'], "\033[1mSetup reference genome menu\033[0m\n" + "-"*31 + "\nRun the options below in order:", "(leave blank to return to main menu)")
+        self.reference_genome_menu = (['Download reference genome', 'Index reference genome'], "\033[1mSetup reference genome menu\033[0m\n" + "-"*31 + "\nRun the options below in order:", "(leave blank to return to previous menu)")
         self.reference_genome_index_menu = (['Index whole genome', 'Index parts of genome'], "\033[1mIndex reference genome menu\033[0m\n" + "-"*28, "(leave blank to return to main menu)")
         self.dna_menu = (['Setup reference genome', 'Create library list file', 'Run analysis'], "\033[1mDNA-analysis menu\033[0m\n" + "-"*31 + "\nRun the options below in order:", "(leave blank to return to main menu)")
-        self.dna_analysis_menu = (['Analyze whole genome', 'Analyze parts of genome'], "\033[1mDNA analysis menu\033[0m\n" + "-"*31 + "\nRun the options below in order:", "(leave blank to return to main menu)")
-        self.rna_menu = (['Map reads to the genome'], "\033[1m""RNA-analysis menu""\033[0m\n" + "-"*31 + "\nRun the options below in order:", "(leave blank to return to main menu)")
+        self.rna_menu = (['Index reference genome', 'Map reads to the genome'], "\033[1m""RNA-analysis menu""\033[0m\n" + "-"*31 + "\nRun the options below in order:", "(leave blank to return to main menu)")
 
 
 
@@ -196,13 +195,12 @@ class Misc():
 
 
     #---------------------------------------------------------------------------
-    def run_command(self, command, text):
+    def run_command(self, command):
         '''This function executes a command and checks if it was executes without errors'''
 
         return_code = subprocess.run(command, shell=True)
         if return_code.returncode == 0:
-            if text:
-                print(f"\n{text} without errors!, continuing with next step...\n")
+            return
         else:
             print('\nAn error has occured, see shell for more information. Exiting program...')
             sys.exit()
@@ -333,6 +331,7 @@ class Shortcuts():
         self.realignedFiles_list = f"{self.realigned_output_dir}realignedFiles.txt"
 
         # Shortcuts to files used to validate if pipeline step is allready completed
+        self.anaconda_setup_complete = getenv("HOME")+'/anaconda3/install.complete'
         self.bwa_index_whole_reference_genome_complete = f"{self.GRCh38_dir}bwa.complete"
         self.validate_bam_complete = f"{self.aligned_output_dir}validateBam.complete"
         self.haplotypecaller_complete = f"{self.haplotypecaller_output_dir}haplotypeCaller.complete"

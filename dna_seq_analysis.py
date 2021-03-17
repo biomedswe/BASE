@@ -28,7 +28,7 @@ class DnaSeqAnalysis():
             if misc.step_allready_completed(allready_completed):
                 misc.logfile('Burrows Wheeler aligner index allready completed, skips step...')
             else:
-                misc.logfile('Starting: indexing with bwa index')
+                misc.logfile('\nStarting: indexing with bwa index')
                 misc.clear_screen()
                 print("\033[1mIndex whole genome\033[0m\n")
                 cmd_bwa_index = f"bwa index {ref_file}"
@@ -64,7 +64,7 @@ class DnaSeqAnalysis():
 
         try:
             if misc.step_allready_completed(shortcuts.validate_bam_complete):
-                logging.info('Validate bam allready completed')
+                logging.info('Validate bam allready completed, skips step...')
                 return True
             else:
                 print("Validating .bam files...\n")
@@ -90,7 +90,7 @@ class DnaSeqAnalysis():
                 pass
             else:
                 threads = multiprocessing.cpu_count() - 2
-                misc.logfile(f'Starting: Burrows Wheeler aligner\nUsing {threads} of {threads+2}\n')
+                misc.logfile(f'\nStarting: Burrows Wheeler aligner\nUsing {threads} of {threads+2}')
                 with open(f'{shortcuts.dna_seq_dir}library.txt', 'r') as fastq_list:
                     for line in fastq_list.readlines():
                         clinical_id, library_id, read1, read2 = line.split()
@@ -115,7 +115,7 @@ class DnaSeqAnalysis():
             if misc.step_allready_completed(shortcuts.sortedFiles_list):
                 misc.logfile('Picard sortsam allready completed, skips step...')
             else:
-                misc.logfile("Starting: sorting SAM/BAM files using Picard Sortsam\n")
+                misc.logfile("\nStarting: sorting SAM/BAM files using Picard Sortsam")
 
                 # Empty strings to store the output
                 tumor_sort_str = ""
@@ -142,7 +142,7 @@ class DnaSeqAnalysis():
             if misc.step_allready_completed(shortcuts.mergedFiles_list):
                 misc.logfile('Picard MergeSamFiles allready completed, skips step...')
             else:
-                misc.logfile("Starting: merging SAM/BAM files using Picard MergeSamFiles\n")
+                misc.logfile("\nStarting: merging SAM/BAM files using Picard MergeSamFiles")
                 with open(shortcuts.sortedFiles_list, 'r') as list:
                     for sample in list.readlines():
                         if options.tumor_id in sample:
@@ -165,7 +165,7 @@ class DnaSeqAnalysis():
             if misc.step_allready_completed(shortcuts.removeDuplicates_list):
                 misc.logfile('Picard MarkDuplicates allready completed, skips step...')
             else:
-                misc.logfile("Starting: removing duplicates in SAM/BAM files using Picard MarkDuplicates...\n")
+                misc.logfile("\nStarting: removing duplicates in SAM/BAM files using Picard MarkDuplicates")
                 with open(shortcuts.mergedFiles_list, 'r') as list:
                     for sample in list.readlines():
                         cmd_rd = f"picard MarkDuplicates -I {shortcuts.merged_output_dir}{sample.rstrip()} -O {shortcuts.removed_duplicates_output_dir}{sample.rstrip()} -M {shortcuts.removed_duplicates_output_dir}marked_dup_metrics_{sample.rstrip()}.txt"
@@ -183,7 +183,7 @@ class DnaSeqAnalysis():
             if misc.step_allready_completed(shortcuts.realignedFiles_list):
                 misc.logfile('GATK LeftAlignIndels allready completed, skips step...')
             else:
-                misc.logfile("Starting: realigning SAM/BAM files using GATK LeftAlignIndels\n")
+                misc.logfile("\nStarting: realigning SAM/BAM files using GATK LeftAlignIndels")
                 with open(shortcuts.removeDuplicates_list, 'r') as list:
                     for sample in list.readlines():
                         cmd_index = f"samtools index {shortcuts.removed_duplicates_output_dir}{sample.rstrip()}"
@@ -202,7 +202,7 @@ class DnaSeqAnalysis():
             if misc.step_allready_completed(shortcuts.haplotypecaller_complete):
                 misc.logfile('GATK haplotypeCaller allready completed, skips step...')
             else:
-                misc.logfile("Starting: looking for SNV's using GATK HaplotypeCaller\n")
+                misc.logfile("\nStarting: looking for SNV's using GATK HaplotypeCaller")
                 with open(shortcuts.realignedFiles_list, 'r') as list:
                     sample_1, sample_2 = list.readlines()
                     if options.intervals:
@@ -238,7 +238,7 @@ class DnaSeqAnalysis():
             if misc.step_allready_completed(shortcuts.delly_complete):
                 misc.logfile('Delly allready completed, skips step...')
             else:
-                misc.logfile("Starting: looking for somatic SNV's using delly\n")
+                misc.logfile("\nStarting: looking for somatic SNV's using delly")
                 with open(shortcuts.realignedFiles_list, 'r') as list:
                     sample_1, sample_2 = list.readlines()
                     cmd_delly_call = f"delly call -x {shortcuts.reference_genome_exclude_template_file} -g {shortcuts.reference_genome_file} -o {shortcuts.delly_output_dir}delly.bcf {shortcuts.realigned_output_dir}{sample_1.rstrip()} {shortcuts.realigned_output_dir}{sample_2.rstrip()}"
@@ -266,7 +266,7 @@ class DnaSeqAnalysis():
             if misc.step_allready_completed(shortcuts.manta_complete):
                 misc.logfile('Manta allready completed, skips step...')
             else:
-                misc.logfile("Starting: looking for somatic SNV's using manta\n")
+                misc.logfile("\nStarting: looking for somatic SNV's using manta")
                 with open(shortcuts.realignedFiles_list, 'r') as list:
                     sample_1, sample_2 = list.readlines()
                     cmd_create_config_file = f"{shortcuts.configManta_file} --tumorBam={shortcuts.realigned_output_dir}{sample_1.rstrip()} --bam={shortcuts.realigned_output_dir}{sample_2.rstrip()} --referenceFasta={shortcuts.reference_genome_file} --runDir={shortcuts.manta_output_dir}"
@@ -280,4 +280,4 @@ class DnaSeqAnalysis():
                 misc.create_trackFile(shortcuts.manta_complete)
                 misc.logfile('Manta succesfully created')
         except Exception as e:
-            misc.logfile(f'Error with manta() in dna_seq_analysis.py: {e}')
+            misc.logfile(f'Error with manta() in dna_seq_analysis.py: {e} seconds')
