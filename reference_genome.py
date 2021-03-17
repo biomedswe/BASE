@@ -36,6 +36,9 @@ class ReferenceGenome():
             print(f'Error with download(): {e}')
             input("Press any key to continue...")
 
+<<<<<<< HEAD
+    
+=======
     #---------------------------------------------------------------------------
     def index_genome_rna(self, choice, filename, misc, shortcuts):
         '''This function indexes either the whole genome or the chromosomes entered'''
@@ -80,3 +83,4 @@ class ReferenceGenome():
         except Exception as e:
             print(f'Error with index_genome_rna: {e}')
             input("Press any key to continue...")
+>>>>>>> 5473b9774558377c381065f090ac58c8cb730510
