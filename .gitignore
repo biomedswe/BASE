@@ -2,3 +2,5 @@ dna_seq
 reference_genome
 rna_seq
 old
+snpEff_genes.txt
+snpEff_summary.html
