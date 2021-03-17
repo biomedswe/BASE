@@ -19,7 +19,8 @@ class Menus():
         self.reference_genome_menu = (['Download reference genome', 'Index reference genome'], "\033[1mSetup reference genome menu\033[0m\n" + "-"*31 + "\nRun the options below in order:", "(leave blank to return to previous menu)")
         self.reference_genome_index_menu = (['Index whole genome', 'Index parts of genome'], "\033[1mIndex reference genome menu\033[0m\n" + "-"*28, "(leave blank to return to main menu)")
         self.dna_menu = (['Setup reference genome', 'Create library list file', 'Run analysis'], "\033[1mDNA-analysis menu\033[0m\n" + "-"*31 + "\nRun the options below in order:", "(leave blank to return to main menu)")
-        self.rna_menu = (['Index reference genome', 'Map reads to the genome'], "\033[1m""RNA-analysis menu""\033[0m\n" + "-"*31 + "\nRun the options below in order:", "(leave blank to return to main menu)")
+        self.rna_menu = (['Index reference genome', 'Map reads to reference genome'], "\033[1m""RNA-analysis menu""\033[0m\n" + "-"*31 + "\nRun the options below in order:", "(leave blank to return to main menu)")
+        self.map_reads_menu = (['Map reads to whole genome', 'Map reads to parts of genome'], "\033[1mMap reads to reference genome menu\033[0m\n" + "-"*28, "(leave blank to return to main menu)")
 
 
 

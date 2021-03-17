@@ -13,6 +13,7 @@ class SetupAnaconda3():
 
         if misc.step_allready_completed(shortcuts.anaconda_setup_complete):
             misc.logfile('Installation of Anaconda3 allready completed, skips step...')
+
         else:
             misc.clear_screen()
             misc.logfile("Download and install Anaconda3\n\n\nDownloading and installing anaconda from https://repo.anaconda.com/archive/Anaconda3-2020.11-Linux-x86_64.sh...")
@@ -35,6 +36,7 @@ class SetupAnaconda3():
             # create file that shows if anaconda3 is allready installed
             misc.create_trackFile(shortcuts.anaconda_setup_complete)
             misc.logfile(f'Trackfile {shortcuts.anaconda_setup_complete} succesfully created')
+
             print("\nAnaconda is now successfully installed\n\n")
             input("The terminal must be restarted for anaconda3 to initialize correctly\n\nPress any key to close the terminal\nThen start it again manually")
             misc.close_terminal()

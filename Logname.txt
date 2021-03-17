@@ -20,3 +20,123 @@
 2021-03-17 22:23:27 - Program starts
 2021-03-17 22:23:37 - Program at main menu
 2021-03-17 22:23:37 - User input: exit program
+2021-03-17 22:50:18 - Program starts
+2021-03-17 22:50:21 - Program at main menu
+2021-03-17 22:50:21 - User input: RNA-analysis
+2021-03-17 22:50:21 - Program at RNA-analysis menu
+2021-03-17 22:50:26 - User input: index reference genome
+2021-03-17 22:50:27 - Program at reference genome index menu
+2021-03-17 22:50:27 - User input: return to previous menu
+2021-03-17 22:50:27 - Program at RNA-analysis menu
+2021-03-17 22:50:28 - Program at RNA-analysis menu
+2021-03-17 22:50:30 - User input: index reference genome
+2021-03-17 22:50:32 - Program at reference genome index menu
+2021-03-17 22:50:32 - User input: return to previous menu
+2021-03-17 22:50:32 - Program at RNA-analysis menu
+2021-03-17 22:50:58 - User input: index reference genome
+2021-03-17 22:51:01 - Program at reference genome index menu
+2021-03-17 22:51:01 - User input: return to previous menu
+2021-03-17 22:51:01 - Program at RNA-analysis menu
+2021-03-17 22:51:11 - Program at RNA-analysis menu
+2021-03-17 22:53:32 - User input: return to previous menu
+2021-03-17 22:53:32 - Program at main menu
+2021-03-17 22:53:32 - User input: exit program
+2021-03-17 22:53:34 - Program starts
+2021-03-17 22:53:35 - Program at main menu
+2021-03-17 22:53:35 - User input: RNA-analysis
+2021-03-17 22:53:35 - Program at RNA-analysis menu
+2021-03-17 22:53:41 - Program at RNA-analysis menu
+2021-03-17 22:53:44 - User input: return to previous menu
+2021-03-17 22:53:45 - Program at main menu
+2021-03-17 22:53:45 - User input (main menu): 2. DNA-analysis
+2021-03-17 22:53:45 - Program at DNA-analysis menu
+2021-03-17 22:53:48 - tumor_id 2064-01 and normal_id 987-02 correctly validated
+2021-03-17 22:53:48 - Burrown Wheeler aligner allready completed, skips step...
+2021-03-17 22:53:48 - Validate bam allready completed, skips step...
+2021-03-17 22:53:48 - Picard sortsam allready completed, skips step...
+2021-03-17 22:53:48 - Picard MergeSamFiles allready completed, skips step...
+2021-03-17 22:53:48 - Picard MarkDuplicates allready completed, skips step...
+2021-03-17 22:53:48 - GATK LeftAlignIndels allready completed, skips step...
+2021-03-17 22:53:48 - GATK haplotypeCaller allready completed, skips step...
+2021-03-17 22:53:48 - Delly allready completed, skips step...
+2021-03-17 22:53:48 - Manta allready completed, skips step...
+2021-03-17 22:53:48 - All steps in DNA-Seq analysis pipeline completed succesfully in: 0.001 min 
+
+2021-03-17 22:53:52 - Program starts
+2021-03-17 22:53:53 - Program at main menu
+2021-03-17 22:53:53 - User input (main menu): 2. DNA-analysis
+2021-03-17 22:53:53 - Program at DNA-analysis menu
+2021-03-17 22:53:54 - User input (DNA-analysis menu): 1. Setup reference genome 
+2021-03-17 22:53:54 - Program at Setup reference genome menu
+2021-03-17 22:53:59 - User input: return to previous menu
+2021-03-17 22:53:59 - Program at DNA-analysis menu
+2021-03-17 22:54:01 - User input (DNA-analysis menu): 1. Setup reference genome 
+2021-03-17 22:54:01 - Program at Setup reference genome menu
+2021-03-17 22:54:02 - User input (setup reference genome menu): 1. Download reference genome
+2021-03-17 22:54:02 - Reference genome and annotation file allready downloaded.
+2021-03-17 22:54:02 - Program at Setup reference genome menu
+2021-03-17 22:54:04 - User input (setup reference genome menu): 1.Index reference genome
+2021-03-17 22:54:04 - Burrows Wheeler aligner index allready completed, skips step...
+2021-03-17 22:54:04 - Program at Setup reference genome menu
+2021-03-17 22:54:04 - User input: return to previous menu
+2021-03-17 22:54:04 - Program at DNA-analysis menu
+2021-03-17 22:54:07 - Program at DNA-analysis menu
+2021-03-17 22:54:09 - User input (DNA-analysis menu): 1. Setup reference genome 
+2021-03-17 22:54:09 - Program at Setup reference genome menu
+2021-03-17 22:54:10 - User input (setup reference genome menu): 1.Index reference genome
+2021-03-17 22:54:10 - Burrows Wheeler aligner index allready completed, skips step...
+2021-03-17 22:54:10 - Program at Setup reference genome menu
+2021-03-17 22:54:13 - User input (setup reference genome menu): 1.Index reference genome
+2021-03-17 22:54:13 - Burrows Wheeler aligner index allready completed, skips step...
+2021-03-17 22:54:13 - Program at Setup reference genome menu
+2021-03-17 22:54:14 - User input: return to previous menu
+2021-03-17 22:54:14 - Program at DNA-analysis menu
+2021-03-17 22:54:23 - tumor_id 2064-01 and normal_id 987-02 correctly validated
+2021-03-17 22:54:23 - Burrown Wheeler aligner allready completed, skips step...
+2021-03-17 22:54:23 - Validate bam allready completed, skips step...
+2021-03-17 22:54:23 - Picard sortsam allready completed, skips step...
+2021-03-17 22:54:23 - Picard MergeSamFiles allready completed, skips step...
+2021-03-17 22:54:23 - Picard MarkDuplicates allready completed, skips step...
+2021-03-17 22:54:23 - GATK LeftAlignIndels allready completed, skips step...
+2021-03-17 22:54:23 - GATK haplotypeCaller allready completed, skips step...
+2021-03-17 22:54:23 - Delly allready completed, skips step...
+2021-03-17 22:54:23 - Manta allready completed, skips step...
+2021-03-17 22:54:23 - All steps in DNA-Seq analysis pipeline completed succesfully in: 0.001 min 
+
+2021-03-17 22:54:25 - Program starts
+2021-03-17 22:54:26 - Program at main menu
+2021-03-17 22:54:26 - User input: RNA-analysis
+2021-03-17 22:54:26 - Program at RNA-analysis menu
+2021-03-17 22:54:28 - User input: index reference genome
+2021-03-17 22:54:30 - Program at reference genome index menu
+2021-03-17 22:54:30 - User input: return to previous menu
+2021-03-17 22:54:30 - Program at RNA-analysis menu
+2021-03-17 22:54:37 - Program at RNA-analysis menu
+2021-03-17 22:54:39 - Program at RNA-analysis menu
+2021-03-17 22:55:18 - User input: return to previous menu
+2021-03-17 22:55:18 - Program at main menu
+2021-03-17 22:55:18 - User input: exit program
+2021-03-17 22:55:19 - Program starts
+2021-03-17 22:55:21 - Program at main menu
+2021-03-17 22:55:21 - User input: RNA-analysis
+2021-03-17 22:55:21 - Program at RNA-analysis menu
+2021-03-17 22:55:33 - Program at RNA-analysis menu
+2021-03-17 22:58:46 - Program at RNA-analysis menu
+2021-03-17 22:58:46 - User input: return to previous menu
+2021-03-17 22:58:47 - Program at main menu
+2021-03-17 22:58:47 - User input: exit program
+2021-03-17 22:58:48 - Program starts
+2021-03-17 22:58:50 - Program at main menu
+2021-03-17 22:58:50 - User input: RNA-analysis
+2021-03-17 22:58:50 - Program at RNA-analysis menu
+2021-03-17 22:58:51 - User input: return to previous menu
+2021-03-17 22:58:52 - Program at main menu
+2021-03-17 22:58:52 - User input: RNA-analysis
+2021-03-17 22:58:52 - Program at RNA-analysis menu
+2021-03-17 23:00:00 - Program at RNA-analysis menu
+2021-03-17 23:00:00 - User input: return to previous menu
+2021-03-17 23:00:01 - Program at main menu
+2021-03-17 23:00:01 - User input: exit program
+2021-03-17 23:00:25 - Program starts
+2021-03-17 23:00:27 - Program at main menu
+2021-03-17 23:00:27 - User input: exit program
