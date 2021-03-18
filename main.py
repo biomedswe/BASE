@@ -1,6 +1,7 @@
+
+# coding=utf-8
 # Packages used in script
 from os import getenv, sys, path, listdir, makedirs
-# import subprocess
 import argparse
 from menus import Menus, Misc, Shortcuts
 from rna_seq_analysis import RnaSeqAnalysis
@@ -44,20 +45,19 @@ def main():
 
         # Setyp anaconda3 menu
         if menu_choice == '1':
-            misc.logfile('User input (main menu): 1. Setup anaconda3')
+            misc.logfile('User input: 1. Setup anaconda3')
             anaconda_choice = all_menus.menu(misc, all_menus.anaconda_menu)
 
             if anaconda_choice == '':
-                misc.logfile('User input (Setup anaconda3 menu): (leave blank to return to main menu)')
+                misc.logfile('User input: return to main menu')
                 break
 
             elif anaconda_choice == '1':
-                misc.logfile('User input (Setup anaconda3 menu): 1. Download and install Anaconda3 with python 3.7.6')
-
+                misc.logfile('User input: 1. Download and install Anaconda3 with python 3.7.6')
                 setup.install_anaconda(misc, shortcuts)
 
             elif anaconda_choice == '2':
-                misc.logfile('User input (Setup anaconda3 menu): 2, Set up a new conda environment for DNA and RNA-sequence analysis')
+                misc.logfile('User input: 2, Set up a new conda environment for DNA and RNA-sequence analysis')
                 setup.create_anaconda_environment(misc, shortcuts)
 
 
