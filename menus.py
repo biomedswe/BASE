@@ -7,8 +7,8 @@ logging.basicConfig(filename='Logname.txt', filemode='a', format='%(asctime)s - 
 
 try:
     from Bio import SeqIO
-except Exception as e:
-    print(f'{e}')
+except:
+    pass
 
 
 class Menus():
