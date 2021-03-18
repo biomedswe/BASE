@@ -17,7 +17,7 @@ class SetupAnaconda3():
 
         setup_complete = getenv("HOME")+'/anaconda3/install.complete'
 
-        if if path.isfile(setup_complete):
+        if path.isfile(setup_complete):
             print('Installation of Anaconda3 allready completed, skips step...')
 
         else:
