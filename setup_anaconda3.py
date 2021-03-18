@@ -129,6 +129,6 @@ STAR
 
 def main():
     setup = SetupAnaconda3()
-    setup.install_anaconda(misc)
+    setup.install_anaconda()
 if __name__ == '__main__':
     main()
