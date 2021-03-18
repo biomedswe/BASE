@@ -1,5 +1,7 @@
-from os import sys, path, getenv
-from menus import Misc
+from os import sys, path, getenv, kill, getppid
+import subprocess
+import signal
+
 
 
 class SetupAnaconda3():
@@ -7,7 +9,7 @@ class SetupAnaconda3():
     def __init__(self):
         pass
 
-    def install_anaconda(self, misc):
+    def install_anaconda(self):
         '''This function downloads anaconda via wget and the link-adress to the linux installer from anaconda.com.
            It then installs anaconda and creates an environment with the required software packages.
            Finally creates the directory three in the sequencing_project folder'''
@@ -19,30 +21,29 @@ class SetupAnaconda3():
 
         else:
             misc.clear_screen()
-            misc.logfile("Download and install Anaconda3\n\n\nDownloading and installing anaconda from https://repo.anaconda.com/archive/Anaconda3-2020.11-Linux-x86_64.sh...")
+            print("Download and install Anaconda3\n\n\nDownloading and installing anaconda from https://repo.anaconda.com/archive/Anaconda3-2020.11-Linux-x86_64.sh...")
 
             # download anaconda
             cmd_download = "wget https://repo.anaconda.com/archive/Anaconda3-2020.11-Linux-x86_64.sh -P $HOME"
-            misc.run_command(cmd_download)
-            misc.logfile('Anaconda3 succesfully downloaded')
-
-            # applies read, write and execute permission for all users to the file
-            # cmd_chmod = "chmod a=xrw $HOME/Anaconda3-2020.11-Linux-x86_64.sh"
-            # misc.run_command(cmd_chmod)
-            # misc.logfile('Read, write and execute permission for Anaconda3-2020.11-Linux-x86_64.sh succesfully applied')
+            subprocess.run(cmd_download)
+            print('Anaconda3 succesfully downloaded')
 
             # installs anaconda
             cmd_install = "bash $HOME/Anaconda3-2020.11-Linux-x86_64.sh"
-            misc.run_command(cmd_install)
-            misc.logfile('Anaconda3 succesfully installed')
+            subprocess.run(cmd_install)
+            print('Anaconda3 succesfully installed')
 
             # create file that shows if anaconda3 is allready installed
-            misc.create_trackFile(setup_complete)
-            misc.logfile('Trackfile {0} succesfully created'.format(setup_complete))
+            try:
+                with open(setup_complete, 'w'):
+                    pass
+            except Exception as e:
+                print('Error with index_genome_dna: {0}'.format(e))
+            print('Trackfile {0} succesfully created'.format(setup_complete))
 
-            misc.logfile("\nAnaconda is now successfully installed\n\n")
+            print("\nAnaconda is now successfully installed\n\n")
             input("The terminal must be restarted for anaconda3 to initialize correctly\n\nPress any key to close the terminal\nThen start it again manually")
-            misc.close_terminal()
+            kill(getppid(), signal.SIGHUP)
 
     def create_anaconda_environment(self, misc, shortcuts):
         '''This function setups a new anaconda environment with all the packages required for the program to run'''
