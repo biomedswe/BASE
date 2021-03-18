@@ -4,6 +4,7 @@ import signal
 
 
 
+
 class SetupAnaconda3():
 
     def __init__(self):
@@ -128,8 +129,6 @@ STAR
 
 def main():
     setup = SetupAnaconda3()
-    misc = Misc()
-    misc.logfile('Download and install Anaconda3 with python 3.7.6')
     setup.install_anaconda(misc)
 if __name__ == '__main__':
     main()
