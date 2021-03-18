@@ -26,12 +26,12 @@ class SetupAnaconda3():
 
             # download anaconda
             cmd_download = "wget https://repo.anaconda.com/archive/Anaconda3-2020.11-Linux-x86_64.sh -P $HOME"
-            subprocess.run(cmd_download)
+            subprocess.run(cmd_download, shell=True)
             print('Anaconda3 succesfully downloaded')
 
             # installs anaconda
             cmd_install = "bash $HOME/Anaconda3-2020.11-Linux-x86_64.sh"
-            subprocess.run(cmd_install)
+            subprocess.run(cmd_install, shell=True)
             print('Anaconda3 succesfully installed')
 
             # create file that shows if anaconda3 is allready installed
