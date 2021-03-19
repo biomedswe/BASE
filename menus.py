@@ -3,7 +3,7 @@ import signal
 import subprocess
 import time
 import logging
-logging.basicConfig(filename='Logname.txt', filemode='a', format='%(asctime)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S', level=logging.DEBUG)
+logging.basicConfig(filename=getenv("HOME")+'/sequencing_project/Logfile.txt', filemode='a', format='%(asctime)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S', level=logging.DEBUG)
 
 try:
     from Bio import SeqIO
