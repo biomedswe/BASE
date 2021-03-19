@@ -57,6 +57,9 @@ class SetupAnaconda3():
             cmd_install = "bash $HOME/Anaconda3-2020.11-Linux-x86_64.sh"
             self.run_command(cmd_install)
             self.log_to_file('Anaconda3 installed - OK!')
+            # Remove installation file
+            cmd_remove = "rm $HOME/Anaconda3-2020.11-Linux-x86_64.sh"
+            self.run_command(cmd_remove)
             # create file that shows if anaconda3 is allready installed
             self.create_trackFile(setup_complete)
             print("Copy and paste in terminal: \"source $HOME/.bashrc\" to initialize anaconda3")
@@ -146,5 +149,6 @@ STAR
 def main():
     setup = SetupAnaconda3()
     setup.install_anaconda()
+    print(getenv("HOME")+'/Anaconda3-2020.11-Linux-x86_64.sh')
 if __name__ == '__main__':
     main()
