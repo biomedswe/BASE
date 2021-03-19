@@ -20,7 +20,7 @@ class SetupAnaconda3():
         '''This function executes a command and checks if it was executes without errors'''
 
         return_code = subprocess.call(command, shell=True)
-        if return_code.returncode == 0:
+        if return_code == 0:
             return
         else:
             self.log_to_file('\nRun_command() exited without returncode = 0, see shell for more information. Exiting program...')
