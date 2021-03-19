@@ -1,15 +1,41 @@
+# Written to support python 2
 from os import sys, path, getenv, kill, getppid
 import subprocess
 import signal
-
-
-
+import logging
+logging.basicConfig(filename='Logname.txt', filemode='a', format='%(asctime)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S', level=logging.DEBUG)
 
 class SetupAnaconda3():
 
     def __init__(self):
         pass
 
+    #---------------------------------------------------------------------------
+    def log_to_file(self, text):
+        print('\n{0}\n'.format(text))
+        logging.info(text)
+
+    #---------------------------------------------------------------------------
+    def run_command(self, command):
+        '''This function executes a command and checks if it was executes without errors'''
+
+        return_code = self.run_command(command, shell=True)
+        if return_code.returncode == 0:
+            return
+        else:
+            self.log_to_file('\nRun_command() exited without returncode = 0, see shell for more information. Exiting program...')
+            sys.exit()
+
+    #---------------------------------------------------------------------------
+    def create_trackFile(self, file):
+        '''This function creates utput list but also a file after each step as a marker that the step is completed'''
+        try:
+            with open(file, 'w'):
+                self.log_to_file('Trackfile {0} created - OK!'.format(file))
+        except Exception as e:
+            self.log_to_file('Error with create_trackFile() in setup_anaconda3.py: {0}'.format(e))
+
+    #---------------------------------------------------------------------------
     def install_anaconda(self):
         '''This function downloads anaconda via wget and the link-adress to the linux installer from anaconda.com.
            It then installs anaconda and creates an environment with the required software packages.
@@ -18,30 +44,24 @@ class SetupAnaconda3():
         setup_complete = getenv("HOME")+'/anaconda3/install.complete'
 
         if path.isfile(setup_complete):
-            print('Installation of Anaconda3 allready completed, skips step...')
+            self.log_to_file('Installation of Anaconda3 allready completed, skips step...')
 
         else:
-            subprocess.run("clear", shell=True)
-            print("Download and install Anaconda3\n\n\nDownloading and installing anaconda from https://repo.anaconda.com/archive/Anaconda3-2020.11-Linux-x86_64.sh...")
+            self.log_to_file("Download and install Anaconda3\n\n\nDownloading and installing anaconda from https://repo.anaconda.com/archive/Anaconda3-2020.11-Linux-x86_64.sh...")
 
             # download anaconda
             cmd_download = "wget https://repo.anaconda.com/archive/Anaconda3-2020.11-Linux-x86_64.sh -P $HOME"
-            subprocess.run(cmd_download, shell=True)
-            print('Anaconda3 succesfully downloaded')
+            self.run_command(cmd_download)
+            self.log_to_file('Anaconda3 downloaded - OK!')
 
             # installs anaconda
             cmd_install = "bash $HOME/Anaconda3-2020.11-Linux-x86_64.sh"
-            subprocess.run(cmd_install, shell=True)
-            print('Anaconda3 succesfully installed')
+            self.run_command(cmd_install)
+            self.log_to_file('Anaconda3 installed - OK!')
 
             # create file that shows if anaconda3 is allready installed
-            try:
-                with open(setup_complete, 'w'):
-                    pass
-            except Exception as e:
-                print('Error with index_genome_dna: {0}'.format(e))
-            print('Trackfile {0} succesfully created'.format(setup_complete))
-
+            self.create_trackFile(setup_complete)
+            
             print("\nAnaconda is now successfully installed\n\n")
             input("The terminal must be restarted for anaconda3 to initialize correctly\n\nPress any key to close the terminal\nThen start it again manually")
             kill(getppid(), signal.SIGHUP)
