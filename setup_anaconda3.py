@@ -44,7 +44,7 @@ class SetupAnaconda3():
         if path.isfile(setup_complete):
             self.log_to_file('Installation of Anaconda3 allready completed, skips step...')
         else:
-            self.log_to_file("Downloading and installing anaconda from https://repo.anaconda.com/archive/Anaconda3-2020.11-Linux-x86_64.sh...")
+            self.log_to_file("Downloading anaconda from https://repo.anaconda.com/archive/Anaconda3-2020.11-Linux-x86_64.sh...")
             if path.isfile(getenv("HOME")+'Anaconda3-2020.11-Linux-x86_64.sh'):
                 self.log_to_file('Anaconda3-2020.11-Linux-x86_64.sh allready downloaded, skips step...')
                 pass
@@ -59,7 +59,7 @@ class SetupAnaconda3():
             self.log_to_file('Anaconda3 installed - OK!')
             # create file that shows if anaconda3 is allready installed
             self.create_trackFile(setup_complete)
-            print("Copy and paste in terminal: $HOME/source .bashrc to initialize anaconda3")
+            print("Copy and paste in terminal: \"$HOME/source .bashrc\" to initialize anaconda3")
 
 
     def create_anaconda_environment(self, misc, shortcuts):
