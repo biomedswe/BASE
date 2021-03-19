@@ -91,6 +91,8 @@ def main():
                     time.sleep(3)
 
                     dna_analysis.alignment(misc, shortcuts)
+                    print('ran dna analysis')
+                    time.sleep(3)
                     if dna_analysis.validate_bam_dna(misc, shortcuts):
                         dna_analysis.sort(options, misc, shortcuts)
                         dna_analysis.merge(options, misc, shortcuts)
