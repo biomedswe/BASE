@@ -64,16 +64,16 @@ class Menus():
                     for line, library_id in enumerate(files, start=1):
                         if choice == '1': # Single-end sequencing
                             if options.tumor_id in library_id:
-                                out_file.write(f"{options.tumor_id} {library_id[:-6]} {library_id} N/A\n")
+                                out_file.write(f"{options.tumor_id} {library_id[:-9]} {library_id} N/A\n")
                             else:
-                                out_file.write(f"{options.normal_id} {library_id[:-6]} {library_id} N/A\n")
+                                out_file.write(f"{options.normal_id} {library_id[:-9]} {library_id} N/A\n")
 
                         elif choice == '2': # Paired-end sequencing
                             if (line % 2) == 1: # not even
                                 if options.tumor_id in library_id:
-                                    out_file.write(f"{options.tumor_id} {library_id[:-8]} {library_id} ")
+                                    out_file.write(f"{options.tumor_id} {library_id[:-11]} {library_id} ")
                                 else:
-                                    out_file.write(f"{options.normal_id} {library_id[:-8]} {library_id} ")
+                                    out_file.write(f"{options.normal_id} {library_id[:-11]} {library_id} ")
                             else: # even
                                 out_file.write(f"{library_id}\n")
                 misc.log_to_file('Library list file created!')
