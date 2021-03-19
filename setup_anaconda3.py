@@ -1,7 +1,6 @@
 # Written to support python 2
-from os import sys, path, getenv, kill, getppid
+from os import sys, path, getenv
 import subprocess
-import signal
 import logging
 logging.basicConfig(filename='Logname.txt', filemode='a', format='%(asctime)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S', level=logging.DEBUG)
 
@@ -42,29 +41,22 @@ class SetupAnaconda3():
            Finally creates the directory three in the sequencing_project folder'''
 
         setup_complete = getenv("HOME")+'/anaconda3/install.complete'
-
         if path.isfile(setup_complete):
             self.log_to_file('Installation of Anaconda3 allready completed, skips step...')
-
         else:
-            self.log_to_file("Download and install Anaconda3\n\n\nDownloading and installing anaconda from https://repo.anaconda.com/archive/Anaconda3-2020.11-Linux-x86_64.sh...")
-
+            self.log_to_file("Downloading and installing anaconda from https://repo.anaconda.com/archive/Anaconda3-2020.11-Linux-x86_64.sh...")
             # download anaconda
             cmd_download = "wget https://repo.anaconda.com/archive/Anaconda3-2020.11-Linux-x86_64.sh -P $HOME"
             self.run_command(cmd_download)
             self.log_to_file('Anaconda3 downloaded - OK!')
-
             # installs anaconda
             cmd_install = "bash $HOME/Anaconda3-2020.11-Linux-x86_64.sh"
             self.run_command(cmd_install)
             self.log_to_file('Anaconda3 installed - OK!')
-
             # create file that shows if anaconda3 is allready installed
             self.create_trackFile(setup_complete)
+            print("Copy and paste in terminal: $HOME/source .bashrc to initialize anaconda3"
 
-            print("\nAnaconda is now successfully installed\n\n")
-            input("The terminal must be restarted for anaconda3 to initialize correctly\n\nPress any key to close the terminal\nThen start it again manually")
-            kill(getppid(), signal.SIGHUP)
 
     def create_anaconda_environment(self, misc, shortcuts):
         '''This function setups a new anaconda environment with all the packages required for the program to run'''
