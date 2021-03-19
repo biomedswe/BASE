@@ -19,7 +19,7 @@ class SetupAnaconda3():
     def run_command(self, command):
         '''This function executes a command and checks if it was executes without errors'''
 
-        return_code = self.run_command(command, shell=True)
+        return_code = subprocess.call(command, shell=True)
         if return_code.returncode == 0:
             return
         else:
@@ -61,7 +61,7 @@ class SetupAnaconda3():
 
             # create file that shows if anaconda3 is allready installed
             self.create_trackFile(setup_complete)
-            
+
             print("\nAnaconda is now successfully installed\n\n")
             input("The terminal must be restarted for anaconda3 to initialize correctly\n\nPress any key to close the terminal\nThen start it again manually")
             kill(getppid(), signal.SIGHUP)
