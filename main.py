@@ -32,36 +32,20 @@ def main():
     ref_genome = ReferenceGenome()
     setup = SetupAnaconda3()
 
-
-    # main menu is shown untill choice is left blank
     misc.logfile('Program starts')
     while True:
-        # Clears screen and prints main menu
+        # Main menu
         menu_choice = all_menus.menu(misc, all_menus.main_menu)
         misc.logfile('Program at main menu')
         if menu_choice == "":
             misc.logfile("User input: exit program")
             break
 
-        # Setyp anaconda3 menu
+        # Setyp anaconda3 environment
         if menu_choice == '1':
-            misc.logfile('User input: 1. Setup anaconda3')
-            anaconda_choice = all_menus.menu(misc, all_menus.anaconda_menu)
-
-            if anaconda_choice == '':
-                misc.logfile('User input: return to main menu')
-                break
-
-            elif anaconda_choice == '1':
-                misc.logfile('User input: 1. Download and install Anaconda3 with python 3.7.6')
-                setup.install_anaconda(misc, shortcuts)
-
-            elif anaconda_choice == '2':
-                misc.logfile('User input: 2, Set up a new conda environment for DNA and RNA-sequence analysis')
-                setup.create_anaconda_environment(misc, shortcuts)
-
-
-
+            misc.logfile('User input: 1, Setup anaconda3 environment')
+            setup.create_anaconda_environment(misc, shortcuts)
+        
         # Dna analysis menu
         elif menu_choice == '2':
             misc.logfile('User input (main menu): 2. DNA-analysis')
