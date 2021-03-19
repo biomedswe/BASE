@@ -45,7 +45,7 @@ class SetupAnaconda3():
             self.log_to_file('Installation of Anaconda3 allready completed, skips step...')
         else:
             self.log_to_file("Downloading anaconda from https://repo.anaconda.com/archive/Anaconda3-2020.11-Linux-x86_64.sh...")
-            if path.isfile(getenv("HOME")+'Anaconda3-2020.11-Linux-x86_64.sh'):
+            if path.isfile(getenv("HOME")+'/Anaconda3-2020.11-Linux-x86_64.sh'):
                 self.log_to_file('Anaconda3-2020.11-Linux-x86_64.sh allready downloaded, skips step...')
                 pass
             else:
