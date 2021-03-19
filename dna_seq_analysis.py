@@ -27,6 +27,7 @@ class DnaSeqAnalysis():
 
             if misc.step_allready_completed(allready_completed):
                 misc.logfile('Burrows Wheeler aligner index allready completed, skips step...')
+                time.sleep(2.5)
             else:
                 misc.logfile('\nStarting: indexing with bwa index')
                 misc.clear_screen()

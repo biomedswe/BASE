@@ -12,6 +12,7 @@ class ReferenceGenome():
         try:
             if misc.step_allready_completed(shortcuts.reference_genome_file) and misc.step_allready_completed(shortcuts.annotation_gtf_file):
                 misc.logfile('Reference genome and annotation file allready downloaded.')
+                time.sleep(2.5)
             else:
                 misc.clear_screen()
                 print("\033[1mDownload reference genome\033[0m\n\n")

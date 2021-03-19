@@ -45,35 +45,34 @@ def main():
         if menu_choice == '1':
             misc.logfile('User input: 1, Setup anaconda3 environment')
             setup.create_anaconda_environment(misc, shortcuts)
-        
+
         # Dna analysis menu
         elif menu_choice == '2':
-            misc.logfile('User input (main menu): 2. DNA-analysis')
+            misc.logfile('User input: 2. DNA-analysis')
             while True:
                 misc.logfile('Program at DNA-analysis menu')
                 dna_menu_choice = all_menus.menu(misc, all_menus.dna_menu)
                 if dna_menu_choice == '':
-                    misc.logfile('User input: return to previous menu')
+                    misc.logfile('User input: return to main menu')
                     break
 
                 # Setup reference genome
                 elif dna_menu_choice == '1':
-                    misc.logfile('User input (DNA-analysis menu): 1. Setup reference genome ')
+                    misc.logfile('User input: 1. Setup reference genome ')
                     while True:
                         misc.logfile('Program at Setup reference genome menu')
                         reference_genome_menu_choice = all_menus.menu(misc, all_menus.reference_genome_menu)
 
                         if reference_genome_menu_choice == '':
-                            misc.logfile('User input: return to previous menu')
+                            misc.logfile('User input: return to DNA-analysis menu')
                             break
                         # Download reference genome
                         elif reference_genome_menu_choice == '1':
-                            misc.logfile('User input (setup reference genome menu): 1. Download reference genome')
+                            misc.logfile('User input: 1. Download reference genome')
                             ref_genome.download(misc, shortcuts)
                         # Index reference genome
                         elif reference_genome_menu_choice == '2':
-                            misc.logfile('User input (setup reference genome menu): 1.Index reference genome')
-
+                            misc.logfile('User input: 2. Index reference genome')
                             dna_analysis.index_genome_dna(misc, shortcuts)
 
                 # Create library list file
