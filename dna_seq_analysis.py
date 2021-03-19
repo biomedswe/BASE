@@ -26,26 +26,26 @@ class DnaSeqAnalysis():
             allready_completed = shortcuts.bwa_index_whole_reference_genome_complete
 
             if misc.step_allready_completed(allready_completed):
-                misc.logfile('Burrows Wheeler aligner index allready completed, skips step...')
+                misc.log_to_file('Burrows Wheeler aligner index allready completed, skips step...')
                 time.sleep(2.5)
             else:
-                misc.logfile('\nStarting: indexing with bwa index')
+                misc.log_to_file('\nStarting: indexing with bwa index')
                 misc.clear_screen()
                 print("\033[1mIndex whole genome\033[0m\n")
                 cmd_bwa_index = f"bwa index {ref_file}"
                 misc.run_command(cmd_bwa_index, None)
-                misc.logfile('Bwa index completed without errors')
+                misc.log_to_file('Bwa index completed without errors')
                 cmd_create_dict = f"samtools dict {ref_file} -o {ref_file[:-2]}dict"
                 misc.run_command(cmd_create_dict, None)
-                misc.logfile('Creating .dict with samtools dict completed without errors')
+                misc.log_to_file('Creating .dict with samtools dict completed without errors')
                 cmd_create_fai = f"samtools faidx {ref_file} -o {ref_file}.fai"
                 misc.run_command(cmd_create_fai, None)
-                misc.logfile('Creating .fai with samtools faidx completed without errors')
+                misc.log_to_file('Creating .fai with samtools faidx completed without errors')
                 misc.create_trackFile(allready_completed)
-                misc.logfile('Indexing reference genome successfully completed!\n')
+                misc.log_to_file('Indexing reference genome successfully completed!\n')
 
         except Exception as e:
-            misc.logfile(f'Error with index_genome_dna() in dna_seq_analysis.py: {e}')
+            misc.log_to_file(f'Error with index_genome_dna() in dna_seq_analysis.py: {e}')
             input("Press any key to continue")
 
     #---------------------------------------------------------------------------
@@ -75,10 +75,10 @@ class DnaSeqAnalysis():
                         cmd_validate = f"picard ValidateSamFile -I {shortcuts.aligned_output_dir}{sample.rstrip()} -MODE SUMMARY"
                         misc.run_command(cmd_validate, None)
                         misc.create_trackFile(shortcuts.validate_bam_complete)
-                    misc.logfile('Picard ValidateSamFile succesfully completed')
+                    misc.log_to_file('Picard ValidateSamFile succesfully completed')
                     return True
         except Exception as e:
-            misc.logfile(f'Error with validate_bam_dna() in dna_seq_analysis.py: {e}')
+            misc.log_to_file(f'Error with validate_bam_dna() in dna_seq_analysis.py: {e}')
 
     #---------------------------------------------------------------------------
     def alignment(self, misc, shortcuts):
@@ -88,11 +88,11 @@ class DnaSeqAnalysis():
         # Whole genome alignment
         try:
             if misc.step_allready_completed(shortcuts.alignedFiles_list):
-                misc.logfile('Burrown Wheeler aligner allready completed, skips step...')
+                misc.log_to_file('Burrown Wheeler aligner allready completed, skips step...')
                 pass
             else:
                 threads = multiprocessing.cpu_count() - 2
-                misc.logfile(f'\nStarting: Burrows Wheeler aligner\nUsing {threads} of {threads+2}')
+                misc.log_to_file(f'\nStarting: Burrows Wheeler aligner\nUsing {threads} of {threads+2}')
 
                 with open(f'{shortcuts.dna_seq_dir}library.txt', 'r') as fastq_list:
                     for line in fastq_list.readlines():
@@ -104,9 +104,9 @@ class DnaSeqAnalysis():
                             cmd_bwa = f"bwa mem -R {read_group_header} {shortcuts.reference_genome_file} {shortcuts.dna_reads_dir}/{read1} {shortcuts.dna_reads_dir}/{read2} -t {threads} | samtools view -bS -o {shortcuts.aligned_output_dir}{library_id}.bam"
                         misc.run_command(cmd_bwa, None)
                         self.create_outputList_dna(shortcuts.alignedFiles_list, f"{library_id}.bam")
-                misc.logfile('Burrows Wheeler aligner succesfully completed')
+                misc.log_to_file('Burrows Wheeler aligner succesfully completed')
         except Exception as e:
-            misc.logfile(f'Error with def alignment() in dna_seq_analysis.py: {e}')
+            misc.log_to_file(f'Error with def alignment() in dna_seq_analysis.py: {e}')
 
     #---------------------------------------------------------------------------
     def sort(self, options, misc, shortcuts):
@@ -116,9 +116,9 @@ class DnaSeqAnalysis():
 
         try:
             if misc.step_allready_completed(shortcuts.sortedFiles_list):
-                misc.logfile('Picard sortsam allready completed, skips step...')
+                misc.log_to_file('Picard sortsam allready completed, skips step...')
             else:
-                misc.logfile("\nStarting: sorting SAM/BAM files using Picard Sortsam")
+                misc.log_to_file("\nStarting: sorting SAM/BAM files using Picard Sortsam")
 
 
                 # Empty strings to store the output
@@ -135,18 +135,18 @@ class DnaSeqAnalysis():
                             normal_sort_str += f" -I {shortcuts.sorted_output_dir}{sample}".rstrip()
                     write_to_file = tumor_sort_str.lstrip() + '\n' + normal_sort_str.lstrip()
                     self.create_outputList_dna(shortcuts.sortedFiles_list, write_to_file)
-                misc.logfile('Picard SortSam succesfully completed')
+                misc.log_to_file('Picard SortSam succesfully completed')
         except Exception as e:
-            misc.logfile(f'Error with sort() in dna_seq_analysis.py: {e}')
+            misc.log_to_file(f'Error with sort() in dna_seq_analysis.py: {e}')
     #---------------------------------------------------------------------------
     def merge(self, options, misc, shortcuts):
         '''This function merges all the input files in the sortedFiles_list to one output file'''
 
         try:
             if misc.step_allready_completed(shortcuts.mergedFiles_list):
-                misc.logfile('Picard MergeSamFiles allready completed, skips step...')
+                misc.log_to_file('Picard MergeSamFiles allready completed, skips step...')
             else:
-                misc.logfile("\nStarting: merging SAM/BAM files using Picard MergeSamFiles")
+                misc.log_to_file("\nStarting: merging SAM/BAM files using Picard MergeSamFiles")
 
                 with open(shortcuts.sortedFiles_list, 'r') as list:
                     for sample in list.readlines():
@@ -158,9 +158,9 @@ class DnaSeqAnalysis():
                             cmd_merge = f"picard MergeSamFiles {sample.rstrip()} -O {shortcuts.merged_output_dir}{options.normal_id}.bam"
                             misc.run_command(cmd_merge, None)
                             self.create_outputList_dna(shortcuts.mergedFiles_list, f"{options.normal_id}.bam")
-                misc.logfile('Picard MergeSamFiles succesfully completed')
+                misc.log_to_file('Picard MergeSamFiles succesfully completed')
         except Exception as e:
-            misc.logfile(f'Error with merge() in dna_seq_analysis.py: {e}')
+            misc.log_to_file(f'Error with merge() in dna_seq_analysis.py: {e}')
 
     #---------------------------------------------------------------------------
     def remove_duplicate(self, misc, shortcuts):
@@ -168,18 +168,18 @@ class DnaSeqAnalysis():
 
         try:
             if misc.step_allready_completed(shortcuts.removeDuplicates_list):
-                misc.logfile('Picard MarkDuplicates allready completed, skips step...')
+                misc.log_to_file('Picard MarkDuplicates allready completed, skips step...')
             else:
-                misc.logfile("\nStarting: removing duplicates in SAM/BAM files using Picard MarkDuplicates")
+                misc.log_to_file("\nStarting: removing duplicates in SAM/BAM files using Picard MarkDuplicates")
 
                 with open(shortcuts.mergedFiles_list, 'r') as list:
                     for sample in list.readlines():
                         cmd_rd = f"picard MarkDuplicates -I {shortcuts.merged_output_dir}{sample.rstrip()} -O {shortcuts.removed_duplicates_output_dir}{sample.rstrip()} -M {shortcuts.removed_duplicates_output_dir}marked_dup_metrics_{sample.rstrip()}.txt"
                         misc.run_command(cmd_rd, None)
                         self.create_outputList_dna(shortcuts.removeDuplicates_list, f"{sample.rstrip()}")
-                misc.logfile('Picard MarkDuplicates succesfully completed')
+                misc.log_to_file('Picard MarkDuplicates succesfully completed')
         except Exception as e:
-            misc.logfile(f'Error with remove_duplicate() in dna_seq_analysis.py: {e}')
+            misc.log_to_file(f'Error with remove_duplicate() in dna_seq_analysis.py: {e}')
 
     #---------------------------------------------------------------------------
     def realign(self, misc, shortcuts):
@@ -187,9 +187,9 @@ class DnaSeqAnalysis():
 
         try:
             if misc.step_allready_completed(shortcuts.realignedFiles_list):
-                misc.logfile('GATK LeftAlignIndels allready completed, skips step...')
+                misc.log_to_file('GATK LeftAlignIndels allready completed, skips step...')
             else:
-                misc.logfile("\nStarting: realigning SAM/BAM files using GATK LeftAlignIndels")
+                misc.log_to_file("\nStarting: realigning SAM/BAM files using GATK LeftAlignIndels")
 
                 with open(shortcuts.removeDuplicates_list, 'r') as list:
                     for sample in list.readlines():
@@ -198,18 +198,18 @@ class DnaSeqAnalysis():
                         cmd_leftAlignIndels = f"gatk LeftAlignIndels -R {shortcuts.reference_genome_file} -I {shortcuts.removed_duplicates_output_dir}{sample.rstrip()} -O {shortcuts.realigned_output_dir}{sample.rstrip()}"
                         misc.run_command(cmd_leftAlignIndels, None)
                         self.create_outputList_dna(shortcuts.realignedFiles_list, f"{sample.rstrip()}")
-                misc.logfile('gatk LeftAlignIndels succesfully compl')
+                misc.log_to_file('gatk LeftAlignIndels succesfully compl')
         except Exception as e:
-            misc.logfile(f'Error with realign() in dna_seq_analysis.py: {e}')
+            misc.log_to_file(f'Error with realign() in dna_seq_analysis.py: {e}')
 
     #---------------------------------------------------------------------------
     def gatk_haplotype(self, options, misc, shortcuts):
 
         try:
             if misc.step_allready_completed(shortcuts.haplotypecaller_complete):
-                misc.logfile('GATK haplotypeCaller allready completed, skips step...')
+                misc.log_to_file('GATK haplotypeCaller allready completed, skips step...')
             else:
-                misc.logfile("\nStarting: looking for SNV's using GATK HaplotypeCaller")
+                misc.log_to_file("\nStarting: looking for SNV's using GATK HaplotypeCaller")
 
                 with open(shortcuts.realignedFiles_list, 'r') as list:
                     sample_1, sample_2 = list.readlines()
@@ -234,9 +234,9 @@ class DnaSeqAnalysis():
                     > {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het_annotated.vcf'''
                     misc.run_command(cmd_annotate, None)
                     misc.create_trackFile(shortcuts.haplotypecaller_complete)
-                misc.logfile('gatk HaplotypeCaller succesfully completed, vcf file is filtered and annotated!')
+                misc.log_to_file('gatk HaplotypeCaller succesfully completed, vcf file is filtered and annotated!')
         except Exception as e:
-            misc.logfile(f'Error with gatk_haplotype in dna_seq_analysis.py: {e}')
+            misc.log_to_file(f'Error with gatk_haplotype in dna_seq_analysis.py: {e}')
 
     #---------------------------------------------------------------------------
     def delly(self, options, misc, shortcuts):
@@ -244,9 +244,9 @@ class DnaSeqAnalysis():
 
         try:
             if misc.step_allready_completed(shortcuts.delly_complete):
-                misc.logfile('Delly allready completed, skips step...')
+                misc.log_to_file('Delly allready completed, skips step...')
             else:
-                misc.logfile("\nStarting: looking for somatic SNV's using delly")
+                misc.log_to_file("\nStarting: looking for somatic SNV's using delly")
 
                 with open(shortcuts.realignedFiles_list, 'r') as list:
                     sample_1, sample_2 = list.readlines()
@@ -263,9 +263,9 @@ class DnaSeqAnalysis():
                 cmd_convert = f"bcftools view {shortcuts.delly_output_dir}delly_filter.bcf > {shortcuts.delly_output_dir}delly_filter.vcf"
                 misc.run_command(cmd_convert, None)
                 misc.create_trackFile(shortcuts.delly_complete)
-                misc.logfile('Delly succesfully completed')
+                misc.log_to_file('Delly succesfully completed')
         except Exception as e:
-            misc.logfile(f'Error with delly() in dna_seq_analysis.py: {e}')
+            misc.log_to_file(f'Error with delly() in dna_seq_analysis.py: {e}')
 
         #---------------------------------------------------------------------------
     def manta(self, misc, shortcuts):
@@ -273,9 +273,9 @@ class DnaSeqAnalysis():
 
         try:
             if misc.step_allready_completed(shortcuts.manta_complete):
-                misc.logfile('Manta allready completed, skips step...')
+                misc.log_to_file('Manta allready completed, skips step...')
             else:
-                misc.logfile("\nStarting: looking for somatic SNV's using manta")
+                misc.log_to_file("\nStarting: looking for somatic SNV's using manta")
 
                 with open(shortcuts.realignedFiles_list, 'r') as list:
                     sample_1, sample_2 = list.readlines()
@@ -288,6 +288,6 @@ class DnaSeqAnalysis():
                     cmd_filter = f'bcftools view -i \'FILTER=="PASS"\' {shortcuts.manta_variants_dir}somaticSV.vcf > {shortcuts.manta_variants_dir}somaticSV_PASS.vcf'
                     misc.run_command(cmd_filter, 'Filtering of passed SNV\'s')
                 misc.create_trackFile(shortcuts.manta_complete)
-                misc.logfile('Manta succesfully created')
+                misc.log_to_file('Manta succesfully created')
         except Exception as e:
-            misc.logfile(f'Error with manta() in dna_seq_analysis.py: {e} seconds')
+            misc.log_to_file(f'Error with manta() in dna_seq_analysis.py: {e} seconds')

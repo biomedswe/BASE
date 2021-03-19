@@ -86,17 +86,17 @@ class SetupAnaconda3():
             shortcuts.GRCh38_dir,
             shortcuts.star_index_dir_whole_genome
             ])
-            misc.logfile('Succesfully created directory tree')
+            misc.log_to_file('Succesfully created directory tree')
 
             if path.isdir(getenv("HOME")+'/anaconda3/envs/sequencing'):
-                misc.logfile("Environment allready exists, do you want to owerwrite?\n")
+                misc.log_to_file("Environment allready exists, do you want to owerwrite?\n")
                 if not misc.confirm_choice():
-                    misc.logfile('User input: No')
+                    misc.log_to_file('User input: No')
                     return
 
             misc.clear_screen()
-            misc.logfile('User input: Yes')
-            misc.logfile('''\033[1mSet up a new conda environment for DNA and RNA-sequence analysis.\033[0m
+            misc.log_to_file('User input: Yes')
+            misc.log_to_file('''\033[1mSet up a new conda environment for DNA and RNA-sequence analysis.\033[0m
 
 Creating a new environment named \"Secuencing\"...
 
@@ -120,12 +120,12 @@ STAR
 
             cmd_env = "conda create -n sequencing -c bioconda bedtools bcftools biopython bwa gatk4 picard python=3.7.6 samtools=1.9 star pandas vcfpy scipy snpeff"
             misc.run_command(cmd_env)
-            misc.logfile('{0} - OK!'.format(cmd_env))
+            misc.log_to_file('{0} - OK!'.format(cmd_env))
 
             # Delly in bioconda didn't work so I had to do a workaround
             cmd_download_delly = "wget https://github.com/dellytools/delly/releases/download/v0.8.7/delly_v0.8.7_linux_x86_64bit -P $HOME/anaconda3/envs/sequencing/bin"
             misc.run_command(cmd_download_delly)
-            misc.logfile('Download delly - OK!')
+            misc.log_to_file('Download delly - OK!')
             cmd_chmod_delly = "chmod a=xrw $HOME/anaconda3/envs/sequencing/bin/delly_v0.8.7_linux_x86_64bit"
             misc.run_command(cmd_chmod_delly)
             cmd_mv = "mv $HOME/anaconda3/envs/sequencing/bin/delly_v0.8.7_linux_x86_64bit $HOME/anaconda3/envs/sequencing/bin/delly"
@@ -144,7 +144,7 @@ STAR
             input("Press any key to exit program...")
             sys.exit()
         except Exception as e:
-            misc.logfile('Error with create_anaconda_environment(): {0}'.format(e))
+            misc.log_to_file('Error with create_anaconda_environment(): {0}'.format(e))
 
 
 def main():

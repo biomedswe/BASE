@@ -54,17 +54,20 @@ class Menus():
             print("2. Paired end sequencing\n")
             choice = misc.validate_choice(2, "(leave blank to return to DNA-analysis menu)")
             if choice == "":
+                misc.log_to_file('User input: return to DNA-analysis menu')
                 return ""
             elif misc.confirm_choice():
+                misc.log_to_file(f'User input: confirmed choice: {choice}')
                 misc.clear_screen()
                 files = listdir(shortcuts.dna_reads_dir)
-                with open("dna_seq/library.txt", 'w') as out_file:
+                with open(f"{shortcuts.dna_seq_dir}library.txt", 'w') as out_file:
                     for line, library_id in enumerate(files, start=1):
                         if choice == '1': # Single-end sequencing
                             if options.tumor_id in library_id:
                                 out_file.write(f"{options.tumor_id} {library_id[:-6]} {library_id} N/A\n")
                             else:
                                 out_file.write(f"{options.normal_id} {library_id[:-6]} {library_id} N/A\n")
+
                         elif choice == '2': # Paired-end sequencing
                             if (line % 2) == 1: # not even
                                 if options.tumor_id in library_id:
@@ -73,9 +76,10 @@ class Menus():
                                     out_file.write(f"{options.normal_id} {library_id[:-8]} {library_id} ")
                             else: # even
                                 out_file.write(f"{library_id}\n")
-                print("Library list file created!\nNow that you have created your list library file, you can run the analysis!\n")
+                misc.log_to_file('Library list file created!')
+                print("\nNow that you have created your list library file, you can run the analysis!\n")
                 input("Press any key to return to DNA-analysis menu...")
-                return ''
+                return
             else:
                 misc.clear_screen()
                 continue
@@ -109,8 +113,8 @@ class Misc():
         pass
 
     #---------------------------------------------------------------------------
-    def logfile(self, text):
-        print(f'\n{text}\n')
+    def log_to_file(self, text):
+        print(f'\n{text}')
         logging.info(text)
 
     #---------------------------------------------------------------------------
@@ -119,14 +123,14 @@ class Misc():
 
         try:
             if options.tumor_id and options.normal_id in "".join(listdir(shortcuts.dna_reads_dir)):
-                self.logfile(f"tumor_id {options.tumor_id} and normal_id {options.normal_id} correctly validated")
+                self.log_to_file(f"tumor_id {options.tumor_id} and normal_id {options.normal_id} correctly validated")
 
             else:
-                self.logfile(f'You have entered a tumor_id: {options.tumor_id} and/or normal_id: {options.normal_id} that is not present in your reads.\nPlease restart program and verify that you have typed in the right \"clinical_id\" for both tumor (-t) and normal (-n)!')
+                self.log_to_file(f'You have entered a tumor_id: {options.tumor_id} and/or normal_id: {options.normal_id} that is not present in your reads.\nPlease restart program and verify that you have typed in the right \"clinical_id\" for both tumor (-t) and normal (-n)!')
                 input("Press any key to exit program")
                 sys.exit()
         except Exception as e:
-            self.logfile(f'Error with validate_id() in menus.py: {e}')
+            self.log_to_file(f'Error with validate_id() in menus.py: {e}')
 
 
 
