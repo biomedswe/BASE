@@ -50,6 +50,7 @@ class SetupAnaconda3():
                 pass
             else:
                 # download anaconda
+                print('doesnt exist')
                 cmd_download = "wget https://repo.anaconda.com/archive/Anaconda3-2020.11-Linux-x86_64.sh -P $HOME"
                 self.run_command(cmd_download)
                 self.log_to_file('Anaconda3 downloaded - OK!')
