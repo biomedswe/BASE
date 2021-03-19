@@ -26,12 +26,13 @@ Let Anaconda3 install at default location
 ```
 
 ### 3. Run main.py and follow instructions in program
+Type the following in the shell:
 ```
-python3 main.py (after navigating to $HOME/sequencing_project)
+python3 main.py -t <tumor clinical id> -n <normal clinical id> (after navigating to $HOME/sequencing_project)
 ```
 or
 ```
-python3 $HOME/sequencing_project/main.py
+python3 $HOME/sequencing_project/main.py -t <tumor clinical id> -n <normal clinical id>
 ```
 
 ### 4. Copy your DNA-seq/RNA-seq reads into the right folders
