@@ -84,15 +84,8 @@ def main():
                 elif dna_menu_choice == '3':
                     start = timeit.default_timer()
                     misc.clear_screen()
-                    print('clear_screen')
-                    time.sleep(3)
                     misc.validate_id(options, shortcuts)
-                    print('validated_id')
-                    time.sleep(3)
-
                     dna_analysis.alignment(misc, shortcuts)
-                    print('ran dna analysis')
-                    time.sleep(3)
                     if dna_analysis.validate_bam_dna(misc, shortcuts):
                         dna_analysis.sort(options, misc, shortcuts)
                         dna_analysis.merge(options, misc, shortcuts)
