@@ -19,8 +19,13 @@ Open bash (Unix shell) and type the following:
 git clone https://github.com/biomedswe/sequencing_project.git $HOME/sequencing_project
 ```
 
-### 2. Run main.py and follow instructions in program
-Please note that you must have python installed first.
+### 2. Run setup_anaconda3.py and follow instructions in program
+Please note that you must have python: ≥ 2.7 installed first.
+```
+Install at default location
+```
+
+### 3. Run main.py and follow instructions in program
 ```
 python3 main.py (after navigating to $HOME/sequencing_project)
 ```
@@ -29,7 +34,7 @@ or
 python3 $HOME/sequencing_project/main.py
 ```
 
-### 3. Copy your DNA-seq/RNA-seq reads into the right folders
+### 4. Copy your DNA-seq/RNA-seq reads into the right folders
 
 DNA-seq reads: (in fasta/fastq format) into $HOME/sequencing_project/dna_seq/reads 
 
