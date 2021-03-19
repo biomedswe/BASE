@@ -59,7 +59,7 @@ class SetupAnaconda3():
             self.log_to_file('Anaconda3 installed - OK!')
             # create file that shows if anaconda3 is allready installed
             self.create_trackFile(setup_complete)
-            print("Copy and paste in terminal: \"$HOME/source .bashrc\" to initialize anaconda3")
+            print("Copy and paste in terminal: \"source $HOME/.bashrc\" to initialize anaconda3")
 
 
     def create_anaconda_environment(self, misc, shortcuts):
