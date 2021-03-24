@@ -201,13 +201,20 @@ class Misc():
     #---------------------------------------------------------------------------
     def run_command(self, command):
         '''This function executes a command and checks if it was executes without errors'''
+        try:
+            return_code = subprocess.run(command, shell=True)
+            if return_code.returncode == 0:
+                return 0
+            else:
+                self.log_to_file('Process ended with returncode != 0, see logfile.txt for more information. Exiting program...')
+                self.log_to_file(return_code.stderr)
+                self.log_to_file(return_code.stdout)
+                sys.exit()
+        except Exception as e:
+            self.log_to_file(f'Error with misc.run_command() in menus.py: {e}')
+            input("Press any key to continue")
 
-        return_code = subprocess.run(command, shell=True)
-        if return_code.returncode == 0:
-            return
-        else:
-            print('\nAn error has occured, see shell for more information. Exiting program...')
-            sys.exit()
+
 
     #---------------------------------------------------------------------------
     def choose_chromosomes_to_index(self, menus, shortcuts):
@@ -301,15 +308,15 @@ class Shortcuts():
         self.GRCh38_dir = f"{self.reference_genome_dir}GRCh38/"
 
         # Shortcuts to output folders in DNA sequencing analysis
-        self.aligned_output_dir = f"{self.dna_seq_dir}Aligned/"
-        self.sorted_output_dir = f"{self.dna_seq_dir}Sorted/"
-        self.merged_output_dir = f"{self.dna_seq_dir}Merged/"
-        self.removed_duplicates_output_dir = f"{self.dna_seq_dir}Removed_duplicates/"
-        self.realigned_output_dir = f"{self.dna_seq_dir}Realigned/"
-        self.haplotypecaller_output_dir = f"{self.dna_seq_dir}GATK_haplotypecaller/"
-        self.delly_output_dir = f"{self.dna_seq_dir}Delly/"
-        self.manta_output_dir = f"{self.dna_seq_dir}Manta/"
-        self.manta_variants_dir = f"{self.dna_seq_dir}Manta/results/variants/"
+        self.aligned_output_dir = f"{self.dna_seq_dir}aligned/"
+        self.sorted_output_dir = f"{self.dna_seq_dir}sorted/"
+        self.merged_output_dir = f"{self.dna_seq_dir}merged/"
+        self.removed_duplicates_output_dir = f"{self.dna_seq_dir}removed_duplicates/"
+        self.realigned_output_dir = f"{self.dna_seq_dir}realigned/"
+        self.haplotypecaller_output_dir = f"{self.dna_seq_dir}gatk_haplotypecaller/"
+        self.delly_output_dir = f"{self.dna_seq_dir}delly/"
+        self.manta_output_dir = f"{self.dna_seq_dir}manta/"
+        self.manta_variants_dir = f"{self.dna_seq_dir}manta/results/variants/"
 
         # Shortcuts to files used in DNA sequencing analysis
         self.reference_genome_file = f"{self.GRCh38_dir}GRCh38.p13.genome.fa"

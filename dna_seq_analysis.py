@@ -75,7 +75,7 @@ class DnaSeqAnalysis():
                         cmd_validate = f"picard ValidateSamFile -I {shortcuts.aligned_output_dir}{sample.rstrip()} -MODE SUMMARY"
                         misc.run_command(cmd_validate)
                         misc.create_trackFile(shortcuts.validate_bam_complete)
-                    misc.log_to_file('Picard ValidateSamFile succesfully completed')
+                    misc.log_to_file('Picard ValidateSamFile completed - OK!')
                     return True
         except Exception as e:
             misc.log_to_file(f'Error with validate_bam_dna() in dna_seq_analysis.py: {e}')
@@ -104,7 +104,7 @@ class DnaSeqAnalysis():
                             cmd_bwa = f"bwa mem -R {read_group_header} {shortcuts.reference_genome_file} {shortcuts.dna_reads_dir}/{read1} {shortcuts.dna_reads_dir}/{read2} -t {threads} | samtools view -bS -o {shortcuts.aligned_output_dir}{library_id}.bam"
                         misc.run_command(cmd_bwa)
                         self.create_outputList_dna(shortcuts.alignedFiles_list, f"{library_id}.bam")
-                misc.log_to_file('Burrows Wheeler aligner succesfully completed')
+                misc.log_to_file('Burrows Wheeler aligner completed - OK!')
         except Exception as e:
             misc.log_to_file(f'Error with def alignment() in dna_seq_analysis.py: {e}')
             input('press any key to exit')
@@ -129,14 +129,18 @@ class DnaSeqAnalysis():
                 with open(shortcuts.alignedFiles_list, 'r') as list:
                     for sample in list.readlines():
                         cmd_sortsam = f"picard SortSam -I {shortcuts.aligned_output_dir}{sample.rstrip()} -O {shortcuts.sorted_output_dir}{sample.rstrip()} -SORT_ORDER coordinate --TMP_DIR $PWD"
-                        misc.run_command(cmd_sortsam)
+                        return_code = misc.run_command(cmd_sortsam)
                         if options.tumor_id in sample:
                             tumor_sort_str += f" -I {shortcuts.sorted_output_dir}{sample}".rstrip()
                         else:
                             normal_sort_str += f" -I {shortcuts.sorted_output_dir}{sample}".rstrip()
                     write_to_file = tumor_sort_str.lstrip() + '\n' + normal_sort_str.lstrip()
                     self.create_outputList_dna(shortcuts.sortedFiles_list, write_to_file)
-                misc.log_to_file('Picard SortSam succesfully completed')
+                misc.log_to_file('Picard SortSam completed - OK!')
+                if return_code == 0:
+                    cmd_remove_aligned_files = f'rm {shortcuts.aligned_output_dir}*.bam'
+                    misc.run_command(cmd_remove_aligned_files)
+                    misc.log_to_file('Aligned BAM files removed')
         except Exception as e:
             misc.log_to_file(f'Error with sort() in dna_seq_analysis.py: {e}')
             input('press any key to exit')
@@ -154,13 +158,17 @@ class DnaSeqAnalysis():
                     for sample in list.readlines():
                         if options.tumor_id in sample:
                             cmd_merge = f"picard MergeSamFiles {sample.rstrip()} -O {shortcuts.merged_output_dir}{options.tumor_id}.bam"
-                            misc.run_command(cmd_merge)
+                            return_code = misc.run_command(cmd_merge)
                             self.create_outputList_dna(shortcuts.mergedFiles_list, f"{options.tumor_id}.bam")
                         else:
                             cmd_merge = f"picard MergeSamFiles {sample.rstrip()} -O {shortcuts.merged_output_dir}{options.normal_id}.bam"
-                            misc.run_command(cmd_merge)
+                            return_code = misc.run_command(cmd_merge)
                             self.create_outputList_dna(shortcuts.mergedFiles_list, f"{options.normal_id}.bam")
-                misc.log_to_file('Picard MergeSamFiles succesfully completed')
+                misc.log_to_file('Picard MergeSamFiles completed - OK!')
+                if return_code == 0:
+                    cmd_remove_sorted_files = f'rm {shortcuts.sorted_output_dir}*.bam'
+                    misc.run_command(cmd_remove_sorted_files)
+                    misc.log_to_file('Sorted BAM files removed')
         except Exception as e:
             misc.log_to_file(f'Error with merge() in dna_seq_analysis.py: {e}')
             input('press any key to exit')
@@ -178,9 +186,13 @@ class DnaSeqAnalysis():
                 with open(shortcuts.mergedFiles_list, 'r') as list:
                     for sample in list.readlines():
                         cmd_rd = f"picard MarkDuplicates -I {shortcuts.merged_output_dir}{sample.rstrip()} -O {shortcuts.removed_duplicates_output_dir}{sample.rstrip()} -M {shortcuts.removed_duplicates_output_dir}marked_dup_metrics_{sample.rstrip()}.txt"
-                        misc.run_command(cmd_rd)
+                        return_code = misc.run_command(cmd_rd)
                         self.create_outputList_dna(shortcuts.removeDuplicates_list, f"{sample.rstrip()}")
-                misc.log_to_file('Picard MarkDuplicates succesfully completed')
+                misc.log_to_file('Picard MarkDuplicates completed - OK!')
+                if return_code == 0:
+                    cmd_remove_merged_files = f'rm {shortcuts.merged_output_dir}*.bam'
+                    misc.run_command(cmd_remove_merged_files)
+                    misc.log_to_file('Merged BAM files removed')
         except Exception as e:
             misc.log_to_file(f'Error with remove_duplicate() in dna_seq_analysis.py: {e}')
             input('press any key to exit')
@@ -200,9 +212,9 @@ class DnaSeqAnalysis():
                         cmd_index = f"samtools index {shortcuts.removed_duplicates_output_dir}{sample.rstrip()}"
                         misc.run_command(cmd_index)
                         cmd_leftAlignIndels = f"gatk LeftAlignIndels -R {shortcuts.reference_genome_file} -I {shortcuts.removed_duplicates_output_dir}{sample.rstrip()} -O {shortcuts.realigned_output_dir}{sample.rstrip()}"
-                        misc.run_command(cmd_leftAlignIndels)
+                        return_code = misc.run_command(cmd_leftAlignIndels)
                         self.create_outputList_dna(shortcuts.realignedFiles_list, f"{sample.rstrip()}")
-                misc.log_to_file('gatk LeftAlignIndels succesfully compl')
+                misc.log_to_file('gatk LeftAlignIndels completed - OK!')
         except Exception as e:
             misc.log_to_file(f'Error with realign() in dna_seq_analysis.py: {e}')
             input('press any key to exit')
