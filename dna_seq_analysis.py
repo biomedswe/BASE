@@ -5,6 +5,7 @@ import argparse
 import csv
 import multiprocessing
 import time
+import timeit
 import logging
 logging.basicConfig(filename='Logname.txt', filemode='a', format='%(asctime)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S', level=logging.DEBUG)
 
@@ -89,10 +90,10 @@ class DnaSeqAnalysis():
         try:
             if misc.step_allready_completed(shortcuts.alignedFiles_list):
                 misc.log_to_file('Burrown Wheeler aligner allready completed, skips step...')
-                pass
             else:
+                start = timeit.default_timer()
                 threads = multiprocessing.cpu_count() - 2
-                misc.log_to_file(f'\nStarting: Burrows Wheeler aligner\nUsing {threads} of {threads+2}')
+                misc.log_to_file(f'\nStarting: Burrows Wheeler aligner\nUsing {threads} out of {threads+2} available threads')
 
                 with open(f'{shortcuts.dna_seq_dir}library.txt', 'r') as fastq_list:
                     for line in fastq_list.readlines():
@@ -102,9 +103,11 @@ class DnaSeqAnalysis():
                             cmd_bwa = f"1: bwa mem -R {read_group_header} {shortcuts.reference_genome_file} {shortcuts.dna_reads_dir}/{read1} -t {threads} | samtools view -bS -o {shortcuts.aligned_output_dir}{library_id}.bam" # samtools view converts SAM to BAM
                         else: # paired-end
                             cmd_bwa = f"bwa mem -R {read_group_header} {shortcuts.reference_genome_file} {shortcuts.dna_reads_dir}/{read1} {shortcuts.dna_reads_dir}/{read2} -t {threads} | samtools view -bS -o {shortcuts.aligned_output_dir}{library_id}.bam"
-                        misc.run_command(cmd_bwa)
+                        # misc.run_command(cmd_bwa)
                         self.create_outputList_dna(shortcuts.alignedFiles_list, f"{library_id}.bam")
-                misc.log_to_file('Burrows Wheeler aligner completed - OK!')
+                end = timeit.default_timer()
+                elapsed_time = end-start
+                misc.log_to_file(f'Burrows Wheeler aligner succesfully completed in {elapsed_time/60:.1g} min')
         except Exception as e:
             misc.log_to_file(f'Error with def alignment() in dna_seq_analysis.py: {e}')
             input('press any key to exit')
