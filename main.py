@@ -96,7 +96,7 @@ def main():
                         dna_analysis.manta(misc, shortcuts)
                         end = timeit.default_timer()
                         elapsed_time = end-start
-                        misc.log_to_file("All steps in DNA-Seq analysis pipeline completed succesfully in: {0:.1g} min \n".format(elapsed_time/60))
+                        misc.log_to_file(f"All steps in DNA-Seq analysis pipeline completed succesfully in: {elapsed_time/60:.1g} min")
                         sys.exit()
 
         # Rna analysis menu
