@@ -77,11 +77,13 @@ def main():
 
                 # Create library list file
                 elif dna_menu_choice == '2':
+                    misc.log_to_file('User input: 2. Create library list file')
                     misc.clear_screen()
                     all_menus.build_library_dna_menu(options, misc, shortcuts)
 
                 # Run dna analysis
                 elif dna_menu_choice == '3':
+                    misc.log_to_file('User input: 3. Run analysis')
                     start = timeit.default_timer()
                     misc.clear_screen()
                     misc.validate_id(options, shortcuts)
