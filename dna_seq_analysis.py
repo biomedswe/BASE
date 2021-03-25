@@ -188,7 +188,7 @@ class DnaSeqAnalysis():
 
                 with open(shortcuts.mergedFiles_list, 'r') as list:
                     for sample in list.readlines():
-                        cmd_rd = f"picard MarkDuplicates -I {shortcuts.merged_output_dir}{sample.rstrip()} -O {shortcuts.removed_duplicates_output_dir}{sample.rstrip()} -M {shortcuts.removed_duplicates_output_dir}marked_dup_metrics_{sample.rstrip()}.txt"
+                        cmd_rd = f"picard MarkDuplicates -I {shortcuts.merged_output_dir}{sample.rstrip()} -O {shortcuts.removed_duplicates_output_dir}{sample.rstrip()} -M {shortcuts.removed_duplicates_output_dir}marked_dup_metrics_{sample.rstrip()}.txt --TMP_DIR {shortcuts.removed_duplicates_output_dir}/tmp"
                         return_code = misc.run_command(cmd_rd)
                         self.create_outputList_dna(shortcuts.removeDuplicates_list, f"{sample.rstrip()}")
                 misc.log_to_file('Picard MarkDuplicates completed - OK!')
