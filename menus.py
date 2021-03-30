@@ -14,7 +14,7 @@ except:
 class Menus():
 
 
-    def __init__(self):
+    def __init__(self, misc):
         try:
             self.main_menu = (['Setup Anaconda3 environment', 'DNA-analysis', 'RNA-analysis'], "\033[1mMain menu\033[0m\n" + "-"*31 + "\nRun the options below in order:", "(leave blank to exit program)")
             self.reference_genome_menu = (['Download reference genome', 'Index reference genome'], "\033[1mSetup reference genome menu\033[0m\n" + "-"*31 + "\nRun the options below in order:", "(leave blank to return to previous menu)")
@@ -28,7 +28,7 @@ class Menus():
 
 
     #---------------------------------------------------------------------------
-    def info_script(self):
+    def info_script(self, misc):
         '''Prints information about the creator of the program'''
         try:
             print( "\033[1m""Biomedswe Allele-specific expression analyser pipeline (BASEAP) v.1.0. 2021\n" "\033[0m")
@@ -41,15 +41,15 @@ class Menus():
             sys.exit()
 
     #---------------------------------------------------------------------------
-    def menu(self, misc, choices):
+    def menu(self, misc, options):
         '''This functions creates a general menu with n choices'''
         try:
             misc.clear_screen()
-            self.info_script()
+            self.info_script(misc)
             print(choices[1], "\n")
-            for i, choice in enumerate(choices[0], start=1):
-                print(f'{i}. {choice}')
-            return misc.validate_choice(len(choices[0]), choices[2])
+            for i, option in enumerate(options[0], start=1):
+                print(f'{i}. {option}')
+            return misc.validate_choice(len(options[0]), options[2])
         except Exception as e:
             misc.log_to_file(f'Error with Menus.menu() in menus.py: {e}. Exiting program...')
             sys.exit()
