@@ -24,7 +24,7 @@ def main():
     options = parser.parse_args() # all arguments will be passed to the functions
     filename = None
     # hur göra här? options måste med i shortcuts
-    all_menus = Menus()
+    all_menus = Menus(misc)
     misc = Misc()
     shortcuts = Shortcuts(options)
     rna_analysis = RnaSeqAnalysis()
