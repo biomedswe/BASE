@@ -238,8 +238,8 @@ class DnaSeqAnalysis():
     def gatk_haplotype(self, options, misc, shortcuts):
 
         try:
-            if misc.step_allready_completed(shortcuts.haplotypecaller_complete):
-                misc.log_to_file('GATK haplotypeCaller allready completed, skips step...')
+            if misc.step_allready_completed(f'{shortcuts.haplotypecaller_output_dir}{options.tumor_id}.vcf'):
+                misc.log_to_file('GATK haplotypeCaller step 1 (snv calling) allready completed, skips step...')
             else:
                 start = timeit.default_timer()
                 misc.log_to_file("\nStarting: looking for SNV's using GATK HaplotypeCaller")
@@ -250,30 +250,82 @@ class DnaSeqAnalysis():
                         cmd_call = f"gatk HaplotypeCaller -R {shortcuts.reference_genome_file} -I {shortcuts.realigned_output_dir}{sample_1.rstrip()} -I {shortcuts.realigned_output_dir}{sample_2.rstrip()} -O {shortcuts.haplotypecaller_output_dir}{options.tumor_id}.vcf -L {options.intervals}"
                     else:
                         cmd_call = f"gatk HaplotypeCaller -R {shortcuts.reference_genome_file} -I {shortcuts.realigned_output_dir}{sample_1.rstrip()} -I {shortcuts.realigned_output_dir}{sample_2.rstrip()} -O {shortcuts.haplotypecaller_output_dir}{options.tumor_id}.vcf"
-                    misc.run_command(cmd_call)
-
-                    # Remove all reads with read depth less than 10, selects only snps, exludes normal samples
-                    cmd_filter_read_depth = f"bcftools view -i 'MIN(FMT/DP)>10' -v snps -s ^987-02 {shortcuts.haplotypecaller_output_dir}{options.tumor_id}.vcf > {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor.vcf"
-                    misc.run_command(cmd_filter_read_depth)
-
-                    # select heterozygous genotype, excludes GT=1/2
-                    cmd_filter_het = f"bcftools view -g het -e 'GT=\"1/2\"' {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor.vcf > {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het.vcf"
-                    misc.run_command(cmd_filter_het)
-                    cmd_indexFeatureFile = f"gatk IndexFeatureFile -I {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het.vcf"
-                    misc.run_command(cmd_indexFeatureFile)
-
-                    # Annotates vcf file
-                    cmd_annotate = f'''java -Xmx4g -jar $HOME/anaconda3/envs/sequencing/share/snpeff-5.0-0/snpEff.jar \\
-                    -v GRCh38.99 -canon -noInteraction -noNextProt -noMotif -strict \\
-                    -onlyProtein {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het.vcf \\
-                    > {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het_annotated.vcf'''
-                    misc.run_command(cmd_annotate)
-                    misc.create_trackFile(shortcuts.haplotypecaller_complete)
-                end = timeit.default_timer()
-                elapsed_time = end-start
-                misc.log_to_file(f'gatk HaplotypeCaller succesfully completed with vcf file filter and annotated in {elapsed_time/60:.1g} min')
+                    if misc.run_command(cmd_call):
+                        end = timeit.default_timer()
+                        misc.log_to_file(f"\n gatk HaplotypeCaller step 1 (snv calling) completed in {end-start/3600:.1g} hours - OK!")
+                    else:
+                        cmd_remove_vcf = (f'rm {shortcuts.haplotypecaller_output_dir}{options.tumor_id}.vcf')
+                        misc.run_command(cmd_remove_vcf)
+                        misc.log_to_file("\nIncomplete vcf file removed - ERROR!")
+                        sys.exit()
         except Exception as e:
-            misc.log_to_file(f'Error with gatk_haplotype in dna_seq_analysis.py: {e}')
+            misc.log_to_file(f'Error with gatk_haplotype step 1 (snv calling) in dna_seq_analysis.py: {e}')
+            input('press any key to exit')
+
+        try:
+            if misc.step_allready_completed(f'{shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor.vcf'):
+                misc.log_to_file('GATK haplotypeCaller step 2 (remove all reads with read depth less than 10, selects only snps, exludes normal samples) allready completed, skips step...')
+            else:
+                # Remove all reads with read depth less than 10, selects only snps, exludes normal samples
+                cmd_filter_read_depth = f"bcftools view -i 'MIN(FMT/DP)>10' -v snps -s ^987-02 {shortcuts.haplotypecaller_output_dir}{options.tumor_id}.vcf > {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor.vcf"
+                if misc.run_command(cmd_filter_read_depth):
+                    end = timeit.default_timer()
+                    misc.log_to_file(f"\n gatk HaplotypeCaller step 2 (remove all reads with read depth less than 10, selects only snps, exludes normal samples) completed in {end-start/3600:.1g} hours - OK!")
+                else:
+                    cmd_remove_vcf = (f'rm {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor.vcf')
+                    misc.run_command(cmd_remove_vcf)
+                    misc.log_to_file("\nIncomplete vcf file removed - ERROR!")
+                    sys.exit()
+        except Exception as e:
+            misc.log_to_file(f'Error with gatk_haplotype step 2 in dna_seq_analysis.py: {e}')
+            input('press any key to exit')
+
+        try:
+            if misc.step_allready_completed(f'{shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het.vcf'):
+                misc.log_to_file('GATK haplotypeCaller step 3 (select heterozygous genotype, excludes GT=1/2) allready completed, skips step...')
+            else:
+                # select heterozygous genotype, excludes GT=1/2
+                cmd_filter_het = f"bcftools view -g het -e 'GT=\"1/2\"' {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor.vcf > {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het.vcf"
+                if misc.run_command(cmd_filter_het):
+                    end = timeit.default_timer()
+                    misc.log_to_file(f"\n gatk HaplotypeCaller step 3 (select heterozygous genotype, excludes GT=1/2) completed in {end-start/3600:.1g} hours - OK!")
+                else:
+                    cmd_remove_vcf = (f'rm {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het.vcf')
+                    misc.run_command(cmd_remove_vcf)
+                    misc.log_to_file("\nIncomplete vcf file removed - ERROR!")
+                    sys.exit()
+        except Exception as e:
+            misc.log_to_file(f'Error with gatk_haplotype step 3 (select heterozygous genotype, excludes GT=1/2) in dna_seq_analysis.py: {e}')
+            input('press any key to exit')
+
+        try:
+            cmd_indexFeatureFile = f"gatk IndexFeatureFile -I {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het.vcf"
+            misc.run_command(cmd_indexFeatureFile)
+        except Exception as e:
+            misc.log_to_file(f'Error with gatk_haplotype step 4 (IndexFeatureFile) in dna_seq_analysis.py: {e}')
+            input('press any key to exit')
+
+        try:
+            if misc.step_allready_completed(f'{shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het_annotated.vcf'):
+                misc.log_to_file('GATK haplotypeCaller step 5 (annotate vcf file) allready completed, skips step...')
+            else:
+                # Annotate vcf file
+                cmd_annotate = f'''java -Xmx4g -jar $HOME/anaconda3/envs/sequencing/share/snpeff-5.0-0/snpEff.jar \\
+                -v GRCh38.99 -canon -noInteraction -noNextProt -noMotif -strict \\
+                -onlyProtein {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het.vcf \\
+                > {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het_annotated.vcf'''
+                if misc.run_command(cmd_annotate):
+                    end = timeit.default_timer()
+                    misc.log_to_file(f"\n gatk HaplotypeCaller step 5 (annotate vcf file) completed in {end-start/3600:.1g} hours - OK!")
+                else:
+                    cmd_remove_vcf = (f'rm {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het_annotated.vcf')
+                    misc.run_command(cmd_remove_vcf)
+                    misc.log_to_file("\nIncomplete vcf file removed - ERROR!")
+                    sys.exit()
+                end = timeit.default_timer()
+                misc.log_to_file(f'gatk HaplotypeCaller succesfully completed with vcf file filtered and annotated in {elapsed_time/3600:.1g} min')
+        except Exception as e:
+            misc.log_to_file(f'Error with gatk_haplotype step 5 (annotate vcf file) in dna_seq_analysis.py: {e}')
             input('press any key to exit')
 
     #---------------------------------------------------------------------------

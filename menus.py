@@ -251,10 +251,10 @@ class Misc():
             return_code = subprocess.run(command, shell=True)
             if return_code.returncode == 0:
                 self.log_to_file(f'{command} succesfully completed')
-                return
+                return True
             else:
-                self.log_to_file('Process ended with returncode != 0, see logfile.txt for more information. Exiting program...')
-                sys.exit()
+                self.log_to_file('Process ended with returncode != 0, see logfile.txt for more information.')
+                return False
         except Exception as e:
             self.log_to_file(f'Error with misc.run_command() in menus.py: {e}. Exiting program...')
             sys.exit()
