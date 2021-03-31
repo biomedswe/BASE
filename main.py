@@ -24,8 +24,8 @@ def main():
     options = parser.parse_args() # all arguments will be passed to the functions
     filename = None
     # hur göra här? options måste med i shortcuts
-    all_menus = Menus()
     misc = Misc()
+    all_menus = Menus(misc)
     shortcuts = Shortcuts(options)
     rna_analysis = RnaSeqAnalysis()
     dna_analysis = DnaSeqAnalysis()
@@ -126,8 +126,7 @@ def main():
                         # Index whole genome
                         elif index_reference_genome_choice == '1':
                             misc.log_to_file('User input: Index whole genome')
-                            ref_genome.index_genome_dna(1, None, misc, shortcuts)
-                            ref_genome.index_genome_rna(1, None, misc, shortcuts)
+                            rna_analysis.index_genome_rna(1, None, misc, shortcuts)
 
 
                         # Index parts of genome
