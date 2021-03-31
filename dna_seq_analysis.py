@@ -247,10 +247,10 @@ class DnaSeqAnalysis():
     def gatk_haplotype(self, options, misc, shortcuts):
 
         try:
+            start = timeit.default_timer()
             if misc.step_allready_completed(f'{shortcuts.haplotypecaller_output_dir}{options.tumor_id}.vcf'):
                 misc.log_to_file('GATK haplotypeCaller step 1 (snv calling) allready completed, skips step...')
             else:
-                start = timeit.default_timer()
                 misc.log_to_file("\nStarting: looking for SNV's using GATK HaplotypeCaller")
 
                 with open(shortcuts.realignedFiles_list, 'r') as list:
