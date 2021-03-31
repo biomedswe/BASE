@@ -3,6 +3,7 @@ import signal
 import subprocess
 import time
 import logging
+import timeit
 logging.basicConfig(filename=getenv("HOME")+'/sequencing_project/Logfile.txt', filemode='a', format='%(asctime)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S', level=logging.DEBUG)
 
 try:
@@ -248,12 +249,14 @@ class Misc():
     def run_command(self, command):
         '''This function executes a command and passes return if it was executes without errors, else prints to log and exits program'''
         try:
+            start = timeit.default_timer()
             return_code = subprocess.run(command, shell=True)
             if return_code.returncode == 0:
-                self.log_to_file(f'{command} succesfully completed - OK!')
+                end = timeit.default_timer()
+                self.log_to_file(f'{command} succesfully completed in {end-start/60} minutes - OK!')
                 return True
             else:
-                self.log_to_file('Process ended with returncode != 0, see logfile.txt for more information.')
+                self.log_to_file(f'Process ended with returncode != 0, {command}.')
                 return False
         except Exception as e:
             self.log_to_file(f'Error with misc.run_command() in menus.py: {e}. Exiting program...')
