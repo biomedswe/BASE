@@ -27,7 +27,7 @@ class RnaSeqAnalysis():
             # Index whole genome
             if choice == 1:
                 if misc.step_allready_completed(shortcuts.star_whole_genome_indexing_complete):
-                    misc.logfile('Whole genome indexing allready completed, returning...')
+                    misc.log_to_file('Whole genome indexing allready completed, returning...')
                 else:
                     threads = multiprocessing.cpu_count() - 2
                     cmd_StarIndex = f'''
@@ -37,15 +37,15 @@ class RnaSeqAnalysis():
                     --genomeFastaFiles {shortcuts.reference_genome_file} \\
                     --sjdbGTFfile {shortcuts.annotation_gtf_file}'''
                     misc.run_command(cmd_StarIndex)
-                    misc.logfile('Indexing whole genome with STAR genomeGenerate succesfully completed')
+                    misc.log_to_file('Indexing whole genome with STAR genomeGenerate succesfully completed')
                     misc.create_trackFile(shortcuts.star_whole_genome_indexing_complete)
-                    misc.logfile('Whole genome indexing succesfully completed!\n')
+                    misc.log_to_file('Whole genome indexing succesfully completed!\n')
                     time.sleep(5)
 
             # Index parts of genome
             elif choice == 2:
                     if misc.step_allready_completed(f'{ref_dir}{filename}/star_index/starIndex.complete'):
-                        misc.logfile(f'{filename} genome indexing with star allready completed...')
+                        misc.log_to_file(f'{filename} genome indexing with star allready completed...')
                     else:
                         threads = multiprocessing.cpu_count() - 2
                         cmd_StarIndex = f'''

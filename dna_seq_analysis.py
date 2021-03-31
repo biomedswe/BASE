@@ -1,5 +1,5 @@
 # Packages used in script
-from os import listdir, sys, mkdir, getenv, path
+from os import listdir, sys, mkdir, getenv, path, rename
 import subprocess
 import argparse
 import csv
@@ -44,7 +44,11 @@ class DnaSeqAnalysis():
                 cmd_split_fasta = f"bedtools makewindows -w 10000000 -g {ref_file}.fai > {chunks_dir}chunk.bed"
                 misc.run_command(cmd_split_fasta)
                 cmd_split_bed = f"split -l 1 {chunks_dir}chunk.bed {chunks_dir}chunk.split"
+                misc.run_command(cmd_split_bed)
                 misc.log_to_file('Spliting fa.fai with bedtools makewindows completed - OK!')
+                for i in listdir(chunks_dir):
+                    rename(i, f"{i}.bed")
+
                 misc.create_trackFile(allready_completed)
                 misc.log_to_file('Indexing reference genome successfully completed!\n')
 
