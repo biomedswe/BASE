@@ -322,8 +322,6 @@ class DnaSeqAnalysis():
                     misc.run_command(cmd_remove_vcf)
                     misc.log_to_file("\nIncomplete vcf file removed - ERROR!")
                     sys.exit()
-                end = timeit.default_timer()
-                misc.log_to_file(f'gatk HaplotypeCaller succesfully completed with vcf file filtered and annotated in {end-start/3600:.1g} min')
         except Exception as e:
             misc.log_to_file(f'Error with gatk_haplotype step 5 (annotate vcf file) in dna_seq_analysis.py: {e}')
             input('press any key to exit')
