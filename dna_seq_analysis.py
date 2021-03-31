@@ -33,13 +33,13 @@ class DnaSeqAnalysis():
                 misc.log_to_file('\nStarting: indexing with bwa index')
                 misc.clear_screen()
                 cmd_bwa_index = f"bwa index {ref_file}"
-                # misc.run_command(cmd_bwa_index)
+                misc.run_command(cmd_bwa_index)
                 misc.log_to_file('Bwa index completed - OK!')
                 cmd_create_dict = f"samtools dict {ref_file} -o {ref_file[:-2]}dict"
-                # misc.run_command(cmd_create_dict)
+                misc.run_command(cmd_create_dict)
                 misc.log_to_file('Creating .dict with samtools dict completed - OK!')
                 cmd_create_fai = f"samtools faidx {ref_file} -o {ref_file}.fai"
-                # misc.run_command(cmd_create_fai)
+                misc.run_command(cmd_create_fai)
                 misc.log_to_file('Creating .fai with samtools faidx completed - OK!')
                 cmd_split_fasta = f"bedtools makewindows -w 10000000 -g {ref_file}.fai > {chunks_dir}chunk.bed"
                 misc.run_command(cmd_split_fasta)
