@@ -224,18 +224,6 @@ class Misc():
             sys.exit()
 
     #---------------------------------------------------------------------------
-    def step_allready_completed(self, file):
-        '''This function checks if an analysis step is completed by looking after a created file *.complete'''
-        try:
-            if path.isfile(file):
-                return True
-            else:
-                return False
-        except Exception as e:
-            misc.log_to_file(f'Error with Misc.step_allready_completed() in menus.py: {e}. Exiting program...')
-            sys.exit()
-
-    #---------------------------------------------------------------------------
     def create_trackFile(self, file):
         '''This function creates utput list but also a file after each step as a marker that the step is completed'''
         try:
@@ -246,18 +234,27 @@ class Misc():
             sys.exit()
 
     #---------------------------------------------------------------------------
-    def run_command(self, command):
-        '''This function executes a command and passes return if it was executes without errors, else prints to log and exits program'''
+    def run_command(self, command, text, file):
+        '''This function first calls _step_allready_completed() to check if the step i allready completed.
+        If not, executes a command and passes return and prints to logfile with time taken if it was executes without errors,
+        else prints error to log, removes incomplete file and exits program'''
+
         try:
-            start = timeit.default_timer()
-            return_code = subprocess.run(command, shell=True)
-            if return_code.returncode == 0:
-                end = timeit.default_timer()
-                self.log_to_file(f'{command} succesfully completed in {end-start/60} minutes - OK!')
-                return True
+            if misc._step_allready_completed(f"{file}"):
+                misc.log_to_file(f"{text} allready completed, skips step...")
+                return
             else:
-                self.log_to_file(f'Process ended with returncode != 0, {command}.')
-                return False
+                start = timeit.default_timer()
+                return_code = subprocess.run(command, shell=True)
+                end = timeit.default_timer()
+                if return_code.returncode == 0:
+                    self.log_to_file(f"{text} succesfully completed in {end-start/60} minutes - OK!")
+                    return
+                else:
+                    self.log_to_file(f'Process ended with returncode != 0, {command} - ERROR!')
+                    subprocess.run(f"rm {file}", shell=True)
+                    self.log_to_file(f'Incomplete {file} removed - OK!')
+                    sys.exit()
         except Exception as e:
             self.log_to_file(f'Error with misc.run_command() in menus.py: {e}. Exiting program...')
             sys.exit()
@@ -344,6 +341,18 @@ class Misc():
                 remove(f'{shortcuts.reference_genome_dir}{filename}/{filename}.bed')
         except Exception as e:
             self.log_to_file(f'Error with misc.create_new_gtf() in menus.py: {e}. Exiting program...')
+            sys.exit()
+
+    #---------------------------------------------------------------------------
+    def _step_allready_completed(self, file):
+        '''This function checks if an analysis step is completed by looking after a created file *.complete'''
+        try:
+            if path.isfile(file):
+                return True
+            else:
+                return False
+        except Exception as e:
+            misc.log_to_file(f'Error with Misc.step_allready_completed() in menus.py: {e}. Exiting program...')
             sys.exit()
 
 #-------------------------------------------------------------------------------
