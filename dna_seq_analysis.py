@@ -26,34 +26,27 @@ class DnaSeqAnalysis():
             chunks_dir = shortcuts.GRCh38_chunks_dir
             allready_completed = shortcuts.bwa_index_whole_reference_genome_complete
 
-            if misc.step_allready_completed(allready_completed):
-                misc.log_to_file('Burrows Wheeler aligner index allready completed, skips step...')
-                time.sleep(2.5)
-            else:
-                misc.log_to_file('\nStarting: indexing with bwa index')
-                misc.clear_screen()
-                cmd_bwa_index = f"bwa index {ref_file}"
-                misc.run_command(cmd_bwa_index)
-                misc.log_to_file('Bwa index completed - OK!')
-                cmd_create_dict = f"samtools dict {ref_file} -o {ref_file[:-2]}dict"
-                misc.run_command(cmd_create_dict)
-                misc.log_to_file('Creating .dict with samtools dict completed - OK!')
-                cmd_create_fai = f"samtools faidx {ref_file} -o {ref_file}.fai"
-                misc.run_command(cmd_create_fai)
-                misc.log_to_file('Creating .fai with samtools faidx completed - OK!')
-                cmd_split_fasta = f"bedtools makewindows -w 10000000 -g {ref_file}.fai > {chunks_dir}chunk.bed"
-                misc.run_command(cmd_split_fasta)
-                cmd_split_bed = f"split -l 1 {chunks_dir}chunk.bed {chunks_dir}chunk.split"
-                misc.run_command(cmd_split_bed)
-                misc.log_to_file('Spliting fa.fai with bedtools makewindows completed - OK!')
-                for i in listdir(chunks_dir):
-                    rename(f"{chunks_dir}{i}", f"{chunks_dir}{i}.bed")
-                misc.log_to_file('Renaming chunk.split* > chunk.split*.bed completed - OK!')
-                misc.create_trackFile(allready_completed)
-                misc.log_to_file('Indexing reference genome successfully completed!\n')
+            misc.log_to_file('\nStarting: indexing with bwa index')
+            misc.clear_screen()
+            cmd_bwa_index = f"bwa index {ref_file}"
+            misc.run_command(cmd_bwa_index, "Bwa index", allready_completed)
+
+            cmd_create_dict = f"samtools dict {ref_file} -o {ref_file[:-2]}dict"
+            misc.run_command(cmd_create_dict, "Creating .dict with samtools dict", f"{ref_file[:-2]}dict")
 
 
+            cmd_create_fai = f"samtools faidx {ref_file} -o {ref_file}.fai"
+            misc.run_command(cmd_create_fai, "Creating .fai with samtools faidx", f"{ref_file}.fai")
 
+            cmd_split_fasta = f"bedtools makewindows -w 10000000 -g {ref_file}.fai > {chunks_dir}chunk.bed"
+            misc.run_command(cmd_split_fasta, "Spliting fa.fai with bedtools makewindows", f"{chunks_dir}chunk.bed")
+
+            cmd_split_bed = f"split -l 1 {chunks_dir}chunk.bed {chunks_dir}chunk.split"
+            misc.run_command(cmd_split_bed, "Splitting chunk.bed to one file per line", f"{chunks_dir}chunk.split*")
+            for i in listdir(chunks_dir):
+                rename(f"{chunks_dir}{i}", f"{chunks_dir}{i}.bed")
+            misc.log_to_file('Renaming chunk.split* > chunk.split*.bed completed - OK!')
+            misc.log_to_file('Indexing reference genome successfully completed!\n')
         except Exception as e:
             misc.log_to_file(f'Error with index_genome_dna() in dna_seq_analysis.py: {e}')
             input("Press any key to continue")
@@ -74,19 +67,13 @@ class DnaSeqAnalysis():
            returns True if no errors are found or False if errors are found'''
 
         try:
-            if misc.step_allready_completed(shortcuts.validate_bam_complete):
-                logging.info('Validate bam allready completed, skips step...')
-
+            misc.log_to_file("\nValidating .bam files...\n")
+            with open(shortcuts.alignedFiles_list, 'r') as list:
+                for sample in list.readlines():
+                    cmd_validate = f"picard ValidateSamFile -I {shortcuts.aligned_output_dir}{sample.rstrip()} -MODE SUMMARY"
+                    misc.run_command(cmd_validate, "Picard ValidateSamFile", shortcuts.validate_bam_complete)
+                    misc.create_trackFile(shortcuts.validate_bam_complete)
                 return True
-            else:
-                print("Validating .bam files...\n")
-                with open(shortcuts.alignedFiles_list, 'r') as list:
-                    for sample in list.readlines():
-                        cmd_validate = f"picard ValidateSamFile -I {shortcuts.aligned_output_dir}{sample.rstrip()} -MODE SUMMARY"
-                        misc.run_command(cmd_validate)
-                        misc.create_trackFile(shortcuts.validate_bam_complete)
-                    misc.log_to_file('Picard ValidateSamFile completed - OK!')
-                    return True
         except Exception as e:
             misc.log_to_file(f'Error with validate_bam_dna() in dna_seq_analysis.py: {e}')
 
@@ -247,54 +234,32 @@ class DnaSeqAnalysis():
     def gatk_haplotype(self, options, misc, shortcuts):
 
         try:
-            if misc.step_allready_completed(f'{shortcuts.haplotypecaller_output_dir}{options.tumor_id}.vcf'):
-                misc.log_to_file('GATK haplotypeCaller step 1 (snv calling) allready completed, skips step...')
-            else:
-                misc.log_to_file("\nStarting: looking for SNV's using GATK HaplotypeCaller")
-
-                with open(shortcuts.realignedFiles_list, 'r') as list:
-                    sample_1, sample_2 = list.readlines()
-                    if options.intervals:
-                        cmd_call = f"gatk HaplotypeCaller -R {shortcuts.reference_genome_file} -I {shortcuts.realigned_output_dir}{sample_1.rstrip()} -I {shortcuts.realigned_output_dir}{sample_2.rstrip()} -O {shortcuts.haplotypecaller_output_dir}{options.tumor_id}.vcf -L {options.intervals}"
-                    else:
-                        cmd_call = f"gatk HaplotypeCaller -R {shortcuts.reference_genome_file} -I {shortcuts.realigned_output_dir}{sample_1.rstrip()} -I {shortcuts.realigned_output_dir}{sample_2.rstrip()} -O {shortcuts.haplotypecaller_output_dir}{options.tumor_id}.vcf"
-                    if not misc.run_command(cmd_call):
-                        cmd_remove_vcf = (f'rm {shortcuts.haplotypecaller_output_dir}{options.tumor_id}.vcf')
-                        misc.run_command(cmd_remove_vcf)
-                        misc.log_to_file("\nIncomplete vcf file removed - ERROR!")
-                        sys.exit()
+            misc.log_to_file("\nStarting: looking for SNV's using GATK HaplotypeCaller")
+            with open(shortcuts.realignedFiles_list, 'r') as list:
+                sample_1, sample_2 = list.readlines()
+                if options.intervals:
+                    cmd_call = f"gatk HaplotypeCaller -R {shortcuts.reference_genome_file} -I {shortcuts.realigned_output_dir}{sample_1.rstrip()} -I {shortcuts.realigned_output_dir}{sample_2.rstrip()} -O {shortcuts.haplotypecaller_output_dir}{options.tumor_id}.vcf -L {options.intervals}"
+                else:
+                    cmd_call = f"gatk HaplotypeCaller -R {shortcuts.reference_genome_file} -I {shortcuts.realigned_output_dir}{sample_1.rstrip()} -I {shortcuts.realigned_output_dir}{sample_2.rstrip()} -O {shortcuts.haplotypecaller_output_dir}{options.tumor_id}.vcf"
+                misc.run_command(cmd_call, 'GATK HaplotypeCaller step 1 (snv calling)', f'{shortcuts.haplotypecaller_output_dir}{options.tumor_id}.vcf')
         except Exception as e:
             misc.log_to_file(f'Error with gatk_haplotype step 1 (snv calling) in dna_seq_analysis.py: {e}')
             input('press any key to exit')
             sys.exit()
 
         try:
-            if misc.step_allready_completed(f'{shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor.vcf'):
-                misc.log_to_file('GATK haplotypeCaller step 2 (remove all reads with read depth less than 10, selects only snps, exludes normal samples) allready completed, skips step...')
-            else:
-                # Remove all reads with read depth less than 10, selects only snps, exludes normal samples
-                cmd_filter_read_depth = f"bcftools view -i 'MIN(FMT/DP)>10' -v snps -s ^{options.normal_id} {shortcuts.haplotypecaller_output_dir}{options.tumor_id}.vcf > {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor.vcf"
-                if not misc.run_command(cmd_filter_read_depth):
-                    cmd_remove_vcf = (f'rm {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor.vcf')
-                    misc.run_command(cmd_remove_vcf)
-                    misc.log_to_file("\nIncomplete vcf file removed - ERROR!")
-                    sys.exit()
+            # Remove all reads with read depth less than 10, selects only snps, exludes normal samples
+            cmd_filter_read_depth = f"bcftools view -i 'MIN(FMT/DP)>10' -v snps -s ^{options.normal_id} {shortcuts.haplotypecaller_output_dir}{options.tumor_id}.vcf > {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor.vcf"
+            misc.run_command(cmd_filter_read_depth, "GATK haplotypeCaller step 2 (remove all reads with read depth less than 10, selects only snps, exludes normal samples)", f"{shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor.vcf")
         except Exception as e:
             misc.log_to_file(f'Error with gatk_haplotype step 2 in dna_seq_analysis.py: {e}')
             input('press any key to exit')
             sys.exit()
 
         try:
-            if misc.step_allready_completed(f'{shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het.vcf'):
-                misc.log_to_file('GATK haplotypeCaller step 3 (select heterozygous genotype, excludes GT=1/2) allready completed, skips step...')
-            else:
-                # select heterozygous genotype, excludes GT=1/2
-                cmd_filter_het = f"bcftools view -g het -e 'GT=\"1/2\"' {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor.vcf > {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het.vcf"
-                if not misc.run_command(cmd_filter_het):
-                    cmd_remove_vcf = (f'rm {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het.vcf')
-                    misc.run_command(cmd_remove_vcf)
-                    misc.log_to_file("\nIncomplete vcf file removed - ERROR!")
-                    sys.exit()
+            # select heterozygous genotype, excludes GT=1/2
+            cmd_filter_het = f"bcftools view -g het -e 'GT=\"1/2\"' {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor.vcf > {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het.vcf"
+            misc.run_command(cmd_filter_het, "GATK haplotypeCaller step 3 (select heterozygous genotype, excludes GT=1/2) allready completed", f"{shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het.vcf")
         except Exception as e:
             misc.log_to_file(f'Error with gatk_haplotype step 3 (select heterozygous genotype, excludes GT=1/2) in dna_seq_analysis.py: {e}')
             input('press any key to exit')
@@ -302,26 +267,19 @@ class DnaSeqAnalysis():
 
         try:
             cmd_indexFeatureFile = f"gatk IndexFeatureFile -I {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het.vcf"
-            misc.run_command(cmd_indexFeatureFile)
+            misc.run_command(cmd_indexFeatureFile, "GATK haplotypeCaller step 2 (remove all reads with read depth less than 10, selects only snps, exludes normal samples)", f"{shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het.vcf.idx")
         except Exception as e:
             misc.log_to_file(f'Error with gatk_haplotype step 4 (IndexFeatureFile) in dna_seq_analysis.py: {e}')
             input('press any key to exit')
             sys.exit()
 
         try:
-            if misc.step_allready_completed(f'{shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het_annotated.vcf'):
-                misc.log_to_file('GATK haplotypeCaller step 5 (annotate vcf file) allready completed, skips step...')
-            else:
-                # Annotate vcf file
-                cmd_annotate = f'''java -Xmx4g -jar $HOME/anaconda3/envs/sequencing/share/snpeff-5.0-0/snpEff.jar \\
-                -v GRCh38.99 -canon -noInteraction -noNextProt -noMotif -strict \\
-                -onlyProtein {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het.vcf \\
-                > {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het_annotated.vcf'''
-                if not misc.run_command(cmd_annotate):
-                    cmd_remove_vcf = (f'rm {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het_annotated.vcf')
-                    misc.run_command(cmd_remove_vcf)
-                    misc.log_to_file("\nIncomplete vcf file removed - ERROR!")
-                    sys.exit()
+            # Annotate vcf file
+            cmd_annotate = f'''java -Xmx4g -jar $HOME/anaconda3/envs/sequencing/share/snpeff-5.0-0/snpEff.jar \\
+            -v GRCh38.99 -canon -noInteraction -noNextProt -noMotif -strict \\
+            -onlyProtein {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het.vcf \\
+            > {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het_annotated.vcf'''
+            misc.run_command(cmd_annotate, "GATK haplotypeCaller step 5 (annotate vcf file) allready completed", f"{shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het_annotated.vcf")
         except Exception as e:
             misc.log_to_file(f'Error with gatk_haplotype step 5 (annotate vcf file) in dna_seq_analysis.py: {e}')
             input('press any key to exit')
@@ -335,7 +293,6 @@ class DnaSeqAnalysis():
             if misc.step_allready_completed(shortcuts.delly_complete):
                 misc.log_to_file('Delly allready completed, skips step...')
             else:
-                start = timeit.default_timer()
                 misc.log_to_file("\nStarting: looking for somatic SNV's using delly")
 
                 with open(shortcuts.realignedFiles_list, 'r') as list:
@@ -373,7 +330,6 @@ class DnaSeqAnalysis():
             if misc.step_allready_completed(shortcuts.manta_complete):
                 misc.log_to_file('Manta allready completed, skips step...')
             else:
-                start = timeit.default_timer()
                 misc.log_to_file("\nStarting: looking for somatic SNV's using manta")
 
                 with open(shortcuts.realignedFiles_list, 'r') as list:
@@ -387,9 +343,6 @@ class DnaSeqAnalysis():
                     cmd_filter = f'bcftools view -i \'FILTER=="PASS"\' {shortcuts.manta_variants_dir}somaticSV.vcf > {shortcuts.manta_variants_dir}somaticSV_PASS.vcf'
                     misc.run_command(cmd_filter, 'Filtering of passed SNV\'s')
                 misc.create_trackFile(shortcuts.manta_complete)
-                end = timeit.default_timer()
-                elapsed_time = end-start
-                misc.log_to_file(f'Manta SNV calling succesfully completed in {elapsed_time/60:.1g} min')
         except Exception as e:
-            misc.log_to_file(f'Error with manta() in dna_seq_analysis.py: {e} seconds')
+            misc.log_to_file(f'Error with manta() in dna_seq_analysis.py: {e}')
             input('press any key to exit')
