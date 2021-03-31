@@ -46,7 +46,7 @@ class Menus():
         try:
             misc.clear_screen()
             self.info_script(misc)
-            print(choices[1], "\n")
+            print(options[1], "\n")
             for i, option in enumerate(options[0], start=1):
                 print(f'{i}. {option}')
             return misc.validate_choice(len(options[0]), options[2])
