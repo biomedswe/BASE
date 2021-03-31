@@ -267,7 +267,7 @@ class DnaSeqAnalysis():
                 misc.log_to_file('GATK haplotypeCaller step 2 (remove all reads with read depth less than 10, selects only snps, exludes normal samples) allready completed, skips step...')
             else:
                 # Remove all reads with read depth less than 10, selects only snps, exludes normal samples
-                cmd_filter_read_depth = f"bcftools view -i 'MIN(FMT/DP)>10' -v snps -s ^987-02 {shortcuts.haplotypecaller_output_dir}{options.tumor_id}.vcf > {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor.vcf"
+                cmd_filter_read_depth = f"bcftools view -i 'MIN(FMT/DP)>10' -v snps -s ^{options.normal_id} {shortcuts.haplotypecaller_output_dir}{options.tumor_id}.vcf > {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor.vcf"
                 if misc.run_command(cmd_filter_read_depth):
                     end = timeit.default_timer()
                     misc.log_to_file(f"\n gatk HaplotypeCaller step 2 (remove all reads with read depth less than 10, selects only snps, exludes normal samples) completed in {end-start/3600:.1g} hours - OK!")
