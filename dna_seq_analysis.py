@@ -23,6 +23,7 @@ class DnaSeqAnalysis():
 
         try:
             ref_file = shortcuts.reference_genome_file
+            chunks_dir = shortcuts.GRCh38_chunks_dir
             allready_completed = shortcuts.bwa_index_whole_reference_genome_complete
 
             if misc.step_allready_completed(allready_completed):
@@ -40,9 +41,9 @@ class DnaSeqAnalysis():
                 cmd_create_fai = f"samtools faidx {ref_file} -o {ref_file}.fai"
                 # misc.run_command(cmd_create_fai)
                 misc.log_to_file('Creating .fai with samtools faidx completed - OK!')
-                cmd_split_fasta = f"bedtools makewindows -w 10000000 -g {ref_file}.fai > {self.GRCh38_chunks_dir}chunk.bed"
+                cmd_split_fasta = f"bedtools makewindows -w 10000000 -g {ref_file}.fai > {chunks_dir}chunk.bed"
                 misc.run_command(cmd_split_fasta)
-                cmd_split_bed = f"split -l 1 {self.GRCh38_chunks_dir}chunk.bed {self.GRCh38_chunks_dir}chunk.split"
+                cmd_split_bed = f"split -l 1 {chunks_dir}chunk.bed {chunks_dir}chunk.split"
                 misc.log_to_file('Spliting fa.fai with bedtools makewindows completed - OK!')
                 misc.create_trackFile(allready_completed)
                 misc.log_to_file('Indexing reference genome successfully completed!\n')
