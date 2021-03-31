@@ -84,7 +84,8 @@ class SetupAnaconda3():
             shortcuts.dna_reads_dir,
             shortcuts.star_output_dir,
             shortcuts.GRCh38_dir,
-            shortcuts.star_index_dir_whole_genome
+            shortcuts.star_index_dir_whole_genome,
+            self.GRCh38_chunks_dir
             ])
             misc.log_to_file('Succesfully created directory tree')
 

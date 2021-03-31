@@ -23,7 +23,6 @@ class DnaSeqAnalysis():
 
         try:
             ref_file = shortcuts.reference_genome_file
-            ref_dir = shortcuts.reference_genome_dir
             allready_completed = shortcuts.bwa_index_whole_reference_genome_complete
 
             if misc.step_allready_completed(allready_completed):
@@ -32,18 +31,23 @@ class DnaSeqAnalysis():
             else:
                 misc.log_to_file('\nStarting: indexing with bwa index')
                 misc.clear_screen()
-                print("\033[1mIndex whole genome\033[0m\n")
                 cmd_bwa_index = f"bwa index {ref_file}"
-                misc.run_command(cmd_bwa_index)
-                misc.log_to_file('Bwa index completed without errors')
+                # misc.run_command(cmd_bwa_index)
+                misc.log_to_file('Bwa index completed - OK!')
                 cmd_create_dict = f"samtools dict {ref_file} -o {ref_file[:-2]}dict"
-                misc.run_command(cmd_create_dict)
-                misc.log_to_file('Creating .dict with samtools dict completed without errors')
+                # misc.run_command(cmd_create_dict)
+                misc.log_to_file('Creating .dict with samtools dict completed - OK!')
                 cmd_create_fai = f"samtools faidx {ref_file} -o {ref_file}.fai"
-                misc.run_command(cmd_create_fai)
-                misc.log_to_file('Creating .fai with samtools faidx completed without errors')
+                # misc.run_command(cmd_create_fai)
+                misc.log_to_file('Creating .fai with samtools faidx completed - OK!')
+                cmd_split_fasta = f"bedtools makewindows -w 10000000 -g {ref_file}.fai > {self.GRCh38_chunks_dir}chunk.bed"
+                misc.run_command(cmd_split_fasta)
+                cmd_split_bed = f"split -l 1 {self.GRCh38_chunks_dir}chunk.bed {self.GRCh38_chunks_dir}chunk.split"
+                misc.log_to_file('Spliting fa.fai with bedtools makewindows completed - OK!')
                 misc.create_trackFile(allready_completed)
                 misc.log_to_file('Indexing reference genome successfully completed!\n')
+
+
 
         except Exception as e:
             misc.log_to_file(f'Error with index_genome_dna() in dna_seq_analysis.py: {e}')

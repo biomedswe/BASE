@@ -358,6 +358,7 @@ class Shortcuts():
             self.dna_reads_dir  = f"{self.dna_seq_dir}reads/"
             self.reference_genome_dir = f"{self.sequencing_project_dir}reference_genome/"
             self.GRCh38_dir = f"{self.reference_genome_dir}GRCh38/"
+            self.GRCh38_chunks_dir = f"{self.GRCh38_dir}chunks/"
 
             # Shortcuts to output folders in DNA sequencing analysis
             self.aligned_output_dir = f"{self.dna_seq_dir}aligned/"
