@@ -47,8 +47,7 @@ class DnaSeqAnalysis():
                 misc.run_command(cmd_split_bed)
                 misc.log_to_file('Spliting fa.fai with bedtools makewindows completed - OK!')
                 for i in listdir(chunks_dir):
-                    rename(i, f"{i}.bed")
-
+                    rename(f"{chunks_dir}{i}", f"{chunks_dir}{i}.bed")
                 misc.create_trackFile(allready_completed)
                 misc.log_to_file('Indexing reference genome successfully completed!\n')
 

@@ -250,7 +250,7 @@ class Misc():
         try:
             return_code = subprocess.run(command, shell=True)
             if return_code.returncode == 0:
-                self.log_to_file(f'{command} succesfully completed')
+                self.log_to_file(f'{command} succesfully completed - OK!')
                 return True
             else:
                 self.log_to_file('Process ended with returncode != 0, see logfile.txt for more information.')
