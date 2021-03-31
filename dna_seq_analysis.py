@@ -82,31 +82,24 @@ class DnaSeqAnalysis():
         '''This function loops through a library list containing either single-end or paired-end protocol, it will automatically detect what protocol it is.
            For every loop, the bwa mem command will be run and the output name for each run will be saved to a txt-file for use in the next step if the command finnish without errors.'''
 
-        # Whole genome alignment
         try:
-            if misc.step_allready_completed(shortcuts.alignedFiles_list):
-                misc.log_to_file('Burrown Wheeler aligner allready completed, skips step...')
-            else:
-                start = timeit.default_timer()
-                threads = multiprocessing.cpu_count() - 2
-                misc.log_to_file(f'\nStarting: Burrows Wheeler aligner\nUsing {threads} out of {threads+2} available threads')
-
-                with open(f'{shortcuts.dna_seq_dir}library.txt', 'r') as fastq_list:
-                    for line in fastq_list.readlines():
-                        clinical_id, library_id, read1, read2 = line.split()
-                        read_group_header = f'\'@RG\\tID:{library_id}\\tSM:{clinical_id}\\tLB:{library_id}\\tPL:ILLUMINA\\tPU:{library_id}\''
-                        if read2 == 'N/A': # single-end
-                            cmd_bwa = f"1: bwa mem -R {read_group_header} {shortcuts.reference_genome_file} {shortcuts.dna_reads_dir}/{read1} -t {threads} | samtools view -bS -o {shortcuts.aligned_output_dir}{library_id}.bam" # samtools view converts SAM to BAM
-                        else: # paired-end
-                            cmd_bwa = f"bwa mem -R {read_group_header} {shortcuts.reference_genome_file} {shortcuts.dna_reads_dir}/{read1} {shortcuts.dna_reads_dir}/{read2} -t {threads} | samtools view -bS -o {shortcuts.aligned_output_dir}{library_id}.bam"
-                        # misc.run_command(cmd_bwa)
-                        self.create_outputList_dna(misc, shortcuts.alignedFiles_list, f"{library_id}.bam")
-                end = timeit.default_timer()
-                elapsed_time = end-start
-                misc.log_to_file(f'Burrows Wheeler aligner succesfully completed in {elapsed_time/60:.1g} min')
+            threads = multiprocessing.cpu_count() - 2
+            misc.log_to_file(f'\nStarting: Burrows Wheeler aligner\nUsing {threads} out of {threads+2} available threads')
+            with open(f'{shortcuts.dna_seq_dir}library.txt', 'r') as fastq_list:
+                for line in fastq_list.readlines():
+                    clinical_id, library_id, read1, read2 = line.split()
+                    read_group_header = f'\'@RG\\tID:{library_id}\\tSM:{clinical_id}\\tLB:{library_id}\\tPL:ILLUMINA\\tPU:{library_id}\''
+                    if read2 == 'N/A': # single-end
+                        cmd_bwa = f"1: bwa mem -R {read_group_header} {shortcuts.reference_genome_file} {shortcuts.dna_reads_dir}/{read1} -t {threads} | samtools view -bS -o {shortcuts.aligned_output_dir}{library_id}.bam" # samtools view converts SAM to BAM
+                    else: # paired-end
+                        cmd_bwa = f"bwa mem -R {read_group_header} {shortcuts.reference_genome_file} {shortcuts.dna_reads_dir}/{read1} {shortcuts.dna_reads_dir}/{read2} -t {threads} | samtools view -bS -o {shortcuts.aligned_output_dir}{library_id}.bam"
+                    misc.run_command(cmd_bwa, "Burrown Wheeler aligner", shortcuts.alignedFiles_list)
+                    self.create_outputList_dna(misc, shortcuts.alignedFiles_list, f"{library_id}.bam")
+            misc.log_to_file(f'Burrows Wheeler aligner succesfully completed - OK!')
         except Exception as e:
             misc.log_to_file(f'Error with def alignment() in dna_seq_analysis.py: {e}')
             input('press any key to exit')
+            sys.exit()
 
     #---------------------------------------------------------------------------
     def sort(self, options, misc, shortcuts):
@@ -115,33 +108,25 @@ class DnaSeqAnalysis():
            The string is needed because you have several inputs in the next function and can therefore not run a for loop'''
 
         try:
-            if misc.step_allready_completed(shortcuts.sortedFiles_list):
-                misc.log_to_file('Picard sortsam allready completed, skips step...')
-            else:
-                start = timeit.default_timer()
-                misc.log_to_file("\nStarting: sorting SAM/BAM files using Picard Sortsam")
-
-
-                # Empty strings to store the output
-                tumor_sort_str = ""
-                normal_sort_str = ""
-                write_to_file = ""
-                with open(shortcuts.alignedFiles_list, 'r') as list:
-                    for sample in list.readlines():
-                        cmd_sortsam = f"picard SortSam -I {shortcuts.aligned_output_dir}{sample.rstrip()} -O {shortcuts.sorted_output_dir}{sample.rstrip()} -SORT_ORDER coordinate --TMP_DIR $PWD"
-                        return_code = misc.run_command(cmd_sortsam)
-                        if options.tumor_id in sample:
-                            tumor_sort_str += f" -I {shortcuts.sorted_output_dir}{sample}".rstrip()
-                        else:
-                            normal_sort_str += f" -I {shortcuts.sorted_output_dir}{sample}".rstrip()
-                    write_to_file = tumor_sort_str.lstrip() + '\n' + normal_sort_str.lstrip()
-                    self.create_outputList_dna(misc, shortcuts.sortedFiles_list, write_to_file)
-                end = timeit.default_timer()
-                elapsed_time = end-start
-                misc.log_to_file(f'Picard SortSam succesfully completed in {elapsed_time/60:.1g} min')
-                cmd_remove_aligned_files = f'rm {shortcuts.aligned_output_dir}*.bam'
-                misc.run_command(cmd_remove_aligned_files)
-                misc.log_to_file('Aligned BAM files removed')
+            misc.log_to_file("\nStarting: sorting SAM/BAM files using Picard Sortsam")
+            # Empty strings to store the output
+            tumor_sort_str = ""
+            normal_sort_str = ""
+            write_to_file = ""
+            with open(shortcuts.alignedFiles_list, 'r') as list:
+                for sample in list.readlines():
+                    cmd_sortsam = f"picard SortSam -I {shortcuts.aligned_output_dir}{sample.rstrip()} -O {shortcuts.sorted_output_dir}{sample.rstrip()} -SORT_ORDER coordinate --TMP_DIR $PWD"
+                    return_code = misc.run_command(cmd_sortsam, "Picard sortsam", f"{shortcuts.sorted_output_dir}{sample.rstrip()}")
+                    if options.tumor_id in sample:
+                        tumor_sort_str += f" -I {shortcuts.sorted_output_dir}{sample}".rstrip()
+                    else:
+                        normal_sort_str += f" -I {shortcuts.sorted_output_dir}{sample}".rstrip()
+                write_to_file = tumor_sort_str.lstrip() + '\n' + normal_sort_str.lstrip()
+                self.create_outputList_dna(misc, shortcuts.sortedFiles_list, write_to_file)
+            misc.log_to_file(f'Picard SortSam succesfully completed - OK!')
+            cmd_remove_aligned_files = f'rm {shortcuts.aligned_output_dir}*.bam'
+            misc.run_command(cmd_remove_aligned_files)
+            misc.log_to_file('Aligned BAM files removed')
         except Exception as e:
             misc.log_to_file(f'Error with sort() in dna_seq_analysis.py: {e}')
             input('press any key to exit')
