@@ -126,8 +126,7 @@ def main():
                         # Index whole genome
                         elif index_reference_genome_choice == '1':
                             misc.log_to_file('User input: Index whole genome')
-                            ref_genome.index_genome_dna(1, None, misc, shortcuts)
-                            ref_genome.index_genome_rna(1, None, misc, shortcuts)
+                            rna_analysis.index_genome_rna(1, None, misc, shortcuts)
 
 
                         # Index parts of genome
