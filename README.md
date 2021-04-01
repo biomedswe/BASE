@@ -30,9 +30,9 @@ or
 ```
 python2 $HOME/sequencing_project/setup_anaconda3.py
 ```
-```
+
 Let Anaconda3 install at default location
-```
+
 
 ### 3. Run main.py and follow instructions in program
 Type the following in the shell:
