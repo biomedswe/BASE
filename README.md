@@ -21,14 +21,15 @@ git clone https://github.com/biomedswe/sequencing_project.git $HOME/sequencing_p
 
 ### 2. Run setup_anaconda3.py and follow instructions in program
 Please note that you must have python: ≥ 2.7 installed first.
+
 Type the following in the shell:
-```
 ```
 python2 setyp_anaconda3.py (after navigating to $HOME/sequencing_project)
 ```
 or
 ```
 python2 $HOME/sequencing_project/setup_anaconda3.py
+```
 ```
 Let Anaconda3 install at default location
 ```
