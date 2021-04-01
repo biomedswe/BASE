@@ -24,7 +24,7 @@ Please note that you must have python: ≥ 2.7 installed first.
 
 Type the following in the shell:
 ```
-python2 setyp_anaconda3.py (after navigating to $HOME/sequencing_project)
+python2 setup_anaconda3.py (after navigating to $HOME/sequencing_project)
 ```
 or
 ```
