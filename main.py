@@ -18,8 +18,8 @@ import timeit
 
 def main():
     parser = argparse.ArgumentParser(description='''This script is used to simplify installation and set up of Anaconda, download reference genome and perform DNA and RNA analysis. Please read the README file first!''')
-    parser.add_argument("-t", "--tumor_id", metavar="", required=True, help="Input clinical id of tumor samples")
-    parser.add_argument("-n", "--normal_id", metavar="", required=True, help="Input clinical id of normal samples")
+    parser.add_argument("-t", "--tumor_id", metavar="", required=False, help="Input clinical id of tumor samples")
+    parser.add_argument("-n", "--normal_id", metavar="", required=False, help="Input clinical id of normal samples")
     parser.add_argument("-i", "--intervals", metavar="", required=False, help="Input path to reference-genome interval if you have any (for use in SNV calling)")
     options = parser.parse_args() # all arguments will be passed to the functions
     filename = None
@@ -32,18 +32,19 @@ def main():
     ref_genome = ReferenceGenome()
     setup = SetupAnaconda3()
 
-    misc.log_to_file('-----Program starts-----')
+    misc.log_to_file('-----Program starts-----\n')
     while True:
         # Main menu
         menu_choice = all_menus.menu(misc, all_menus.main_menu)
         misc.log_to_file('Program at main menu')
         if menu_choice == "":
-            misc.log_to_file("User input: exit program")
+            misc.log_to_file("User input: exit program\n")
             break
 
         # Setyp anaconda3 environment
         if menu_choice == '1':
             misc.log_to_file('User input: 1, Setup anaconda3 environment')
+            misc.clear_screen()
             setup.create_anaconda_environment(misc, shortcuts)
 
         # Dna analysis menu

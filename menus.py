@@ -136,8 +136,8 @@ class Misc():
     #---------------------------------------------------------------------------
     def log_to_file(self, text):
         try:
-            print(f'\n{text}')
-            logging.info(text)
+            print(f'{text}\n')
+            logging.info(f"{text}\n")
         except Exception as e:
             logging.info(f'Error with Misc.log_to_file() in menus.py: {e}. Exiting program...')
             sys.exit()
@@ -210,22 +210,22 @@ class Misc():
             misc.log_to_file(f'Error with Misc.close_terminal() in menus.py: {e}. Exiting program...')
             sys.exit()
     #---------------------------------------------------------------------------
-    def create_directory(self, paths):
+    def create_directory(self, paths, text):
         '''This function creates the output directories for the different analysis steps'''
         try:
             for path in paths:
-                try:
-                    # create target directory
-                    makedirs(path)
-                except FileExistsError:
-                    pass
+                # create target directory
+                makedirs(path)
+            self.log_to_file(f"{text} created succesfully - OK!")
+        except FileExistsError:
+            self.log_to_file(f"{text} allready exists - skips step...")
         except Exception as e:
-            misc.log_to_file(f'Error with Misc.create_directory() in menus.py: {e}. Exiting program...')
+            self.log_to_file(f'Error with Misc.create_directory() in menus.py: {e}. Exiting program...')
             sys.exit()
 
     #---------------------------------------------------------------------------
     def create_trackFile(self, file):
-        '''This function creates utput list but also a file after each step as a marker that the step is completed'''
+        '''This function creates a trackfile that _step_allready_completed() function can look after when checking if step is allready completed'''
         try:
             with open(file, 'w'):
                 pass
@@ -234,29 +234,29 @@ class Misc():
             sys.exit()
 
     #---------------------------------------------------------------------------
-    def run_command(self, command, text, file):
+    def run_command(self, command, text, file, trackfile):
         '''This function first calls _step_allready_completed() to check if the step i allready completed.
-        If not, executes a command and passes return and prints to logfile with time taken if it was executes without errors,
-        else prints error to log, removes incomplete file and exits program'''
+        If not completed; if process is executed without errors, it prints to logfile with time taken and passes return.
+        else; if process ends  with errors, it prints error to log, removes incomplete file and then exits program'''
 
         try:
-            if misc._step_allready_completed(f"{file}"):
-                misc.log_to_file(f"{text} allready completed, skips step...")
-                return
-            else:
-                start = timeit.default_timer()
+            if not self._step_allready_completed(file, text):
                 return_code = subprocess.run(command, shell=True)
-                end = timeit.default_timer()
                 if return_code.returncode == 0:
-                    self.log_to_file(f"{text} succesfully completed in {end-start/60} minutes - OK!")
-                    return
+                    self.log_to_file(f"{text} succesfully completed - OK!")
+                    return True
+                    if trackfile:
+                        self._create_trackFile(trackfile)
+                        return True
                 else:
                     self.log_to_file(f'Process ended with returncode != 0, {command} - ERROR!')
                     subprocess.run(f"rm {file}", shell=True)
                     self.log_to_file(f'Incomplete {file} removed - OK!')
                     sys.exit()
+            else:
+                return False
         except Exception as e:
-            self.log_to_file(f'Error with misc.run_command() in menus.py: {e}. Exiting program...')
+            self.log_to_file(f'Error with self.run_command() in setup_anaconda3.py: {e}. Exiting program...')
             sys.exit()
 
     #---------------------------------------------------------------------------
@@ -344,17 +344,20 @@ class Misc():
             sys.exit()
 
     #---------------------------------------------------------------------------
-    def _step_allready_completed(self, file):
-        '''This function checks if an analysis step is completed by looking after a created file *.complete'''
+    def _step_allready_completed(self, file, text):
+        '''This function checks if a step is allready completed by checking if "file" allready exists, if so, returns True, else return False'''
         try:
-            if path.isfile(file):
-                return True
+            if file:
+                if path.isfile(file):
+                    self.log_to_file(f"{text} allready completed, skips step...")
+                    return True
+                else:
+                    return False
             else:
-                return False
+                False
         except Exception as e:
-            misc.log_to_file(f'Error with Misc.step_allready_completed() in menus.py: {e}. Exiting program...')
+            self.log_to_file(f'Error with misc._step_allready_completed() in setup_anaconda3.py: {e}. Exiting program...')
             sys.exit()
-
 #-------------------------------------------------------------------------------
 class Shortcuts():
     '''This class contains shortcuts to key files and folders neccessary for the program'''

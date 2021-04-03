@@ -1,4 +1,5 @@
 import time, multiprocessing
+from os import sys
 
 class ReferenceGenome():
 
@@ -10,35 +11,23 @@ class ReferenceGenome():
         from https://www.gencodegenes.org/human/'''
 
         try:
-            if misc.step_allready_completed(shortcuts.reference_genome_file) and misc.step_allready_completed(shortcuts.annotation_gtf_file):
-                misc.log_to_file('Reference genome and annotation file allready downloaded.')
-                time.sleep(2.5)
-            else:
-                misc.clear_screen()
-                print("\033[1mDownload reference genome\033[0m\n\n")
-                print("Downloading:")
-                print("GRCh38.p13.genome.fa and from Comprehensive gene annotation https://www.gencodegenes.org/human/...\n")
-
-                cmd_fasta_download = f"wget ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_36/GRCh38.p13.genome.fa.gz -P {shortcuts.GRCh38_dir}"
-                misc.run_command(cmd_fasta_download, 'Download of GRCh38.p13.genome.fa.gz completed')
-
+            misc.clear_screen()
+            misc.log_to_file("Downloading GRCh38.p13.genome.fa and Comprehensive gene annotation from https://www.gencodegenes.org/human/...")
+            cmd_fasta_download = f"wget ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_36/GRCh38.p13.genome.fa.gz -P {shortcuts.GRCh38_dir}"
+            if misc.run_command(cmd_fasta_download, 'Downloading GRCh38.p13.genome.fa.gz', shortcuts.reference_genome_file, None):
                 cmd_fasta_unzip = f"gunzip {shortcuts.GRCh38_dir}GRCh38.p13.genome.fa.gz"
-                misc.run_command(cmd_fasta_unzip, 'Unzip of GRCh38.p13.genome.fa.gz completed')
+                misc.run_command(cmd_fasta_unzip, 'Unzipping GRCh38.p13.genome.fa.gz', None, None)
 
-                cmd_gtf_download = f"wget ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_37/gencode.v37.primary_assembly.annotation.gtf.gz -P {shortcuts.GRCh38_dir}"
-                misc.run_command(cmd_gtf_download, 'Download of gencode.v37.primary_assembly.annotation.gtf.gz completed')
-
+            cmd_gtf_download = f"wget ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_37/gencode.v37.primary_assembly.annotation.gtf.gz -P {shortcuts.GRCh38_dir}"
+            if misc.run_command(cmd_gtf_download, 'Downloading gencode.v37.primary_assembly.annotation.gtf.gz', shortcuts.annotation_gtf_file, None):
                 cmd_gtf_unzip = f"gunzip {shortcuts.GRCh38_dir}gencode.v37.primary_assembly.annotation.gtf.gz"
-                misc.run_command(cmd_gtf_unzip, 'Unzip of gencode.v37.primary_assembly.annotation.gtf.gz completed')
-
-                print("Download completed!\nGRCh38.p13.genome.fa and gencode.v37.primary_assembly.annotation.gtf are saved in the reference_genome/bwa_index/GRCh38 folder.\n")
-                return input("Press any key to return to main menu...")
+                misc.run_command(cmd_gtf_unzip, 'Unzipping gencode.v37.primary_assembly.annotation.gtf.gz', None, None)
+                misc.log_to_file("Download completed!\nGRCh38.p13.genome.fa and gencode.v37.primary_assembly.annotation.gtf are saved in the reference_genome/bwa_index/GRCh38 folder.\n")
+            return input("Press any key to return to previous menu...")
         except Exception as e:
-            print(f'Error with download(): {e}')
-            input("Press any key to continue...")
-
-
-
+            print(f'Error with ReferenceGenome.download() in reference_genome.py: {e}')
+            input('press any key to exit')
+            sys.exit()
 
     #---------------------------------------------------------------------------
     def index_genome_rna(self, choice, filename, misc, shortcuts):
@@ -82,5 +71,6 @@ class ReferenceGenome():
                         misc.run_command(cmd_StarIndex, '\nIndexing parts of genome completed')
                         misc.create_trackFile(f'{ref_dir}{filename}/star_index/starIndex.complete')
         except Exception as e:
-            print(f'Error with index_genome_rna: {e}')
-            input("Press any key to continue...")
+            print(f'Error with ReferenceGenome.index_genome_rna in reference_genome.py: {e}')
+            input('press any key to exit')
+            sys.exit()

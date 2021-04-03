@@ -26,27 +26,23 @@ class DnaSeqAnalysis():
             chunks_dir = shortcuts.GRCh38_chunks_dir
             allready_completed = shortcuts.bwa_index_whole_reference_genome_complete
 
-            misc.log_to_file('\nStarting: indexing with bwa index')
             misc.clear_screen()
+            misc.log_to_file('Starting: indexing with bwa index')
             cmd_bwa_index = f"bwa index {ref_file}"
-            misc.run_command(cmd_bwa_index, "Bwa index", allready_completed)
-
-            cmd_create_dict = f"samtools dict {ref_file} -o {ref_file[:-2]}dict"
-            misc.run_command(cmd_create_dict, "Creating .dict with samtools dict", f"{ref_file[:-2]}dict")
-
-
-            cmd_create_fai = f"samtools faidx {ref_file} -o {ref_file}.fai"
-            misc.run_command(cmd_create_fai, "Creating .fai with samtools faidx", f"{ref_file}.fai")
-
-            cmd_split_fasta = f"bedtools makewindows -w 10000000 -g {ref_file}.fai > {chunks_dir}chunk.bed"
-            misc.run_command(cmd_split_fasta, "Spliting fa.fai with bedtools makewindows", f"{chunks_dir}chunk.bed")
-
-            cmd_split_bed = f"split -l 1 {chunks_dir}chunk.bed {chunks_dir}chunk.split"
-            misc.run_command(cmd_split_bed, "Splitting chunk.bed to one file per line", f"{chunks_dir}chunk.split*")
-            for i in listdir(chunks_dir):
-                rename(f"{chunks_dir}{i}", f"{chunks_dir}{i}.bed")
-            misc.log_to_file('Renaming chunk.split* > chunk.split*.bed completed - OK!')
+            if misc.run_command(cmd_bwa_index, "Bwa index", allready_completed, None):
+                cmd_create_dict = f"samtools dict {ref_file} -o {ref_file[:-2]}dict"
+                misc.run_command(cmd_create_dict, "Creating .dict with samtools dict", f"{ref_file[:-2]}dict", None)
+                cmd_create_fai = f"samtools faidx {ref_file} -o {ref_file}.fai"
+                misc.run_command(cmd_create_fai, "Creating .fai with samtools faidx", f"{ref_file}.fai", None)
+                cmd_split_fasta = f"bedtools makewindows -w 10000000 -g {ref_file}.fai > {chunks_dir}chunk.bed"
+                misc.run_command(cmd_split_fasta, "Spliting fa.fai with bedtools makewindows", f"{chunks_dir}chunk.bed", None)
+                cmd_split_bed = f"split -l 1 {chunks_dir}chunk.bed {chunks_dir}chunk.split"
+                misc.run_command(cmd_split_bed, "Splitting chunk.bed to one file per line", f"{chunks_dir}chunk.split*", allready_completed)
+                for i in listdir(chunks_dir):
+                    rename(f"{chunks_dir}{i}", f"{chunks_dir}{i}.bed")
+                misc.log_to_file('Renaming chunk.split* > chunk.split*.bed completed - OK!')
             misc.log_to_file('Indexing reference genome successfully completed!\n')
+            return input("Press any key to return to previous menu...")
         except Exception as e:
             misc.log_to_file(f'Error with index_genome_dna() in dna_seq_analysis.py: {e}')
             input("Press any key to continue")
