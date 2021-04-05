@@ -1,4 +1,4 @@
-from os import path, getenv, listdir, makedirs, sys, remove, kill, getppid
+from os import path, getenv, listdir, makedirs, sys, remove, kill, getppid, remove
 import signal
 import subprocess
 import time
@@ -78,25 +78,28 @@ class Menus():
                         for line, library_id in enumerate(files, start=1):
                             if choice == '1': # Single-end sequencing
                                 if options.tumor_id in library_id:
-                                    out_file.write(f"{options.tumor_id} {library_id[:-9]} {library_id} N/A\n")
+                                    out_file.write(f"{options.tumor_id} {library_id.split('_')[0]} {library_id} N/A\n")
                                 else:
-                                    out_file.write(f"{options.normal_id} {library_id[:-9]} {library_id} N/A\n")
+                                    out_file.write(f"{options.normal_id} {library_id.split('_')[0]} {library_id} N/A\n")
 
                             elif choice == '2': # Paired-end sequencing
                                 if (line % 2) == 1: # not even
                                     if options.tumor_id in library_id:
-                                        out_file.write(f"{options.tumor_id} {library_id[:-11]} {library_id} ")
+                                        out_file.write(f"{options.tumor_id} {library_id.split('_')[0]} {library_id} ")
                                     else:
-                                        out_file.write(f"{options.normal_id} {library_id[:-11]} {library_id} ")
+                                        out_file.write(f"{options.normal_id} {library_id.split('_')[0]} {library_id} ")
                                 else: # even
                                     out_file.write(f"{library_id}\n")
                     misc.log_to_file('Library list file created!')
-                    print("\nNow that you have created your list library file, you can run the analysis!\n")
+                    print("Now that you have created your list library file, you can run the analysis!\n")
                     input("Press any key to return to DNA-analysis menu...")
                     return
                 else:
                     misc.clear_screen()
                     continue
+        except TypeError:
+            print("Missing tumor id and/or normal id!\nplease enter: \"-t <tumor-id> -n <normal-id>\" when running the script")
+            sys.exit()
         except Exception as e:
             misc.log_to_file(f'Error with Menus.build_library_dna_menu() in menus.py: {e}. Exiting program...')
             sys.exit()
@@ -143,6 +146,17 @@ class Misc():
             sys.exit()
 
     #---------------------------------------------------------------------------
+    def elapsed_time(self, elapsed):
+        if elapsed >= 86400:
+            return f"{elapsed/86400:.1f} days"
+        if  3600 <= elapsed > 86400:
+            return f"{elapsed/3600:.1f} hours"
+        elif 60 <= elapsed < 3600:
+            return f"{elapsed/60:.1f} minutes"
+        elif elapsed < 60:
+            return f"{elapsed:.1f} seconds"
+
+    #---------------------------------------------------------------------------
     def validate_id(self,options, shortcuts):
         '''This function validates wether the tumor_id and normal_id you entered is present in your reads'''
 
@@ -151,7 +165,7 @@ class Misc():
                 self.log_to_file(f"tumor_id {options.tumor_id} and normal_id {options.normal_id} correctly validated")
 
             else:
-                self.log_to_file(f'You have entered a tumor_id: {options.tumor_id} and/or normal_id: {options.normal_id} that is not present in your reads.\nPlease restart program and verify that you have typed in the right \"clinical_id\" for both tumor (-t) and normal (-n)!')
+                self.log_to_file(f'You have entered a tumor_id: {options.tumor_id} and normal_id: {options.normal_id} that is not present in your reads.\nPlease restart program and verify that you have typed in the right \"clinical_id\" for both tumor (-t) and normal (-n)!')
                 input("Press any key to exit program")
                 sys.exit()
         except Exception as e:
@@ -225,7 +239,7 @@ class Misc():
 
     #---------------------------------------------------------------------------
     def create_trackFile(self, file):
-        '''This function creates a trackfile that _step_allready_completed() function can look after when checking if step is allready completed'''
+        '''This function creates a trackfile that step_allready_completed() function can look after when checking if step is allready completed'''
         try:
             with open(file, 'w'):
                 pass
@@ -234,29 +248,32 @@ class Misc():
             sys.exit()
 
     #---------------------------------------------------------------------------
+    def remove_incomplete_file(self, file):
+        remove(file)
+        self.log_to_file(f'Incomplete {file} removed - OK!')
+
+    #---------------------------------------------------------------------------
     def run_command(self, command, text, file, trackfile):
-        '''This function first calls _step_allready_completed() to check if the step i allready completed.
+        '''This function first calls step_allready_completed() to check if the step i allready completed.
         If not completed; if process is executed without errors, it prints to logfile with time taken and passes return.
         else; if process ends  with errors, it prints error to log, removes incomplete file and then exits program'''
 
         try:
-            if not self._step_allready_completed(file, text):
-                return_code = subprocess.run(command, shell=True)
-                if return_code.returncode == 0:
-                    self.log_to_file(f"{text} succesfully completed - OK!")
-                    return True
-                    if trackfile:
-                        self._create_trackFile(trackfile)
-                        return True
-                else:
-                    self.log_to_file(f'Process ended with returncode != 0, {command} - ERROR!')
-                    subprocess.run(f"rm {file}", shell=True)
-                    self.log_to_file(f'Incomplete {file} removed - OK!')
-                    sys.exit()
+            if file:
+                if self.step_allready_completed(file, text):
+                    return False
+            return_code = subprocess.run(command, shell=True)
+            if return_code.returncode == 0:
+                if text: self.log_to_file(f"{text} succesfully completed - OK!")
+                if trackfile: self.create_trackFile(trackfile)
+                return True
             else:
-                return False
+                self.log_to_file(f'Process ended with returncode != 0, {command} - ERROR!')
+                self.remove_incomplete_file(file)
+                # subprocess.run(f"rm {file}", shell=True)
+                sys.exit()
         except Exception as e:
-            self.log_to_file(f'Error with self.run_command() in setup_anaconda3.py: {e}. Exiting program...')
+            self.log_to_file(f'Error with self.run_command() in menus.py: {e}. Exiting program...')
             sys.exit()
 
     #---------------------------------------------------------------------------
@@ -265,7 +282,7 @@ class Misc():
 
         try:
             self.clear_screen()
-            menus.info_script()
+            menus.info_script(self)
 
             print('''You can add chromosomes separated by a space.
     Use this syntax:
@@ -294,15 +311,11 @@ class Misc():
     #---------------------------------------------------------------------------
     def create_new_fasta(self, chromosomes, shortcuts):
         try:
-            ref_file = shortcuts.reference_genome_file
             ref_dir = shortcuts.reference_genome_dir
-
             filename = "".join(chromosomes) + "_GRCh38"
-            if self.step_completed(f'{ref_dir}{filename}/{filename}.fa', f'Fasta for {filename} allready created, skips step...'):
-                pass
-            else:
+            if not self.step_allready_completed(f'{ref_dir}{filename}/{filename}.fa', f'Creating Fasta for {filename}'):
                 print('Creating a new fasta file...')
-                self.create_directory([f'{ref_dir}{filename}'])
+                self.create_directory([f'{ref_dir}{filename}'], f'Folder {ref_dir}{filename}' )
                 sequences = SeqIO.parse(ref_file, 'fasta')
                 with open(f'{ref_dir}{filename}/{filename}.fa', 'w+') as fa:
                     for chr in chromosomes:
@@ -323,12 +336,10 @@ class Misc():
         try:
             ref_dir = shortcuts.reference_genome_dir
 
-            if self.step_completed(f'{ref_dir}{filename}/{filename}.gtf', f'Gtf for {filename} allready created, skips step...'):
-                pass
-            else:
+            if not self.step_allready_completed(f'{ref_dir}{filename}/{filename}.gtf', f'Creating Gtf for {filename}'):
                 print('Creating a new gtf file...')
                 sequences = SeqIO.parse(shortcuts.reference_genome_file, 'fasta')
-                with open(f'{shortcuts.reference_genome_dir}{filename}/{filename}.bed', 'w') as bed:
+                with open(f'{ref_dir}{filename}/{filename}.bed', 'w') as bed:
                     for chr in chromosomes:
                         for line in sequences:
                             if line.id == chr:
@@ -336,16 +347,18 @@ class Misc():
                                 bed.write("0\t")
                                 bed.write(str(len(line.seq)))
                                 break
-                cmd_createGTF = f"bedtools intersect -a {shortcuts.annotation_gtf_file} -b {shortcuts.reference_genome_dir}{filename}/{filename}.bed > {shortcuts.reference_genome_dir}{filename}/{filename}.gtf"
-                misc.run_command(cmd_createGTF, '')
-                remove(f'{shortcuts.reference_genome_dir}{filename}/{filename}.bed')
+                cmd_createGTF = f"bedtools intersect -a {shortcuts.annotation_gtf_file} -b {ref_dir}{filename}/{filename}.bed > {ref_dir}{filename}/{filename}.gtf"
+                self.run_command(cmd_createGTF, f'Creating Gtf for {filename}', None, None)
+                remove(f'{ref_dir}{filename}/{filename}.bed')
         except Exception as e:
             self.log_to_file(f'Error with misc.create_new_gtf() in menus.py: {e}. Exiting program...')
             sys.exit()
 
     #---------------------------------------------------------------------------
-    def _step_allready_completed(self, file, text):
-        '''This function checks if a step is allready completed by checking if "file" allready exists, if so, returns True, else return False'''
+    def step_allready_completed(self, file, text):
+        '''This function checks if a step is allready completed by checking if "file" allready exists.
+        If file exists: returns True, else return False'''
+
         try:
             if file:
                 if path.isfile(file):
@@ -356,7 +369,7 @@ class Misc():
             else:
                 False
         except Exception as e:
-            self.log_to_file(f'Error with misc._step_allready_completed() in setup_anaconda3.py: {e}. Exiting program...')
+            self.log_to_file(f'Error with misc.step_allready_completed() in setup_anaconda3.py: {e}. Exiting program...')
             sys.exit()
 #-------------------------------------------------------------------------------
 class Shortcuts():
@@ -390,7 +403,7 @@ class Shortcuts():
             self.reference_genome_file = f"{self.GRCh38_dir}GRCh38.p13.genome.fa"
             self.reference_genome_exclude_template_file = f"{self.sequencing_project_dir}excludeTemplate/human.hg38.excl.tsv"
             self.configManta_file = getenv("HOME")+"/anaconda3/envs/sequencing/bin/manta-1.6.0.centos6_x86_64/bin/configManta.py"
-            self.runWorkflow_file = getenv("HOME")+"/sequencing_project/dna_seq/Manta/runWorkflow.py"
+            self.runWorkflow_file = getenv("HOME")+"/sequencing_project/dna_seq/manta/runWorkflow.py"
 
             # Shortcuts to folders used in RNA sequencing analysis
             self.rna_reads_dir  = f"{self.rna_seq_dir}reads/"
@@ -411,7 +424,7 @@ class Shortcuts():
 
             # Shortcuts to files used to validate if pipeline step is allready completed
             self.anaconda_setup_complete = getenv("HOME")+'/anaconda3/install.complete'
-            self.bwa_index_whole_reference_genome_complete = f"{self.GRCh38_dir}bwa.complete"
+            self.bwa_index_whole_reference_genome_complete = f"{self.GRCh38_dir}index.complete"
             self.validate_bam_complete = f"{self.aligned_output_dir}validateBam.complete"
             self.haplotypecaller_complete = f"{self.haplotypecaller_output_dir}haplotypeCaller.complete"
             self.delly_complete = f"{self.delly_output_dir}delly.complete"

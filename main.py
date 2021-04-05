@@ -80,12 +80,12 @@ def main():
                 elif dna_menu_choice == '2':
                     misc.log_to_file('User input: 2. Create library list file')
                     misc.clear_screen()
+                    misc.validate_id(options, shortcuts)
                     all_menus.build_library_dna_menu(options, misc, shortcuts)
 
                 # Run dna analysis
                 elif dna_menu_choice == '3':
                     misc.log_to_file('User input: 3. Run analysis')
-                    start = timeit.default_timer()
                     misc.clear_screen()
                     misc.validate_id(options, shortcuts)
                     dna_analysis.alignment(misc, shortcuts)
@@ -97,9 +97,7 @@ def main():
                         dna_analysis.gatk_haplotype(options, misc, shortcuts)
                         dna_analysis.delly(options, misc, shortcuts)
                         dna_analysis.manta(misc, shortcuts)
-                        end = timeit.default_timer()
-                        elapsed_time = end-start
-                        misc.log_to_file(f"All steps in DNA-Seq analysis pipeline completed succesfully in: {elapsed_time/60:.1g} min")
+                        misc.log_to_file('GDC DNA-Seq analysis pipeline successfully completed - OK!')
                         sys.exit()
 
         # Rna analysis menu
@@ -139,9 +137,9 @@ def main():
                             else:
                                 filename = misc.create_new_fasta(chromosomes, shortcuts)
                                 misc.create_new_gtf(chromosomes, filename, shortcuts)
-                                ref_genome.index_genome_dna(2, filename, misc, shortcuts)
                                 ref_genome.index_genome_rna(2, filename, misc, shortcuts)
-                                input("Press any key to return to main menu")
+                                input("Press any key to return to RNA-analysis menu")
+                                break
 
                 elif rna_choice == '2':
                     misc.log_to_file('User input: Map reads to reference genome')

@@ -20,12 +20,12 @@ class SetupAnaconda3():
 
     #---------------------------------------------------------------------------
     def run_command(self, command, text, file, trackfile):
-        '''This function first calls _step_allready_completed() to check if the step i allready completed.
+        '''This function first calls step_allready_completed() to check if the step i allready completed.
         If not completed; if process is executed without errors, it prints to logfile with time taken and passes return.
         else; if process ends  with errors, it prints error to log, removes incomplete file and then exits program'''
 
         try:
-            if not self._step_allready_completed(file, text):
+            if not self.step_allready_completed(file, text):
                 return_code = subprocess.call(command, shell=True)
                 if return_code == 0:
                     self.log_to_file("{0} succesfully completed - OK!".format(text))
@@ -43,7 +43,7 @@ class SetupAnaconda3():
 
     #---------------------------------------------------------------------------
     def _create_trackFile(self, file):
-        '''This function creates a trackfile that _step_allready_completed() function can look after when checking if step is allready completed'''
+        '''This function creates a trackfile that step_allready_completed() function can look after when checking if step is allready completed'''
         try:
             with open(file, 'w'):
                 self.log_to_file('Trackfile {0} created - OK!'.format(file))
@@ -51,7 +51,7 @@ class SetupAnaconda3():
             self.log_to_file('Error with SetupAnaconda3._create_trackFile() in setup_anaconda3.py: {0}'.format(e))
 
     #---------------------------------------------------------------------------
-    def _step_allready_completed(self, file, text):
+    def step_allready_completed(self, file, text):
         '''This function checks if a step is allready completed by checking if "file" allready exists, if so, returns True, else return False'''
         try:
             if file:
@@ -63,7 +63,7 @@ class SetupAnaconda3():
             else:
                 False
         except Exception as e:
-            self.log_to_file('Error with SetupAnaconda3._step_allready_completed() in setup_anaconda3.py: {0}. Exiting program...'.format(e))
+            self.log_to_file('Error with SetupAnaconda3.step_allready_completed() in setup_anaconda3.py: {0}. Exiting program...'.format(e))
             sys.exit()
 
     #---------------------------------------------------------------------------

@@ -39,9 +39,7 @@ class ReferenceGenome():
 
             # Index whole genome
             if choice == 1:
-                if misc.step_allready_completed(shortcuts.star_whole_genome_indexing_complete):
-                    misc.log_to_file('Whole genome indexing allready completed, returning...')
-                else:
+                if not misc.step_allready_completed(shortcuts.star_whole_genome_indexing_complete, "Indexing whole genom with STAR genomeGenerate"):
                     threads = multiprocessing.cpu_count() - 2
                     cmd_StarIndex = f'''
                     STAR --runThreadN {threads} \\
@@ -50,16 +48,13 @@ class ReferenceGenome():
                     --genomeFastaFiles {shortcuts.reference_genome_file} \\
                     --sjdbGTFfile {shortcuts.annotation_gtf_file}'''
                     print(cmd_StarIndex)
-                    misc.run_command(cmd_StarIndex, '\nIndexing whole genom with STAR genomeGenerate...')
-                    misc.create_trackFile(shortcuts.star_whole_genome_indexing_complete)
+                    misc.run_command(cmd_StarIndex, None, None, shortcuts.star_whole_genome_indexing_complete)
                     print("\nWhole genome indexing completed!\n")
                     time.sleep(5)
 
             # Index parts of genome
             elif choice == 2:
-                    if misc.step_allready_completed(f'{ref_dir}{filename}/star_index/starIndex.complete'):
-                        misc.log_to_file(f'{filename} genome indexing with star allready completed...')
-                    else:
+                    if not misc.step_allready_completed(f'{ref_dir}{filename}/star_index/starIndex.complete', f'Genome indexing {filename} with star'):
                         threads = multiprocessing.cpu_count() - 2
                         cmd_StarIndex = f'''
                         STAR --runThreadN {threads} \\
@@ -68,8 +63,8 @@ class ReferenceGenome():
                         --genomeDir {ref_dir}{filename}/star_index \\
                         --genomeFastaFiles {ref_dir}{filename}/{filename}.fa \\
                         --sjdbGTFfile {ref_dir}{filename}/{filename}.gtf'''
-                        misc.run_command(cmd_StarIndex, '\nIndexing parts of genome completed')
-                        misc.create_trackFile(f'{ref_dir}{filename}/star_index/starIndex.complete')
+                        misc.run_command(cmd_StarIndex,  f'Genome indexing {filename} with star', None, f'{ref_dir}{filename}/star_index/starIndex.complete')
+
         except Exception as e:
             print(f'Error with ReferenceGenome.index_genome_rna in reference_genome.py: {e}')
             input('press any key to exit')

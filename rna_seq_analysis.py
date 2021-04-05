@@ -26,21 +26,16 @@ class RnaSeqAnalysis():
 
             # Index whole genome
             if choice == 1:
-                if misc.step_allready_completed(shortcuts.star_whole_genome_indexing_complete):
-                    misc.log_to_file('Whole genome indexing allready completed, returning...')
-                else:
-                    threads = multiprocessing.cpu_count() - 2
-                    cmd_StarIndex = f'''
-                    STAR --runThreadN {threads} \\
-                    --runMode genomeGenerate \\
-                    --genomeDir {shortcuts.star_index_dir_whole_genome} \\
-                    --genomeFastaFiles {shortcuts.reference_genome_file} \\
-                    --sjdbGTFfile {shortcuts.annotation_gtf_file}'''
-                    misc.run_command(cmd_StarIndex)
-                    misc.log_to_file('Indexing whole genome with STAR genomeGenerate succesfully completed')
-                    misc.create_trackFile(shortcuts.star_whole_genome_indexing_complete)
-                    misc.log_to_file('Whole genome indexing succesfully completed!\n')
-                    time.sleep(5)
+                threads = multiprocessing.cpu_count() - 2
+                cmd_StarIndex = f'''
+                STAR --runThreadN {threads} \\
+                --runMode genomeGenerate \\
+                --genomeDir {shortcuts.star_index_dir_whole_genome} \\
+                --genomeFastaFiles {shortcuts.reference_genome_file} \\
+                --sjdbGTFfile {shortcuts.annotation_gtf_file}'''
+                if misc.run_command(cmd_StarIndex, "Whole genome indexing with STAR", shortcuts.star_whole_genome_indexing_complete, shortcuts.star_whole_genome_indexing_complete):
+                    misc.log_to_file('Whole genome indexing with STAR succesfully completed!\n')
+                time.sleep(3)
 
             # Index parts of genome
             elif choice == 2:
@@ -247,7 +242,7 @@ class RnaSeqAnalysis():
 
     #---------------------------------------------------------------------------
     def binominal_test(self, row):
-        '''This function reads the columns altCount, totalCount and Dna_altAlleleFreq from current row. The runs binom_test with these inputs
+        '''This function reads the columns altCount, totalCount and Dna_altAlleleFreq from current row. Then runs binom_test with these inputs
         and returns the answer'''
 
         try:
