@@ -312,10 +312,11 @@ class Misc():
     def create_new_fasta(self, chromosomes, shortcuts):
         try:
             ref_dir = shortcuts.reference_genome_dir
+            ref_file = shortcuts.reference_genome_file
             filename = "".join(chromosomes) + "_GRCh38"
             if not self.step_allready_completed(f'{ref_dir}{filename}/{filename}.fa', f'Creating Fasta for {filename}'):
-                print('Creating a new fasta file...')
-                self.create_directory([f'{ref_dir}{filename}'], f'Folder {ref_dir}{filename}' )
+                self.log_to_file(f'Startring: creating a new fasta file for {filename}...')
+                self.create_directory([f'{ref_dir}{filename}'], f'Folder {filename}' )
                 sequences = SeqIO.parse(ref_file, 'fasta')
                 with open(f'{ref_dir}{filename}/{filename}.fa', 'w+') as fa:
                     for chr in chromosomes:
@@ -337,7 +338,7 @@ class Misc():
             ref_dir = shortcuts.reference_genome_dir
 
             if not self.step_allready_completed(f'{ref_dir}{filename}/{filename}.gtf', f'Creating Gtf for {filename}'):
-                print('Creating a new gtf file...')
+                self.log_to_file(f'Starting: creating a new gtf file for {filename}...')
                 sequences = SeqIO.parse(shortcuts.reference_genome_file, 'fasta')
                 with open(f'{ref_dir}{filename}/{filename}.bed', 'w') as bed:
                     for chr in chromosomes:
@@ -411,9 +412,10 @@ class Shortcuts():
             self.star_index_dir_whole_genome =  f"{self.GRCh38_dir}star_index/"
 
 
+
             # Shortcuts to files used in RNA sequencing analysis
             self.annotation_gtf_file = f"{self.GRCh38_dir}gencode.v37.primary_assembly.annotation.gtf"
-            self.gatk_vcfFile = f"{self.haplotypecaller_output_dir}{options.tumor_id}_filtered_ReadDepthOver10_het.vcf"
+            self.gatk_vcfFile = f"{self.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het_annotated.vcf"
 
             # Shortcuts to output lists (used for input in pipeline steps) (and also for validation if pipeline step i allready completed)
             self.alignedFiles_list = f"{self.aligned_output_dir}alignedFiles.txt"
@@ -430,6 +432,7 @@ class Shortcuts():
             self.delly_complete = f"{self.delly_output_dir}delly.complete"
             self.manta_complete = f"{self.manta_output_dir}manta.complete"
             self.star_whole_genome_indexing_complete = f"{self.star_index_dir_whole_genome}whole_index.complete"
+            self.star_map_whole_genome_complete = f"{self.star_output_dir}whole_map.complete"
     except Exception as e:
         self.log_to_file(f'Error with Shortcuts.__init__ in menus.py: {e}. Exiting program...')
         sys.exit()

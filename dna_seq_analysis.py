@@ -246,7 +246,7 @@ class DnaSeqAnalysis():
 
                 try:
                     # Annotate vcf file
-                    cmd_annotate = f'''java -Xmx4g -jar $HOME/anaconda3/envs/sequencing/share/snpeff-5.0-0/snpEff.jar \\
+                    cmd_annotate = f'''java -Xmx4g -jar $HOME/anaconda3/envs/sequencing/share/snpeff-5.0-1/snpEff.jar \\
                     -v GRCh38.99 -canon -noInteraction -noNextProt -noMotif -strict \\
                     -onlyProtein {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het.vcf \\
                     > {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het_annotated.vcf'''
@@ -306,7 +306,7 @@ class DnaSeqAnalysis():
                 with open(shortcuts.realignedFiles_list, 'r') as list:
                     sample_1, sample_2 = list.read().splitlines()
                     cmd_create_config_file = f"{shortcuts.configManta_file} --tumorBam={shortcuts.realigned_output_dir}{sample_1} --bam={shortcuts.realigned_output_dir}{sample_2} --referenceFasta={shortcuts.reference_genome_file} --runDir={shortcuts.manta_output_dir}"
-                    misc.run_command(cmd_create_config_file, "Manta calling (step 1)", shortcuts.runWorkflow_file, None)
+                    misc.run_command(cmd_create_config_file, "Manta create config file (step 1)", shortcuts.runWorkflow_file, None)
                     cmd_runWorkflow = f"{shortcuts.runWorkflow_file} -m local -j 4"
                     misc.run_command(cmd_runWorkflow, 'Manta running workflow (step 2)', f"{shortcuts.manta_variants_dir}somaticSV.vcf.gz", None)
                     cmd_unzip = f'gunzip {shortcuts.manta_variants_dir}somaticSV.vcf.gz'

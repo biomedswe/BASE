@@ -2,6 +2,7 @@ from os import listdir, getenv, sys
 import subprocess
 import multiprocessing
 import time
+import timeit
 try:
     import vcfpy
     import pandas as pd
@@ -26,23 +27,28 @@ class RnaSeqAnalysis():
 
             # Index whole genome
             if choice == 1:
-                threads = multiprocessing.cpu_count() - 2
-                cmd_StarIndex = f'''
-                STAR --runThreadN {threads} \\
-                --runMode genomeGenerate \\
-                --genomeDir {shortcuts.star_index_dir_whole_genome} \\
-                --genomeFastaFiles {shortcuts.reference_genome_file} \\
-                --sjdbGTFfile {shortcuts.annotation_gtf_file}'''
-                if misc.run_command(cmd_StarIndex, "Whole genome indexing with STAR", shortcuts.star_whole_genome_indexing_complete, shortcuts.star_whole_genome_indexing_complete):
-                    misc.log_to_file('Whole genome indexing with STAR succesfully completed!\n')
-                time.sleep(3)
+                if not misc.step_allready_completed(shortcuts.star_whole_genome_indexing_complete, "Indexing whole genom with STAR genomeGenerate"):
+                    start = timeit.default_timer()
+                    threads = multiprocessing.cpu_count() - 2
+                    misc.log_to_file(f"Starting: indexing whole genome with STAR using {threads} out of {threads+2} available threads")
+                    cmd_StarIndex = f'''
+                    STAR --runThreadN {threads} \\
+                    --runMode genomeGenerate \\
+                    --genomeDir {shortcuts.star_index_dir_whole_genome} \\
+                    --genomeFastaFiles {shortcuts.reference_genome_file} \\
+                    --sjdbGTFfile {shortcuts.annotation_gtf_file}'''
+                    if misc.run_command(cmd_StarIndex, None, None, shortcuts.star_whole_genome_indexing_complete):
+                        end = timeit.default_timer()
+                        misc.log_to_file(f'Indexing whole genome with STAR succesfully completed in {misc.elapsed_time(end-start)} - OK!')
+                        input('press any key to exit')
+                        sys.exit()
 
             # Index parts of genome
             elif choice == 2:
-                    if misc.step_allready_completed(f'{ref_dir}{filename}/star_index/starIndex.complete'):
-                        misc.log_to_file(f'{filename} genome indexing with star allready completed...')
-                    else:
+                    if not misc.step_allready_completed(f'{ref_dir}{filename}/star_index/starIndex.complete', f'Genome indexing {filename} with star'):
+                        start = timeit.default_timer()
                         threads = multiprocessing.cpu_count() - 2
+                        misc.log_to_file(f"Starting: indexing {filename} with STAR using {threads} out of {threads+2} available threads")
                         cmd_StarIndex = f'''
                         STAR --runThreadN {threads} \\
                         --genomeSAindexNbases 12 \\
@@ -50,76 +56,84 @@ class RnaSeqAnalysis():
                         --genomeDir {ref_dir}{filename}/star_index \\
                         --genomeFastaFiles {ref_dir}{filename}/{filename}.fa \\
                         --sjdbGTFfile {ref_dir}{filename}/{filename}.gtf'''
-                        misc.run_command(cmd_StarIndex, '\nIndexing parts of genome completed')
-                        misc.create_trackFile(f'{ref_dir}{filename}/star_index/starIndex.complete')
+                        if misc.run_command(cmd_StarIndex,  f'Genome indexing {filename} with star', None, f'{ref_dir}{filename}/star_index/starIndex.complete'):
+                            end = timeit.default_timer()
+                            misc.log_to_file(f'Indexing {filename} with STAR succesfully completed in {misc.elapsed_time(end-start)} - OK!')
+                            input('press any key to exit')
+                            sys.exit()
         except Exception as e:
-            print(f'Error with index_genome_rna: {e}')
-            input("Press any key to continue...")
+            print(f'Error with ReferenceGenome.index_genome_rna in reference_genome.py: {e}')
+            input('press any key to exit')
+            sys.exit()
+
 
 
     #---------------------------------------------------------------------------
     def map_reads(self, options, filename, misc, shortcuts):
         '''This function map reads to the reference genome'''
 
+
+
         try:
+            if not filename: filename = input("You have restarted the program since you indexed parts of genome, please type in the chromosome/s you want to map to (e.g. chr13):")
 
-            if misc.step_allready_completed(f'{shortcuts.star_output_dir}{options.tumor_id}_{filename}_map.complete', 'Map reads to genome allready completed, skips step...'):
-                time.sleep(2.5)
-                pass
-            else:
-                reads = []
+            # if not misc.step_allready_completed(f'{shortcuts.star_output_dir}{options.tumor_id}_{filename}_map.complete', 'Map reads to genome'):
+            start = timeit.default_timer()
+            reads = []
+            for read in listdir(shortcuts.rna_reads_dir):
+                if options.tumor_id in read:
+                    reads.append(read)
+                else:
+                    misc.log_to_file('Rna reads are incorrectly named')
+                    sys.exit()
+            threads = multiprocessing.cpu_count() - 2
+            misc.log_to_file(f'Starting: map reads to the genome with STAR using {threads} out of {threads+2} available threads')
 
-                for read in listdir(shortcuts.rna_reads_dir):
-                    if options.tumor_id in read:
-                        reads.append(read)
-                    else:
-                        print('Rna reads are incorrectly named')
-                threads = multiprocessing.cpu_count() - 2
-                print('Map reads to the genome\n\n')
-
-
-                cmd_mapReads = f'''
-                STAR --genomeDir {shortcuts.star_index_dir}{filename}_hg38_index \\
-                --readFilesIn {shortcuts.rna_reads_dir}{reads[0]} {shortcuts.rna_reads_dir}{reads[1]} \\
-                --runThreadN {threads} \\
-                --alignIntronMax 1000000 \\
-                --alignIntronMin 20 \\
-                --alignMatesGapMax 1000000 \\
-                --alignSJDBoverhangMin 1 \\
-                --alignSJoverhangMin 8 \\
-                --alignSoftClipAtReferenceEnds Yes \\
-                --chimJunctionOverhangMin 15 \\
-                --chimMainSegmentMultNmax 1 \\
-                --chimOutType Junctions SeparateSAMold WithinBAM SoftClip \\
-                --chimSegmentMin 15 \\
-                --genomeLoad NoSharedMemory \\
-                --limitSjdbInsertNsj 1200000 \\
-                --outFileNamePrefix {shortcuts.star_output_dir}{options.tumor_id} \\
-                --outFilterIntronMotifs None \\
-                --outFilterMatchNminOverLread 0.33 \\
-                --outFilterMismatchNmax 999 \\
-                --outFilterMismatchNoverLmax 0.1 \\
-                --outFilterMultimapNmax 20 \\
-                --outFilterScoreMinOverLread 0.33 \\
-                --outFilterType BySJout \\
-                --outSAMattributes NH HI AS nM NM MD XS ch vA vG vW \\
-                --outSAMstrandField intronMotif \\
-                --outSAMtype BAM Unsorted \\
-                --outSAMunmapped Within \\
-                --quantMode TranscriptomeSAM GeneCounts \\
-                --readFilesCommand zcat \\
-                --waspOutputMode SAMtag \\
-                --varVCFfile {shortcuts.gatk_vcfFile} \\
-                --outSAMattrRGline ID:{reads[0][:-16]} SM:{options.tumor_id} LB:{reads[0][:-16]} PL:"ILLUMINA" PU:{reads[0][:-16]} \\
-                --twopassMode Basic'''
-                misc.run_command(cmd_mapReads, 'Mapping reads to genome completed')
-                cmd_sortsam = f"picard SortSam -I {shortcuts.star_output_dir}{options.tumor_id}Aligned.out.bam -O {shortcuts.star_output_dir}{options.tumor_id}Aligned_sorted.out.bam -SO coordinate"
-                misc.run_command(cmd_sortsam, None)
-                cmd_samtools_index = f"samtools index {shortcuts.star_output_dir}{options.tumor_id}Aligned_sorted.out.bam"
-                misc.run_command(cmd_samtools_index, None)
-                misc.create_trackFile(f'{shortcuts.star_output_dir}{options.tumor_id}_{filename}_map.complete')
+            cmd_mapReads = f'''
+            STAR --genomeDir {shortcuts.reference_genome_dir}{filename}/star_index/ \\
+            --readFilesIn {shortcuts.rna_reads_dir}{reads[0]} {shortcuts.rna_reads_dir}{reads[1]} \\
+            --runThreadN {threads} \\
+            --alignIntronMax 1000000 \\
+            --alignIntronMin 20 \\
+            --alignMatesGapMax 1000000 \\
+            --alignSJDBoverhangMin 1 \\
+            --alignSJoverhangMin 8 \\
+            --alignSoftClipAtReferenceEnds Yes \\
+            --chimJunctionOverhangMin 15 \\
+            --chimMainSegmentMultNmax 1 \\
+            --chimOutType Junctions SeparateSAMold WithinBAM SoftClip \\
+            --chimSegmentMin 15 \\
+            --genomeLoad NoSharedMemory \\
+            --limitSjdbInsertNsj 1200000 \\
+            --outFileNamePrefix {shortcuts.star_output_dir}{filename}/{options.tumor_id}_ \\
+            --outFilterIntronMotifs None \\
+            --outFilterMatchNminOverLread 0.33 \\
+            --outFilterMismatchNmax 999 \\
+            --outFilterMismatchNoverLmax 0.1 \\
+            --outFilterMultimapNmax 20 \\
+            --outFilterScoreMinOverLread 0.33 \\
+            --outFilterType BySJout \\
+            --outSAMattributes NH HI AS nM NM MD XS ch vA vG vW \\
+            --outSAMstrandField intronMotif \\
+            --outSAMtype BAM Unsorted \\
+            --outSAMunmapped Within \\
+            --quantMode TranscriptomeSAM GeneCounts \\
+            --readFilesCommand zcat \\
+            --waspOutputMode SAMtag \\
+            --varVCFfile {shortcuts.gatk_vcfFile} \\
+            --outSAMattrRGline ID:{reads[0][:-16]} SM:{options.tumor_id} LB:{reads[0][:-16]} PL:"ILLUMINA" PU:{reads[0][:-16]} \\
+            --twopassMode Basic'''
+            misc.run_command(cmd_mapReads, f'Mapping reads to {filename} genome', f'{shortcuts.star_output_dir}{filename}/{options.tumor_id}_Aligned.out.bam', f'{shortcuts.star_output_dir}{filename}/{options.tumor_id}_Aligned.out.bam')
+            cmd_sortsam = f"picard SortSam -I {shortcuts.star_output_dir}{filename}/{options.tumor_id}_Aligned.out.bam -O {shortcuts.star_output_dir}{filename}/{options.tumor_id}_Aligned_sorted.out.bam -SO coordinate"
+            misc.run_command(cmd_sortsam, "Sorting BAM with Picard SortSam", f"{shortcuts.star_output_dir}{filename}/{options.tumor_id}_Aligned_sorted.out.bam", f"{shortcuts.star_output_dir}{filename}/{options.tumor_id}_Aligned_sorted.out.bam")
+            cmd_samtools_index = f"samtools index {shortcuts.star_output_dir}{filename}/{options.tumor_id}_Aligned_sorted.out.bam"
+            misc.run_command(cmd_samtools_index, "Indexing BAM with Samtools index", None, None)
+            end = timeit.default_timer()
+            misc.log_to_file(f'Mapping reads to {filename} with STAR succesfully completed in {misc.elapsed_time(end-start)} - OK!')
+            input('press any key to exit')
+            sys.exit()
         except Exception as e:
-            print(f'Error with map_reads(): {e}')
+            misc.log_to_file(f'Error with map_reads(): {e}')
 
     #---------------------------------------------------------------------------
     def ASEReadCounter(self, options, filename, misc, shortcuts):

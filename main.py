@@ -128,6 +128,7 @@ def main():
                             rna_analysis.index_genome_rna(1, None, misc, shortcuts)
 
 
+
                         # Index parts of genome
                         elif index_reference_genome_choice == '2':
                             misc.log_to_file('User input: Index parts of genome')
@@ -137,30 +138,30 @@ def main():
                             else:
                                 filename = misc.create_new_fasta(chromosomes, shortcuts)
                                 misc.create_new_gtf(chromosomes, filename, shortcuts)
-                                ref_genome.index_genome_rna(2, filename, misc, shortcuts)
+                                rna_analysis.index_genome_rna(2, filename, misc, shortcuts)
                                 input("Press any key to return to RNA-analysis menu")
                                 break
 
+                # Map reads to reference genome
                 elif rna_choice == '2':
                     misc.log_to_file('User input: Map reads to reference genome')
-                    map_reads_choice = all_menus.menu(misc, all_menus.map_reads_menu)
                     while True:
                         misc.log_to_file('Program at Map reads to reference genome menu')
-                        reference_genome_menu_choice = all_menus.menu(misc, all_menus.reference_genome_menu)
+                        map_reads_choice = all_menus.menu(misc, all_menus.map_reads_menu)
 
-                        if reference_genome_menu_choice == '':
+                        if map_reads_choice == '':
                             misc.log_to_file('User input: return to previous menu')
                             break
 
                         # Map to whole genome
-                        elif reference_genome_menu_choice == '1':
+                        elif map_reads_choice == '1':
                             misc.log_to_file('User input: Map reads to whole genome')
-
+                            rna_analysis.map_reads(options, "GRCh38", misc, shortcuts)
 
                         # Map to parts of genome
-                        elif reference_genome_menu_choice == '2':
-                            misc.log_to_file('User input (setup reference genome menu): 1.Index reference genome')
-
+                        elif map_reads_choice == '2':
+                            misc.log_to_file('User input: Map reads to parts of genome')
+                            rna_analysis.map_reads(options, filename, misc, shortcuts)
 
 
 
