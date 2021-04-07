@@ -128,13 +128,13 @@ Picard tools
 Python 3.7.6
 Samtools 1.9
 Scipy
-Snpeff 5.0-1
+Snpeff 5.0
 STAR
 Vcfpy
 ''')
 
             cmd_env = "conda create -n sequencing -c bioconda bedtools bcftools biopython bwa gatk4 picard python=3.7.6 samtools=1.9 star pandas vcfpy scipy snpeff"
-            misc.run_command(cmd_env, "Installing bedtools bcftools biopython bwa gatk4 picard python=3.7.6 samtools=1.9 star pandas vcfpy scipy snpeff=5.0-1", None, None)
+            misc.run_command(cmd_env, "Installing bedtools bcftools biopython bwa gatk4 picard python=3.7.6 samtools=1.9 star pandas vcfpy scipy snpeff=5.0", None, None)
 
             # Delly in bioconda didn't work so I had to do a workaround
             cmd_download_delly = "wget https://github.com/dellytools/delly/releases/download/v0.8.7/delly_v0.8.7_linux_x86_64bit -P $HOME/anaconda3/envs/sequencing/bin"

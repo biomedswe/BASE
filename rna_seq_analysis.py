@@ -121,11 +121,11 @@ class RnaSeqAnalysis():
             --readFilesCommand zcat \\
             --waspOutputMode SAMtag \\
             --varVCFfile {shortcuts.gatk_vcfFile} \\
-            --outSAMattrRGline ID:{reads[0][:-16]} SM:{options.tumor_id} LB:{reads[0][:-16]} PL:"ILLUMINA" PU:{reads[0][:-16]} \\
+            --outSAMattrRGline ID:{reads[0][:16]} SM:{options.tumor_id} LB:{reads[0][:16]} PL:"ILLUMINA" PU:{reads[0][:16]} \\
             --twopassMode Basic'''
-            misc.run_command(cmd_mapReads, f'Mapping reads to {filename} genome', f'{shortcuts.star_output_dir}{filename}/{options.tumor_id}_Aligned.out.bam', f'{shortcuts.star_output_dir}{filename}/{options.tumor_id}_Aligned.out.bam')
+            misc.run_command(cmd_mapReads, f'Mapping reads to {filename} genome', f'{shortcuts.star_output_dir}{filename}/{options.tumor_id}_Aligned.out.bam', None)
             cmd_sortsam = f"picard SortSam -I {shortcuts.star_output_dir}{filename}/{options.tumor_id}_Aligned.out.bam -O {shortcuts.star_output_dir}{filename}/{options.tumor_id}_Aligned_sorted.out.bam -SO coordinate"
-            misc.run_command(cmd_sortsam, "Sorting BAM with Picard SortSam", f"{shortcuts.star_output_dir}{filename}/{options.tumor_id}_Aligned_sorted.out.bam", f"{shortcuts.star_output_dir}{filename}/{options.tumor_id}_Aligned_sorted.out.bam")
+            misc.run_command(cmd_sortsam, "Sorting BAM with Picard SortSam", f"{shortcuts.star_output_dir}{filename}/{options.tumor_id}_Aligned_sorted.out.bam", None)
             cmd_samtools_index = f"samtools index {shortcuts.star_output_dir}{filename}/{options.tumor_id}_Aligned_sorted.out.bam"
             misc.run_command(cmd_samtools_index, "Indexing BAM with Samtools index", None, None)
             end = timeit.default_timer()
@@ -188,10 +188,12 @@ class RnaSeqAnalysis():
             df['Dna_refCount'] = df.apply(lambda row: self.ad_tumor_coverage(row, 0, dict), axis=1)
             df['Dna_altCount'] = df.apply(lambda row: self.ad_tumor_coverage(row, 1, dict), axis=1)
             df['Dna_totalCount'] = df.apply(lambda row: self.ad_tumor_coverage(row, 'both', dict), axis=1)
+            # df['Copy_number']
             df['Dna_altAlleleFreq'] = df.apply(lambda row: self.alt_allele_freq(row, dict), axis=1)
             df['pValue_dna_altAlleleFreq'] = df.apply(lambda row: self.binominal_test(row), axis=1)
             df['geneName'] = df.apply(lambda row: self.add_gene_name(row, dict), axis=1)
             df['variantType'] = df.apply(lambda row: self.add_variant_type(row, dict), axis=1)
+
             # df.drop(['variantID', 'lowMAPQDepth', 'lowBaseQDepth', 'rawDepth', 'otherBases', 'improperPairs'], inplace=True)
             print(df)
             # df.to_csv('rna_seq/star/2064-01_chr13_STAR_ASE.csv', sep=',', index=False)
