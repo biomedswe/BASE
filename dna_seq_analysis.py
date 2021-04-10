@@ -3,12 +3,12 @@ from os import listdir, sys, mkdir, getenv, path, rename
 import subprocess
 import argparse
 import csv
-import multiprocessing
+import multiprocessing as mp
 import time
 import timeit
-import logging
 from shutil import copy
-logging.basicConfig(filename='Logname.txt', filemode='a', format='%(asctime)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S', level=logging.DEBUG)
+from functools import partial
+
 
 
 
@@ -37,16 +37,17 @@ class DnaSeqAnalysis():
                 misc.run_command(cmd_create_fai, "Creating .fai with samtools faidx", f"{ref_file}.fai", None)
                 cmd_split_fasta = f"bedtools makewindows -w 10000000 -g {ref_file}.fai > {chunks_dir}chunk"
                 misc.run_command(cmd_split_fasta, "Spliting fa.fai with bedtools makewindows", f"{chunks_dir}chunk.bed", None)
-                cmd_split_bed = f"split -l 1 {chunks_dir}chunk.bed {chunks_dir}chunk.split"
+                cmd_split_bed = f"split -l 59 {chunks_dir}chunk.bed {chunks_dir}chunk.split"
                 misc.run_command(cmd_split_bed, "Splitting chunk.bed to one file per line", f"{chunks_dir}chunk.split*", allready_completed)
                 for i in listdir(chunks_dir):
                     rename(f"{chunks_dir}{i}", f"{chunks_dir}{i}.bed")
                 misc.log_to_file('Renaming chunk.split* > chunk.split*.bed completed - OK!')
+                remove( f"{chunks_dir}chunk.bed")
             misc.log_to_file('Indexing reference genome successfully completed!\n')
             return input("Press any key to return to previous menu...")
         except Exception as e:
-            misc.log_to_file(f'Error with index_genome_dna() in dna_seq_analysis.py: {e}')
-            input("Press any key to continue")
+            misc.log_exception(".index_genome_dna() in dna_seq_analysis.py:", e)
+
 
     #---------------------------------------------------------------------------
     def create_outputList_dna(self, misc, output_path, write_to_file):
@@ -57,22 +58,25 @@ class DnaSeqAnalysis():
                 c.write(f"{write_to_file}\n")
 
         except Exception as e:
-            misc.log_to_file(f'Error with create_outputList_dna() in dna_seq_analysis.py: {e}')
-            input("Press any key to continue")
+            misc.log_exception(".create_outputList_dna() in dna_seq_analysis.py:", e)
+
     #---------------------------------------------------------------------------
     def validate_bam_dna(self, misc, shortcuts):
         '''This function runs picard ValidateSamFile to check if any errors are present in the aligned files.
            returns True if no errors are found or False if errors are found'''
 
         try:
+            start = timeit.default_timer()
             misc.log_to_file("Validating .bam files...")
             with open(shortcuts.alignedFiles_list, 'r') as list:
                 for sample in list.read().splitlines():
                     cmd_validate = f"picard ValidateSamFile -I {shortcuts.aligned_output_dir}{sample} -MODE SUMMARY"
-                    misc.run_command(cmd_validate, f"Picard ValidateSamFile for {sample[:-5]}", f"{shortcuts.aligned_output_dir}{sample[:-6]}.validated", f"{shortcuts.aligned_output_dir}{sample[:-6]}.validated")
+                    allready_validated = misc.run_command(cmd_validate, f"Picard ValidateSamFile {sample[:-4]}", f"{shortcuts.aligned_output_dir}{sample[:-6]}.validated", f"{shortcuts.aligned_output_dir}{sample[:-6]}.validated")
+                end = timeit.default_timer()
+                if allready_validated: misc.log_to_file(f'All .bam files succesfully validated in {misc.elapsed_time(end-start)} - OK!')
             return True
         except Exception as e:
-            misc.log_to_file(f'Error with validate_bam_dna() in dna_seq_analysis.py: {e}')
+            misc.log_exception(".validate_bam_dna() in dna_seq_analysis.py:", e)
 
     #---------------------------------------------------------------------------
     def alignment(self, misc, shortcuts):
@@ -82,7 +86,7 @@ class DnaSeqAnalysis():
         try:
             if not misc.step_allready_completed(shortcuts.alignedFiles_list, "Burrows Wheeler aligner"):
                 start = timeit.default_timer()
-                threads = multiprocessing.cpu_count() - 2
+                threads = mp.cpu_count() - 2
                 misc.log_to_file(f'Starting: Burrows Wheeler aligner Using {threads} out of {threads+2} available threads')
                 with open(f'{shortcuts.dna_seq_dir}library.txt', 'r') as fastq_list:
                     for line in fastq_list.readlines():
@@ -92,14 +96,13 @@ class DnaSeqAnalysis():
                             cmd_bwa = f"1: bwa mem -R {read_group_header} {shortcuts.reference_genome_file} {shortcuts.dna_reads_dir}/{read1} -t {threads} | samtools view -bS -o {shortcuts.aligned_output_dir}{library_id}.bam" # samtools view converts SAM to BAM
                         else: # paired-end
                             cmd_bwa = f"bwa mem -R {read_group_header} {shortcuts.reference_genome_file} {shortcuts.dna_reads_dir}/{read1} {shortcuts.dna_reads_dir}/{read2} -t {threads} | samtools view -bS -o {shortcuts.aligned_output_dir}{library_id}.bam"
-                        misc.run_command(cmd_bwa, f"Aligning {shortcuts.aligned_output_dir}{library_id}.bam", None, None)
+                        misc.run_command(cmd_bwa, f"Aligning {library_id}.bam", None, None)
                         self.create_outputList_dna(misc, shortcuts.alignedFiles_list, f"{library_id}.bam")
                     end = timeit.default_timer()
                     misc.log_to_file(f'Burrows Wheeler aligner succesfully completed in {misc.elapsed_time(end-start)} - OK!')
-        except Exception as e:
-            misc.log_to_file(f'Error with def alignment() in dna_seq_analysis.py: {e}')
-            input('press any key to exit')
-            sys.exit()
+        except OSError as e: misc.log_exception("You have to create a library file first", e)
+        except Exception as e: misc.log_exception("alignment() in dna_seq_analysis.py:", e)
+
 
     #---------------------------------------------------------------------------
     def sort(self, options, misc, shortcuts):
@@ -127,11 +130,10 @@ class DnaSeqAnalysis():
                     self.create_outputList_dna(misc, shortcuts.sortedFiles_list, write_to_file)
                 end = timeit.default_timer()
                 misc.log_to_file(f'Picard SortSam succesfully completed in {misc.elapsed_time(end-start)} - OK!')
-                misc.run_command(f"rm {shortcuts.aligned_output_dir}*.bam", 'Removing aligned BAM files to save space', None, None)
+                # misc.run_command(f"rm {shortcuts.aligned_output_dir}*.bam", 'Removing aligned BAM files to save space', None, None)
         except Exception as e:
-            misc.log_to_file(f'Error with sort() in dna_seq_analysis.py: {e}')
-            input('press any key to exit')
-            sys.exit()
+            misc.log_exception(".sort() in dna_seq_analysis.py:", e)
+
     #---------------------------------------------------------------------------
     def merge(self, options, misc, shortcuts):
         '''This function merges all the input files in the sortedFiles_list to one output file'''
@@ -149,15 +151,14 @@ class DnaSeqAnalysis():
                             self.create_outputList_dna(misc, shortcuts.mergedFiles_list, f"{options.tumor_id}.bam")
                         else:
                             cmd_merge = f"picard MergeSamFiles {sample} -O {shortcuts.merged_output_dir}{options.normal_id}.bam"
-                            misc.run_command(cmd_merge, f"Merging {shortcuts.merged_output_dir}{options.normal_id}.bam", f"{shortcuts.merged_output_dir}{options.normal_id}.bam", None)
+                            misc.run_command(cmd_merge, f"Merging {options.normal_id}.bam", f"{shortcuts.merged_output_dir}{options.normal_id}.bam", None)
                             self.create_outputList_dna(misc, shortcuts.mergedFiles_list, f"{options.normal_id}.bam")
                 end = timeit.default_timer()
                 misc.log_to_file(f'Picard MergeSamFiles succesfully completed in {misc.elapsed_time(end-start)} - OK!')
-                misc.run_command(f"rm {shortcuts.sorted_output_dir}*.bam", 'Removing sorted BAM files to save space', None, None)
+                # misc.run_command(f"rm {shortcuts.sorted_output_dir}*.bam", 'Removing sorted BAM files to save space', None, None)
         except Exception as e:
-            misc.log_to_file(f'Error with merge() in dna_seq_analysis.py: {e}')
-            input('press any key to exit')
-            sys.exit()
+            misc.log_exception(".merge() in dna_seq_analysis.py:", e)
+
 
     #---------------------------------------------------------------------------
     def remove_duplicate(self, misc, shortcuts):
@@ -174,11 +175,10 @@ class DnaSeqAnalysis():
                         copy(shortcuts.mergedFiles_list, shortcuts.removeDuplicates_list) # just copying because the content will be the same
                 end = timeit.default_timer()
                 misc.log_to_file(f'Picard MarkDuplicates succesfully completed in {misc.elapsed_time(end-start)} - OK!')
-                misc.run_command(f"rm {shortcuts.merged_output_dir}*.bam", 'Removing merged BAM files to save space', None, None)
+                # misc.run_command(f"rm {shortcuts.merged_output_dir}*.bam", 'Removing merged BAM files to save space', None, None)
         except Exception as e:
-            misc.log_to_file(f'Error with remove_duplicate() in dna_seq_analysis.py: {e}')
-            input('press any key to exit')
-            sys.exit()
+            misc.log_exception(".remove_duplicate() in dna_seq_analysis.py:", e)
+
 
     #---------------------------------------------------------------------------
     def realign(self, misc, shortcuts):
@@ -197,11 +197,15 @@ class DnaSeqAnalysis():
                         copy(shortcuts.removeDuplicates_list, shortcuts.realignedFiles_list)
                 end = timeit.default_timer()
                 misc.log_to_file(f'gatk LeftAlignIndels succesfully completed in {misc.elapsed_time(end-start)} - OK!')
-                misc.run_command(f"rm {shortcuts.removed_duplicates_output_dir}*.bam", 'Removing remove_duplicate BAM files to save space', None, None)
+                # misc.run_command(f"rm {shortcuts.removed_duplicates_output_dir}*.bam", 'Removing remove_duplicate BAM files to save space', None, None)
         except Exception as e:
-            misc.log_to_file(f'Error with realign() in dna_seq_analysis.py: {e}')
-            input('press any key to exit')
-            sys.exit()
+            misc.log_exception(".realign() in dna_seq_analysis.py:", e)
+
+    #---------------------------------------------------------------------------
+    def gatk_haplotype_multiprocessing(self, options, misc, shortcuts, sample_1, sample_2, input):
+        cmd_call = f"gatk HaplotypeCaller -R {shortcuts.reference_genome_file} -I {shortcuts.realigned_output_dir}{sample_1} -I {shortcuts.realigned_output_dir}{sample_2} -O {shortcuts.haplotypecaller_chunks_dir}{options.tumor_id}_{input}.vcf -L {shortcuts.GRCh38_chunks_dir}{input}"
+        misc.run_command(cmd_call, None, None, None)
+        self.create_outputList_dna(misc, shortcuts.gatk_chunks_list, f"{shortcuts.haplotypecaller_chunks_dir}{options.tumor_id}_{input}.vcf")
 
     #---------------------------------------------------------------------------
     def gatk_haplotype(self, options, misc, shortcuts):
@@ -209,58 +213,59 @@ class DnaSeqAnalysis():
         try:
             if not misc.step_allready_completed(shortcuts.haplotypecaller_complete, "GATK haplotypeCaller"):
                 start = timeit.default_timer()
-                misc.log_to_file("Starting: looking for SNV's using GATK HaplotypeCaller")
+                misc.log_to_file("Starting: looking for SNV's using GATK HaplotypeCaller (multiprocessing)")
                 with open(shortcuts.realignedFiles_list, 'r') as list:
                     sample_1, sample_2 = list.read().splitlines()
-                    if options.intervals:
-                        cmd_call = f"gatk HaplotypeCaller -R {shortcuts.reference_genome_file} -I {shortcuts.realigned_output_dir}{sample_1} -I {shortcuts.realigned_output_dir}{sample_2} -O {shortcuts.haplotypecaller_output_dir}{options.tumor_id}.vcf -L {options.intervals}"
-                    else:
-                        cmd_call = f"gatk HaplotypeCaller -R {shortcuts.reference_genome_file} -I {shortcuts.realigned_output_dir}{sample_1} -I {shortcuts.realigned_output_dir}{sample_2} -O {shortcuts.haplotypecaller_output_dir}{options.tumor_id}.vcf"
-                    misc.run_command(cmd_call, 'GATK HaplotypeCaller step 1 (snv calling)', f'{shortcuts.haplotypecaller_output_dir}{options.tumor_id}.vcf', None)
-
-                try:
-                    # Remove all reads with read depth less than 10, selects only snps, exludes normal samples
-                    cmd_filter_read_depth = f"bcftools view -i 'MIN(FMT/DP)>10' -v snps -s ^{options.normal_id} {shortcuts.haplotypecaller_output_dir}{options.tumor_id}.vcf > {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor.vcf"
-                    misc.run_command(cmd_filter_read_depth, "GATK haplotypeCaller step 2 (remove read depth < 10, selects only snps, exludes normal samples)", f"{shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor.vcf", None)
-                except Exception as e:
-                    misc.log_to_file(f'Error with gatk_haplotype step 2 in dna_seq_analysis.py: {e}')
-                    input('press any key to exit')
-                    sys.exit()
-
-                try:
-                    # select heterozygous genotype, excludes GT=1/2
-                    cmd_filter_het = f"bcftools view -g het -e 'GT=\"1/2\"' {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor.vcf > {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het.vcf"
-                    misc.run_command(cmd_filter_het, "GATK haplotypeCaller step 3 (select heterozygous genotype, excludes GT=1/2)", f"{shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het.vcf", None)
-                except Exception as e:
-                    misc.log_to_file(f'Error with gatk_haplotype step 3 (select heterozygous genotype, excludes GT=1/2) in dna_seq_analysis.py: {e}')
-                    input('press any key to exit')
-                    sys.exit()
-
-                try:
-                    cmd_indexFeatureFile = f"gatk IndexFeatureFile -I {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het.vcf"
-                    misc.run_command(cmd_indexFeatureFile, "GATK haplotypeCaller step 4 (index fearure file)", f"{shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het.vcf.idx", None)
-                except Exception as e:
-                    misc.log_to_file(f'Error with gatk_haplotype step 4 (IndexFeatureFile) in dna_seq_analysis.py: {e}')
-                    input('press any key to exit')
-                    sys.exit()
-
-                try:
-                    # Annotate vcf file
-                    cmd_annotate = f'''java -Xmx4g -jar $HOME/anaconda3/envs/sequencing/share/snpeff-5.0-1/snpEff.jar \\
-                    -v GRCh38.99 -canon -noInteraction -noNextProt -noMotif -strict \\
-                    -onlyProtein {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het.vcf \\
-                    > {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het_annotated.vcf'''
-                    misc.run_command(cmd_annotate, "GATK haplotypeCaller step 5 (annotate vcf file)", f"{shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het_annotated.vcf", shortcuts.haplotypecaller_complete)
-                    end = timeit.default_timer()
-                    misc.log_to_file(f'GATK HaplotypeCaller succesfully completed in {misc.elapsed_time(end-start)} - OK!')
-                except Exception as e:
-                    misc.log_to_file(f'Error with gatk_haplotype step 5 (annotate vcf file) in dna_seq_analysis.py: {e}')
-                    input('press any key to exit')
-                    sys.exit()
+                with mp.Pool() as pool:
+                    pool.map(partial(self.gatk_haplotype_multiprocessing, options, misc, shortcuts, sample_1, sample_2),listdir(shortcuts.GRCh38_chunks_dir))
+                end = timeit.default_timer()
+                misc.log_to_file(f'gatk haplotypecaller (multiprocessing) succesfully completed in {misc.elapsed_time(end-start)} - OK!')
         except Exception as e:
-            misc.log_to_file(f'Error with gatk_haplotype step 1 (snv calling) in dna_seq_analysis.py: {e}')
-            input('press any key to exit')
-            sys.exit()
+            misc.log_exception(".gatk_haplotype step 1 (snv calling) in dna_seq_analysis.py:", e)
+
+        try:
+            # Merge all vcf files
+            # misc.run_command(f"rm {shortcuts.haplotypecaller_chunks_dir}*.idx", None, None, None)
+            cmd_merge = f"picard MergeVcfs -I {shortcuts.gatk_chunks_list} -O {shortcuts.haplotypecaller_output_dir}{options.tumor_id}.vcf"
+            misc.run_command(cmd_merge, None, f"{shortcuts.haplotypecaller_output_dir}{options.tumor_id}.vcf", None)
+        except Exception as e:
+            misc.log_exception(".gatk_haplotype step 2 (merge vcf) in dna_seq_analysis.py:", e)
+
+        try:
+            # Remove all reads with read depth less than 10, selects only snps, exludes normal samples
+            cmd_filter_read_depth = f"bcftools view -i 'MIN(FMT/DP)>10' -v snps -s ^{options.normal_id} {shortcuts.haplotypecaller_output_dir}{options.tumor_id}.vcf > {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor.vcf"
+            misc.run_command(cmd_filter_read_depth, "GATK haplotypeCaller step 3 (remove read depth < 10, selects only snps, exludes normal samples)", f"{shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor.vcf", None)
+        except Exception as e:
+            misc.log_exception(".gatk_haplotype step 3 in dna_seq_analysis.py:", e)
+
+
+        try:
+            # select heterozygous genotype, excludes GT=1/2
+            cmd_filter_het = f"bcftools view -g het -e 'GT=\"1/2\"' {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor.vcf > {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het.vcf"
+            misc.run_command(cmd_filter_het, "GATK haplotypeCaller step 4 (select heterozygous genotype, excludes GT=1/2)", f"{shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het.vcf", None)
+        except Exception as e:
+            misc.log_exception(".gatk_haplotype step 4 (select heterozygous genotype, excludes GT=1/2) in dna_seq_analysis.py:", e)
+
+
+        try:
+            # Annotate vcf file
+            cmd_annotate = f'''java -Xmx4g -jar $HOME/anaconda3/envs/sequencing/share/snpeff-5.0-1/snpEff.jar \\
+            -v GRCh38.99 -canon -noInteraction -noNextProt -noMotif -strict \\
+            -onlyProtein {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het.vcf \\
+            > {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het_annotated.vcf'''
+            misc.run_command(cmd_annotate, "GATK haplotypeCaller step 5 (annotate vcf file)", f"{shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het_annotated.vcf", shortcuts.haplotypecaller_complete)
+        except Exception as e:
+            misc.log_exception(".gatk_haplotype step 5 (annotate vcf file) in dna_seq_analysis.py:", e)
+
+
+        try:
+            cmd_indexFeatureFile = f"gatk IndexFeatureFile -I {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het_annotated.vcf"
+            if misc.run_command(cmd_indexFeatureFile, "GATK haplotypeCaller step 6 (index fearure file)", f"{shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het_annotated.vcf.idx", None):
+                end = timeit.default_timer()
+                misc.log_to_file(f'All steps in GATK HaplotypeCaller succesfully completed in {misc.elapsed_time(end-start)} - OK!')
+        except Exception as e:
+            misc.log_exception(".gatk_haplotype step 6 (IndexFeatureFile) in dna_seq_analysis.py:", e)
+
 
     #---------------------------------------------------------------------------
     def delly(self, options, misc, shortcuts):
@@ -279,7 +284,7 @@ class DnaSeqAnalysis():
                     tsv_output.writerow([f"{options.tumor_id}", 'tumor'])
                     tsv_output.writerow([f"{options.normal_id}", 'control'])
                 cmd_dos2unix = f"dos2unix {shortcuts.delly_output_dir}sample.tsv"
-                misc.run_command(cmd_dos2unix, "Converting sample.tsv to Unix format", None, None)
+                misc.run_command(cmd_dos2unix, None, None, None)
 
                 # Filter bcf file to only show somatic mutations
                 cmd_filter = f"delly filter -f somatic -o {shortcuts.delly_output_dir}delly_filter.bcf -s {shortcuts.delly_output_dir}sample.tsv {shortcuts.delly_output_dir}delly.bcf"
@@ -291,9 +296,8 @@ class DnaSeqAnalysis():
                 end = timeit.default_timer()
                 misc.log_to_file(f'Delly SNV calling succesfully completed in {misc.elapsed_time(end-start)} - OK!')
         except Exception as e:
-            misc.log_to_file(f'Error with delly() in dna_seq_analysis.py: {e}')
-            input('press any key to exit')
-            sys.exit()
+            misc.log_exception(self, e, ".delly() in dna_seq_analysis.py:")
+
 
         #---------------------------------------------------------------------------
     def manta(self, misc, shortcuts):
@@ -316,6 +320,4 @@ class DnaSeqAnalysis():
                     end = timeit.default_timer()
                     misc.log_to_file(f'Manta SNV calling succesfully completed in {misc.elapsed_time(end-start)} - OK!')
         except Exception as e:
-            misc.log_to_file(f'Error with manta() in dna_seq_analysis.py: {e}')
-            input('press any key to exit')
-            sys.exit()
+            misc.log_exception(self, e, ".manta() in dna_seq_analysis.py:")
