@@ -24,8 +24,8 @@ class Menus():
             self.rna_menu = (['Index reference genome', 'Map reads to reference genome'], "\033[1m""RNA-analysis menu""\033[0m\n" + "-"*31 + "\nRun the options below in order:", "(leave blank to return to main menu)")
             self.map_reads_menu = (['Map reads to whole genome', 'Map reads to parts of genome'], "\033[1mMap reads to reference genome menu\033[0m\n" + "-"*28, "(leave blank to return to main menu)")
         except Exception as e:
-            misc.log_to_file(f'Error with Menus.__init__() in menus.py: {e}. Exiting program...')
-            sys.exit()
+            misc.log_exception('.__init__() in menus.py:', e)
+
 
 
     #---------------------------------------------------------------------------
@@ -38,8 +38,7 @@ class Menus():
             print("Github: https://github.com/biomedswe/sequencing_project")
             print("For correspondence please contact jonas870318@gmail.com\n\n")
         except Exception as e:
-            misc.log_to_file(f'Error with Menus.info_script() in menus.py: {e}. Exiting program...')
-            sys.exit()
+            misc.log_exception('.info_script() in menus.py:', e)
 
     #---------------------------------------------------------------------------
     def menu(self, misc, options):
@@ -52,8 +51,7 @@ class Menus():
                 print(f'{i}. {option}')
             return misc.validate_choice(len(options[0]), options[2])
         except Exception as e:
-            misc.log_to_file(f'Error with Menus.menu() in menus.py: {e}. Exiting program...')
-            sys.exit()
+            misc.log_exception('.menu() in menus.py:', e)
 
     #---------------------------------------------------------------------------
     def build_library_dna_menu(self, options, misc, shortcuts):
@@ -97,37 +95,10 @@ class Menus():
                 else:
                     misc.clear_screen()
                     continue
-        except TypeError:
-            print("Missing tumor id and/or normal id!\nplease enter: \"-t <tumor-id> -n <normal-id>\" when running the script")
-            sys.exit()
+        except TypeError as t:
+            misc.log_exception("Missing tumor id and/or normal id!\nplease enter: \"-t <tumor-id> -n <normal-id>\" when running the script", t)
         except Exception as e:
-            misc.log_to_file(f'Error with Menus.build_library_dna_menu() in menus.py: {e}. Exiting program...')
-            sys.exit()
-
-    #---------------------------------------------------------------------------
-    # this can be use for both dna and rna genome index
-    def star_index_menu(self, choice, misc, shortcuts, rna_analysis):
-        '''This function creates a STAR index with STAR --runMode genomeGenerate'''
-
-        try:
-            while True:
-
-                if choice == "":
-                    return ""
-                elif misc.confirm_choice():
-                    misc.clear_screen()
-                    # whole genome
-                    if choice == '1':
-                        rna_analysis.index_genome_rna_analysis(1, misc, shortcuts)
-                    # parts of genome
-                    elif choice == '2':
-                        name = rna_analysis.index_genome_rna_analysis(2, misc, shortcuts)
-                        return name
-                else:
-                    continue
-        except Exception as e:
-            misc.log_to_file(f'Error with Menus.star_index_menu() in menus.py: {e}. Exiting program...')
-            sys.exit()
+            misc.log_exception('.build_library_dna_menu() in menus.py:', e)
 
 #-------------------------------------------------------------------------------
 class Misc():
@@ -142,19 +113,33 @@ class Misc():
             print(f'{text}\n')
             logging.info(f"{text}\n")
         except Exception as e:
-            logging.info(f'Error with Misc.log_to_file() in menus.py: {e}. Exiting program...')
+            logging.info(f'Error with {self}.log_to_file() in menus.py: {e}. Exiting program...')
             sys.exit()
 
     #---------------------------------------------------------------------------
+    def log_exception(self, text, exception):
+        try:
+            self.log_to_file(f'{exception}: {text}. Exiting program...')
+            sys.exit()
+        except Exception as e:
+            self.log_to_file(f"Error with {self}log_exception() in menus.py: {e}. Exiting program...")
+
+    #---------------------------------------------------------------------------
     def elapsed_time(self, elapsed):
-        if elapsed >= 86400:
-            return f"{elapsed/86400:.1f} days"
-        if  3600 <= elapsed > 86400:
-            return f"{elapsed/3600:.1f} hours"
-        elif 60 <= elapsed < 3600:
-            return f"{elapsed/60:.1f} minutes"
-        elif elapsed < 60:
-            return f"{elapsed:.1f} seconds"
+        try:
+            if elapsed >= 86400:
+                return f"{round(elapsed/86400, 2)} days"
+            if  3600 <= elapsed > 86400:
+                return f"{round(elapsed/3600, 2)} hours"
+            elif 60 <= elapsed < 3600:
+                return f"{round(elapsed/60, 2)} minutes"
+            elif elapsed < 60:
+                return f"{round(elapsed, 2)} seconds"
+            else:
+                return Exception
+        except Exception as e:
+            misc.log_exception(".elapsed_time() in menus.py:", e)
+            sys.exit()
 
     #---------------------------------------------------------------------------
     def validate_id(self,options, shortcuts):
@@ -169,7 +154,7 @@ class Misc():
                 input("Press any key to exit program")
                 sys.exit()
         except Exception as e:
-            self.log_to_file(f'Error with Misc.validate_id() in menus.py: {e}. Exiting program...')
+            misc.log_exception(".validate_id() in menus.py:", e)
             sys.exit()
 
     #---------------------------------------------------------------------------
@@ -186,7 +171,7 @@ class Misc():
                 else:
                     return choice
         except Exception as e:
-            misc.log_to_file(f'Error with Misc.validate_choice() in menus.py: {e}. Exiting program...')
+            misc.log_exception(".validate_choice() in menus.py:", e)
             sys.exit()
 
     #---------------------------------------------------------------------------
@@ -203,7 +188,7 @@ class Misc():
                 else:
                     print("Invalid choice, type 'n' or 'y'!")
         except Exception as e:
-            misc.log_to_file(f'Error with Misc.confirm_choice() in menus.py: {e}. Exiting program...')
+            misc.log_exception(".confirm_choice() in menus.py:", e)
             sys.exit()
 
     #---------------------------------------------------------------------------
@@ -212,7 +197,7 @@ class Misc():
         try:
             subprocess.run("clear", shell=True)
         except Exception as e:
-            misc.log_to_file(f'Error with Misc.clear_screen() in menus.py: {e}. Exiting program...')
+            misc.log_exception(".clear_screen() in menus.py:", e)
             sys.exit()
 
     #---------------------------------------------------------------------------
@@ -221,20 +206,20 @@ class Misc():
         try:
             kill(getppid(), signal.SIGHUP)
         except Exception as e:
-            misc.log_to_file(f'Error with Misc.close_terminal() in menus.py: {e}. Exiting program...')
+            misc.log_exception(".close_terminal() in menus.py:", e)
             sys.exit()
     #---------------------------------------------------------------------------
-    def create_directory(self, paths, text):
+    def create_directory(self, paths):
         '''This function creates the output directories for the different analysis steps'''
         try:
             for path in paths:
                 # create target directory
                 makedirs(path)
-            self.log_to_file(f"{text} created succesfully - OK!")
+            self.log_to_file(f"{path} created succesfully - OK!")
         except FileExistsError:
-            self.log_to_file(f"{text} allready exists - skips step...")
+            self.log_to_file(f"{path} allready exists - skips step...")
         except Exception as e:
-            self.log_to_file(f'Error with Misc.create_directory() in menus.py: {e}. Exiting program...')
+            misc.log_exception(".create_directory() in menus.py:", e)
             sys.exit()
 
     #---------------------------------------------------------------------------
@@ -244,13 +229,16 @@ class Misc():
             with open(file, 'w'):
                 pass
         except Exception as e:
-            misc.log_to_file(f'Error with Misc.create_trackFile() in menus.py: {e}. Exiting program...')
+            misc.log_exception(".create_trackFile() in menus.py:", e)
             sys.exit()
 
     #---------------------------------------------------------------------------
     def remove_incomplete_file(self, file):
-        remove(file)
-        self.log_to_file(f'Incomplete {file} removed - OK!')
+        '''This function removes incomplete files if the processing of file ended with returncode != 0'''
+
+        if file:
+            remove(file)
+            self.log_to_file(f'Incomplete {file} removed - OK!')
 
     #---------------------------------------------------------------------------
     def run_command(self, command, text, file, trackfile):
@@ -270,10 +258,9 @@ class Misc():
             else:
                 self.log_to_file(f'Process ended with returncode != 0, {command} - ERROR!')
                 self.remove_incomplete_file(file)
-                # subprocess.run(f"rm {file}", shell=True)
                 sys.exit()
         except Exception as e:
-            self.log_to_file(f'Error with self.run_command() in menus.py: {e}. Exiting program...')
+            misc.log_exception("run_command() in menus.py:", e)
             sys.exit()
 
     #---------------------------------------------------------------------------
@@ -305,7 +292,7 @@ class Misc():
                 else:
                     print('Invalid syntax, please check spelling!')
         except Exception as e:
-            self.log_to_file(f'Error with misc.choose_chromosomes_to_index() in menus.py: {e}. Exiting program...')
+            misc.log_exception(".choose_chromosomes_to_index() in menus.py:", e)
             sys.exit()
 
     #---------------------------------------------------------------------------
@@ -313,10 +300,10 @@ class Misc():
         try:
             ref_dir = shortcuts.reference_genome_dir
             ref_file = shortcuts.reference_genome_file
-            filename = "".join(chromosomes) + "_GRCh38"
+            filename = "".join(chromosomes) + "_GRCh38.p13.genome"
             if not self.step_allready_completed(f'{ref_dir}{filename}/{filename}.fa', f'Creating Fasta for {filename}'):
                 self.log_to_file(f'Startring: creating a new fasta file for {filename}...')
-                self.create_directory([f'{ref_dir}{filename}'], f'Folder {filename}' )
+                self.create_directory([f'{ref_dir}{filename}'])
                 sequences = SeqIO.parse(ref_file, 'fasta')
                 with open(f'{ref_dir}{filename}/{filename}.fa', 'w+') as fa:
                     for chr in chromosomes:
@@ -328,7 +315,7 @@ class Misc():
 
             return filename
         except Exception as e:
-            self.log_to_file(f'Error with misc.create_new_fasta() in menus.py: {e}. Exiting program...')
+            misc.log_exception(".create_new_fasta() in menus.py:", e)
             sys.exit()
 
     #---------------------------------------------------------------------------
@@ -352,7 +339,7 @@ class Misc():
                 self.run_command(cmd_createGTF, f'Creating Gtf for {filename}', None, None)
                 remove(f'{ref_dir}{filename}/{filename}.bed')
         except Exception as e:
-            self.log_to_file(f'Error with misc.create_new_gtf() in menus.py: {e}. Exiting program...')
+            misc.log_exception(".create_new_gtf() in menus.py:", e)
             sys.exit()
 
     #---------------------------------------------------------------------------
@@ -363,14 +350,14 @@ class Misc():
         try:
             if file:
                 if path.isfile(file):
-                    self.log_to_file(f"{text} allready completed, skips step...")
+                    if text: self.log_to_file(f"{text} allready completed, skips step...")
                     return True
                 else:
                     return False
             else:
-                False
+                return False
         except Exception as e:
-            self.log_to_file(f'Error with misc.step_allready_completed() in setup_anaconda3.py: {e}. Exiting program...')
+            misc.log_exception(".step_allready_completed() in setup_anaconda3.py:", e)
             sys.exit()
 #-------------------------------------------------------------------------------
 class Shortcuts():
@@ -386,7 +373,7 @@ class Shortcuts():
             # Shortcuts to input folders
             self.dna_reads_dir  = f"{self.dna_seq_dir}reads/"
             self.reference_genome_dir = f"{self.sequencing_project_dir}reference_genome/"
-            self.GRCh38_dir = f"{self.reference_genome_dir}GRCh38/"
+            self.GRCh38_dir = f"{self.reference_genome_dir}GRCh38.p13.genome/"
             self.GRCh38_chunks_dir = f"{self.GRCh38_dir}chunks/"
 
             # Shortcuts to output folders in DNA sequencing analysis
@@ -396,6 +383,7 @@ class Shortcuts():
             self.removed_duplicates_output_dir = f"{self.dna_seq_dir}removed_duplicates/"
             self.realigned_output_dir = f"{self.dna_seq_dir}realigned/"
             self.haplotypecaller_output_dir = f"{self.dna_seq_dir}gatk_haplotypecaller/"
+            self.haplotypecaller_chunks_dir = f"{self.haplotypecaller_output_dir}chunks/"
             self.delly_output_dir = f"{self.dna_seq_dir}delly/"
             self.manta_output_dir = f"{self.dna_seq_dir}manta/"
             self.manta_variants_dir = f"{self.dna_seq_dir}manta/results/variants/"
@@ -423,6 +411,7 @@ class Shortcuts():
             self.mergedFiles_list = f"{self.merged_output_dir}mergedFiles.txt"
             self.removeDuplicates_list = f"{self.removed_duplicates_output_dir}remove_duplicate.txt"
             self.realignedFiles_list = f"{self.realigned_output_dir}realignedFiles.txt"
+            self.gatk_chunks_list = f"{self.haplotypecaller_chunks_dir}chunks.list"
 
             # Shortcuts to files used to validate if pipeline step is allready completed
             self.anaconda_setup_complete = getenv("HOME")+'/anaconda3/install.complete'
@@ -431,8 +420,7 @@ class Shortcuts():
             self.haplotypecaller_complete = f"{self.haplotypecaller_output_dir}haplotypeCaller.complete"
             self.delly_complete = f"{self.delly_output_dir}delly.complete"
             self.manta_complete = f"{self.manta_output_dir}manta.complete"
-            self.star_whole_genome_indexing_complete = f"{self.star_index_dir_whole_genome}whole_index.complete"
-            self.star_map_whole_genome_complete = f"{self.star_output_dir}whole_map.complete"
+
     except Exception as e:
         self.log_to_file(f'Error with Shortcuts.__init__ in menus.py: {e}. Exiting program...')
         sys.exit()

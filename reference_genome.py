@@ -7,7 +7,7 @@ class ReferenceGenome():
         pass
 
     def download(self, misc, shortcuts):
-        '''This function downloads the human reference genome GRCh38.fa and the comprehensive gene annotations gencode.v37.primary_assembly.annotation.gtf
+        '''This function downloads the human reference genome GRCh38.p13.genome.fa and the comprehensive gene annotations gencode.v37.primary_assembly.annotation.gtf
         from https://www.gencodegenes.org/human/'''
 
         try:
@@ -22,9 +22,9 @@ class ReferenceGenome():
             if misc.run_command(cmd_gtf_download, 'Downloading gencode.v37.primary_assembly.annotation.gtf.gz', shortcuts.annotation_gtf_file, None):
                 cmd_gtf_unzip = f"gunzip {shortcuts.GRCh38_dir}gencode.v37.primary_assembly.annotation.gtf.gz"
                 misc.run_command(cmd_gtf_unzip, 'Unzipping gencode.v37.primary_assembly.annotation.gtf.gz', None, None)
-                misc.log_to_file("Download completed!\nGRCh38.p13.genome.fa and gencode.v37.primary_assembly.annotation.gtf are saved in the reference_genome/bwa_index/GRCh38 folder.\n")
+                misc.log_to_file("Download completed!\nGRCh38.p13.genome.fa and gencode.v37.primary_assembly.annotation.gtf are saved in the reference_genome/GRCh38.p13.genome folder.\n")
             return input("Press any key to return to previous menu...")
         except Exception as e:
-            print(f'Error with ReferenceGenome.download() in reference_genome.py: {e}')
+            misc.log_exception(self, e, ".download() in reference_genome.py:")
             input('press any key to exit')
             sys.exit()

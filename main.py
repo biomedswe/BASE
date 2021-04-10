@@ -125,7 +125,7 @@ def main():
                         # Index whole genome
                         elif index_reference_genome_choice == '1':
                             misc.log_to_file('User input: Index whole genome')
-                            rna_analysis.index_genome_rna(1, None, misc, shortcuts)
+                            rna_analysis.index_genome_rna(1, filename, misc, shortcuts)
 
 
 
@@ -155,13 +155,19 @@ def main():
 
                         # Map to whole genome
                         elif map_reads_choice == '1':
+                            filename = "GRCh38.p13.genome"
                             misc.log_to_file('User input: Map reads to whole genome')
-                            rna_analysis.map_reads(options, "GRCh38", misc, shortcuts)
+                            rna_analysis.map_reads(options, filename, misc, shortcuts)
+                            rna_analysis.ASEReadCounter(options, filename, misc, shortcuts)
+                            rna_analysis.add_wgs_data_to_csv(options, filename, misc, shortcuts)
+                            sys.exit()
 
                         # Map to parts of genome
                         elif map_reads_choice == '2':
                             misc.log_to_file('User input: Map reads to parts of genome')
                             rna_analysis.map_reads(options, filename, misc, shortcuts)
+                            rna_analysis.ASEReadCounter(options, filename, misc, shortcuts)
+                            rna_analysis.add_wgs_data_to_csv(options, filename, misc, shortcuts)
 
 
 

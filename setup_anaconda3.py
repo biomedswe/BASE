@@ -15,7 +15,7 @@ class SetupAnaconda3():
             print('\n{0}'.format(text))
             logging.info('\n{0}'.format(text))
         except Exception as e:
-            logging.info('Error with self.log_to_file() in setup_anaconda3.py: {0}. Exiting program...'.format(e))
+            logging.info('Error with {0}.log_to_file() in setup_anaconda3.py: {1}. Exiting program...'.format(self, e))
             sys.exit()
 
     #---------------------------------------------------------------------------
@@ -38,7 +38,7 @@ class SetupAnaconda3():
                     self.log_to_file('Incomplete {0} removed - OK!'.format(file))
                     sys.exit()
         except Exception as e:
-            self.log_to_file('Error with SetupAnaconda3.run_command() in setup_anaconda3.py: {0}. Exiting program...'.format(e))
+            self.log_to_file('Error with {0}.run_command() in setup_anaconda3.py: {1}. Exiting program...'.format(self, e))
             sys.exit()
 
     #---------------------------------------------------------------------------
@@ -73,11 +73,11 @@ class SetupAnaconda3():
 
         self.log_to_file("Downloading anaconda from https://repo.anaconda.com/archive/Anaconda3-2020.11-Linux-x86_64.sh...")
         # Download Anaconda3
-        self.run_command("wget https://repo.anaconda.com/archive/Anaconda3-2020.11-Linux-x86_64.sh -P $HOME", "Downloading Anaconda3-2020.11-Linux-x86_64.sh", getenv("HOME")+'/anaconda3/install.complete', None)
+        self.run_command("wget https://repo.anaconda.com/archive/Anaconda3-2020.11-Linux-x86_64.sh -P $HOME", "Downloading Anaconda3-2020.11-Linux-x86_64.sh", getenv("HOME")+'/Anaconda3-2020.11-Linux-x86_64.sh', None)
         # Install Anaconda3
-        self.run_command("bash $HOME/Anaconda3-2020.11-Linux-x86_64.sh", "Installation of Anaconda3", getenv("HOME")+'/anaconda3/install.complete', None)
+        self.run_command("bash $HOME/Anaconda3-2020.11-Linux-x86_64.sh", "Installation of Anaconda3", getenv("HOME")+'/anaconda3/install.complete', getenv("HOME")+'/anaconda3/install.complete')
         # remove installation file
-        self.run_command("rm $HOME/Anaconda3-2020.11-Linux-x86_64.sh", 'Removal of installation file', getenv("HOME")+'/anaconda3/install.complete', getenv("HOME")+'/anaconda3/install.complete')
+        self.run_command("rm $HOME/Anaconda3-2020.11-Linux-x86_64.sh", 'Removal of installation file', None, None)
         print("\nInstallation of Anaconda3 is now completed,\nBefore you are done, you have to Copy and paste the following in the terminal: \"source $HOME/.bashrc\" to initialize anaconda3")
 
     #---------------------------------------------------------------------------
@@ -101,7 +101,7 @@ class SetupAnaconda3():
             shortcuts.GRCh38_dir,
             shortcuts.star_index_dir_whole_genome,
             shortcuts.GRCh38_chunks_dir
-            ], "Directory tree")
+            ])
 
             if path.isdir(getenv("HOME")+'/anaconda3/envs/sequencing'):
                 misc.log_to_file("Environment allready exists, do you want to owerwrite?")
