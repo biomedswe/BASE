@@ -176,20 +176,20 @@ class RnaSeqAnalysis():
 
 
             df = pd.read_csv(f'{shortcuts.star_output_dir}{filename}/{options.tumor_id}_{filename}_STAR_ASE.csv')
-            print(df)
 
-            for i in range(10):
-                df['Dna_refCount'] = df.apply(lambda row: self.ad_tumor_coverage(row, 0, dict), axis=1)
-                df['Dna_altCount'] = df.apply(lambda row: self.ad_tumor_coverage(row, 1, dict), axis=1)
-                df['Dna_totalCount'] = df.apply(lambda row: self.ad_tumor_coverage(row, 'both', dict), axis=1)
-                # df['Copy_number'] finns i annotated.vcf filen
-                df['Dna_altAlleleFreq'] = df.apply(lambda row: self.alt_allele_freq(row, dict), axis=1)
-                df['pValue_dna_altAlleleFreq'] = df.apply(lambda row: self.binominal_test(row), axis=1)
-                df['geneName'] = df.apply(lambda row: self.add_gene_name(row, dict), axis=1)
-                df['variantType'] = df.apply(lambda row: self.add_variant_type(row, dict), axis=1)
+
+
+            df['Dna_refCount'] = df.apply(lambda row: self.ad_tumor_coverage(row, 0, dict), axis=1)
+            df['Dna_altCount'] = df.apply(lambda row: self.ad_tumor_coverage(row, 1, dict), axis=1)
+            df['Dna_totalCount'] = df.apply(lambda row: self.ad_tumor_coverage(row, 'both', dict), axis=1)
+            # df['Copy_number'] finns i annotated.vcf filen
+            df['Dna_altAlleleFreq'] = df.apply(lambda row: self.alt_allele_freq(row, dict), axis=1)
+            df['pValue_dna_altAlleleFreq'] = df.apply(lambda row: self.binominal_test(row), axis=1)
+            df['geneName'] = df.apply(lambda row: self.add_gene_name(row, dict), axis=1)
+            df['variantType'] = df.apply(lambda row: self.add_variant_type(row, dict), axis=1)
 
             df.drop(['variantID', 'lowMAPQDepth', 'lowBaseQDepth', 'rawDepth', 'otherBases', 'improperPairs'], axis=1, inplace=True)
-
+            print(df)
             df.to_csv(f'{shortcuts.star_output_dir}{filename}/{options.tumor_id}_{filename}_STAR_ASE_completed.csv', sep=',', index=False)
             end = timeit.default_timer()
             misc.log_to_file(f'Creating CSV completed in {misc.elapsed_time(end-start)} - OK!')
@@ -245,7 +245,7 @@ class RnaSeqAnalysis():
 
             if chr_pos in list(dict.keys()):
                 alt_allele_freq = altCount/totalCount
-                return '{0:.3g}'.format(alt_allele_freq)
+                return f"{alt_allele_freq:.3g}"
 
         except Exception as e:
             misc.log_exception(".alt_allele_freq() in rna_seq_analysis.py:", e)
@@ -261,7 +261,7 @@ class RnaSeqAnalysis():
             totalCount = row[7]
             Dna_altAlleleFreq = row[16]
             avg_pvalue = binom_test(altCount, totalCount, float(Dna_altAlleleFreq))
-            return avg_pvalue
+            return f"{avg_pvalue:.3f}"
         except Exception as e:
             misc.log_exception(".binominal_test() in rna_seq_analysis.py:", e)
             return None
