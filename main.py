@@ -3,11 +3,13 @@
 # Packages used in script
 from os import getenv, sys, path, listdir, makedirs
 import argparse
-from menus import Menus, Misc, Shortcuts
+from menus import Menus
+from misc import Misc
+from shortcuts import Shortcuts
+from setup_anaconda3 import SetupAnaconda3
 from rna_seq_analysis import RnaSeqAnalysis
 from dna_seq_analysis import DnaSeqAnalysis
 from reference_genome import ReferenceGenome
-from setup_anaconda3 import SetupAnaconda3
 import time
 import timeit
 
@@ -139,7 +141,6 @@ def main():
                                 filename = misc.create_new_fasta(chromosomes, shortcuts)
                                 misc.create_new_gtf(chromosomes, filename, shortcuts)
                                 rna_analysis.index_genome_rna(2, filename, misc, shortcuts)
-                                input("Press any key to return to RNA-analysis menu")
                                 break
 
                 # Map reads to reference genome
