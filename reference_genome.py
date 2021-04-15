@@ -12,14 +12,16 @@ class ReferenceGenome():
 
         try:
             misc.clear_screen()
-            misc.log_to_file("Downloading GRCh38.p13.genome.fa and Comprehensive gene annotation from https://www.gencodegenes.org/human/...")
+            misc.log_to_file("Downloading GRCh38.p13.genome.fa and gencode.v37.primary_assembly.annotation.gtf from https://www.gencodegenes.org/human/...")
             cmd_fasta_download = f"wget ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_36/GRCh38.p13.genome.fa.gz -P {shortcuts.GRCh38_dir}"
             if misc.run_command(cmd_fasta_download, 'Downloading GRCh38.p13.genome.fa.gz', shortcuts.reference_genome_file, None):
+                misc.log_to_file("Unzipping, please wait...")
                 cmd_fasta_unzip = f"gunzip {shortcuts.GRCh38_dir}GRCh38.p13.genome.fa.gz"
                 misc.run_command(cmd_fasta_unzip, 'Unzipping GRCh38.p13.genome.fa.gz', None, None)
 
             cmd_gtf_download = f"wget ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_37/gencode.v37.primary_assembly.annotation.gtf.gz -P {shortcuts.GRCh38_dir}"
             if misc.run_command(cmd_gtf_download, 'Downloading gencode.v37.primary_assembly.annotation.gtf.gz', shortcuts.annotation_gtf_file, None):
+                misc.log_to_file("Unzipping, please wait...")
                 cmd_gtf_unzip = f"gunzip {shortcuts.GRCh38_dir}gencode.v37.primary_assembly.annotation.gtf.gz"
                 misc.run_command(cmd_gtf_unzip, 'Unzipping gencode.v37.primary_assembly.annotation.gtf.gz', None, None)
                 misc.log_to_file("Download completed!\nGRCh38.p13.genome.fa and gencode.v37.primary_assembly.annotation.gtf are saved in the reference_genome/GRCh38.p13.genome folder.\n")

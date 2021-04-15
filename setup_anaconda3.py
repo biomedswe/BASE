@@ -100,7 +100,8 @@ class SetupAnaconda3():
             shortcuts.star_output_dir,
             shortcuts.GRCh38_dir,
             shortcuts.star_index_dir_whole_genome,
-            shortcuts.GRCh38_chunks_dir
+            shortcuts.GRCh38_chunks_dir,
+            shortcuts.haplotypecaller_chunks_dir
             ])
 
             if path.isdir(getenv("HOME")+'/anaconda3/envs/sequencing'):
@@ -108,10 +109,11 @@ class SetupAnaconda3():
                 if not misc.confirm_choice():
                     misc.log_to_file('User input: No')
                     return
-
-            misc.clear_screen()
-            misc.log_to_file('User input: Yes')
-            misc.log_to_file('''Set up a new conda environment for DNA and RNA-sequence analysis.
+                else:
+                    misc.log_to_file('User input: Yes')
+            else:
+                misc.clear_screen()
+                misc.log_to_file('''Set up a new conda environment for DNA and RNA-sequence analysis.
 
 Creating a new environment named \"Secuencing\"...
 

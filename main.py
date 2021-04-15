@@ -4,7 +4,7 @@
 from os import getenv, sys, path, listdir, makedirs
 import argparse
 from menus import Menus
-from misc import Misc
+from miscellaneous import Misc
 from shortcuts import Shortcuts
 from setup_anaconda3 import SetupAnaconda3
 from rna_seq_analysis import RnaSeqAnalysis
@@ -77,6 +77,7 @@ def main():
                         elif reference_genome_menu_choice == '2':
                             misc.log_to_file('User input: 2. Index reference genome')
                             dna_analysis.index_genome_dna(misc, shortcuts)
+                            break
 
                 # Create library list file
                 elif dna_menu_choice == '2':
@@ -87,6 +88,7 @@ def main():
 
                 # Run dna analysis
                 elif dna_menu_choice == '3':
+                    start = timeit.default_timer()
                     misc.log_to_file('User input: 3. Run analysis')
                     misc.clear_screen()
                     misc.validate_id(options, shortcuts)
@@ -99,7 +101,8 @@ def main():
                         dna_analysis.gatk_haplotype(options, misc, shortcuts)
                         dna_analysis.delly(options, misc, shortcuts)
                         dna_analysis.manta(misc, shortcuts)
-                        misc.log_to_file('GDC DNA-Seq analysis pipeline successfully completed - OK!')
+                        elapsed = timeit.default_timer() - start
+                        misc.log_to_file(f'GDC DNA-Seq analysis pipeline successfully completed in {misc.elapsed_time(elapsed)} - OK!')
                         sys.exit()
 
         # Rna analysis menu

@@ -38,8 +38,8 @@ class RnaSeqAnalysis():
                     --genomeFastaFiles {shortcuts.reference_genome_file} \\
                     --sjdbGTFfile {shortcuts.annotation_gtf_file}'''
                     if misc.run_command(cmd_StarIndex, None, None, f"{shortcuts.star_index_dir_whole_genome}{filename}_starIndex.complete"):
-                        end = timeit.default_timer()
-                        misc.log_to_file(f'Indexing whole genome with STAR succesfully completed in {misc.elapsed_time(end-start)} - OK!')
+                        elapsed = timeit.default_timer() - start
+                        misc.log_to_file(f'Indexing whole genome with STAR succesfully completed in {misc.elapsed_time(elapsed)} - OK!')
                         input('press any key to exit')
                         sys.exit()
 
@@ -57,8 +57,8 @@ class RnaSeqAnalysis():
                         --genomeFastaFiles {ref_dir}{filename}/{filename}.fa \\
                         --sjdbGTFfile {ref_dir}{filename}/{filename}.gtf'''
                         if misc.run_command(cmd_StarIndex,  f'Genome indexing {filename} with star', None, f'{ref_dir}{filename}/star_index/starIndex.complete'):
-                            end = timeit.default_timer()
-                            misc.log_to_file(f'Indexing {filename} with STAR succesfully completed in {misc.elapsed_time(end-start)} - OK!')
+                            elapsed = timeit.default_timer() - start
+                            misc.log_to_file(f'Indexing {filename} with STAR succesfully completed in {misc.elapsed_time(elapsed)} - OK!')
                             input('press any key to return to previous menu...')
 
         except Exception as e:
@@ -126,8 +126,8 @@ class RnaSeqAnalysis():
                 misc.run_command(cmd_sortsam, "Sorting BAM with Picard SortSam", f"{shortcuts.star_output_dir}{filename}/{options.tumor_id}_Aligned_sorted.out.bam", None)
                 cmd_samtools_index = f"samtools index {shortcuts.star_output_dir}{filename}/{options.tumor_id}_Aligned_sorted.out.bam"
                 misc.run_command(cmd_samtools_index, "Indexing BAM with Samtools index", f"{shortcuts.star_output_dir}{filename}/{options.tumor_id}_Aligned_sorted.out.bam.bai",  f"{shortcuts.star_output_dir}{filename}/map.complete")
-                end = timeit.default_timer()
-                misc.log_to_file(f'All steps in mapping reads to {filename} with STAR succesfully completed in {misc.elapsed_time(end-start)} - OK!')
+                elapsed = timeit.default_timer() - start
+                misc.log_to_file(f'All steps in mapping reads to {filename} with STAR succesfully completed in {misc.elapsed_time(elapsed)} - OK!')
         except Exception as e:
             misc.log_exception(".map_reads() in rna_seq_analysis.py:", e)
 
@@ -135,21 +135,22 @@ class RnaSeqAnalysis():
     def ASEReadCounter(self, options, filename, misc, shortcuts):
 
         try:
-            ref_dir = shortcuts.reference_genome_dir
-            misc.log_to_file("Starting: Counting ASE reads using ASEReadCounter")
-            start = timeit.default_timer()
-            cmd_ase = f'''
-            gatk ASEReadCounter -R {ref_dir}{filename}/{filename}.fa \\
-            --min-mapping-quality 10 --min-depth-of-non-filtered-base 10 \\
-            --min-base-quality 2 \\
-            --disable-read-filter NotDuplicateReadFilter \\
-            --variant {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het_annotated.vcf \\
-            -I {shortcuts.star_output_dir}{filename}/{options.tumor_id}_Aligned_sorted.out.bam \\
-            --output-format CSV \\
-            --output {shortcuts.star_output_dir}{filename}/{options.tumor_id}_{filename}_STAR_ASE.csv'''
-            misc.run_command(cmd_ase, None, f'{shortcuts.star_output_dir}{filename}/ase.complete', f'{shortcuts.star_output_dir}{filename}/ase.complete')
-            end = timeit.default_timer()
-            misc.log_to_file(f'ASEReadCounter for {filename} with STAR succesfully completed in {misc.elapsed_time(end-start)} - OK!')
+            if not misc.step_allready_completed(f"{shortcuts.star_output_dir}{filename}/ase.complete", f'ASEReadCounter for {filename}'):
+                ref_dir = shortcuts.reference_genome_dir
+                misc.log_to_file("Starting: Counting ASE reads using ASEReadCounter")
+                start = timeit.default_timer()
+                cmd_ase = f'''
+                gatk ASEReadCounter -R {ref_dir}{filename}/{filename}.fa \\
+                --min-mapping-quality 10 --min-depth-of-non-filtered-base 10 \\
+                --min-base-quality 2 \\
+                --disable-read-filter NotDuplicateReadFilter \\
+                --variant {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het_annotated.vcf \\
+                -I {shortcuts.star_output_dir}{filename}/{options.tumor_id}_Aligned_sorted.out.bam \\
+                --output-format CSV \\
+                --output {shortcuts.star_output_dir}{filename}/{options.tumor_id}_{filename}_STAR_ASE.csv'''
+                misc.run_command(cmd_ase, None, f'{shortcuts.star_output_dir}{filename}/ase.complete', f'{shortcuts.star_output_dir}{filename}/ase.complete')
+                elapsed = timeit.default_timer() - start
+                misc.log_to_file(f'ASEReadCounter for {filename} with STAR succesfully completed in {misc.elapsed_time(elapsed)} - OK!')
         except Exception as e:
             misc.log_exception(".ASEReadCounter() in rna_seq_analysis.py:", e)
 
@@ -168,10 +169,15 @@ class RnaSeqAnalysis():
             for record in vcf_reader:
                 chrom = record.CHROM
                 pos = record.POS
-                ad = record.calls[0].data.get('AD')
+                ref_ad = record.calls[0].data.get('AD')[0]
+                alt_ad = record.calls[0].data.get('AD')[1]
                 geneName = record.__dict__['INFO']['ANN'][0].split('|')[3]
                 variantType = record.__dict__['INFO']['ANN'][0].split('|')[1]
-                dict[f"{chrom}-{pos}"] = [ad, geneName, variantType]
+                dict[f"{chrom}-{pos}"] = [ref_ad, alt_ad, geneName, variantType]
+
+            df_dict = pd.DataFrame.from_dict(dict, orient="index", columns=[ "DNA_ref_AD", "DNA_alt_AD", "geneName", "variantType"])
+            print(df_dict)
+            sys.exit()
 
 
 
@@ -179,26 +185,27 @@ class RnaSeqAnalysis():
 
 
 
-            df['Dna_refCount'] = df.apply(lambda row: self.ad_tumor_coverage(row, 0, dict), axis=1)
-            df['Dna_altCount'] = df.apply(lambda row: self.ad_tumor_coverage(row, 1, dict), axis=1)
-            df['Dna_totalCount'] = df.apply(lambda row: self.ad_tumor_coverage(row, 'both', dict), axis=1)
+            df['Dna_refCount'] = df.apply(lambda row: self.ad_tumor_coverage(row, 0, dict, misc), axis=1)
+            df['Dna_altCount'] = df.apply(lambda row: self.ad_tumor_coverage(row, 1, dict, misc), axis=1)
+            df['Dna_totalCount'] = df.apply(lambda row: self.ad_tumor_coverage(row, 'both', dict, misc), axis=1)
             # df['Copy_number'] finns i annotated.vcf filen
-            df['Dna_altAlleleFreq'] = df.apply(lambda row: self.alt_allele_freq(row, dict), axis=1)
-            df['pValue_dna_altAlleleFreq'] = df.apply(lambda row: self.binominal_test(row), axis=1)
-            df['geneName'] = df.apply(lambda row: self.add_gene_name(row, dict), axis=1)
-            df['variantType'] = df.apply(lambda row: self.add_variant_type(row, dict), axis=1)
+            # df['VAF_ratio'] = df.apply
+            df['Dna_altAlleleFreq'] = df.apply(lambda row: self.alt_allele_freq(row, dict, misc), axis=1)
+            df['pValue_dna_altAlleleFreq'] = df.apply(lambda row: self.binominal_test(row, misc), axis=1)
+            df['geneName'] = df.apply(lambda row: self.add_gene_name(row, dict, misc), axis=1)
+            df['variantType'] = df.apply(lambda row: self.add_variant_type(row, dict, misc), axis=1)
 
             df.drop(['variantID', 'lowMAPQDepth', 'lowBaseQDepth', 'rawDepth', 'otherBases', 'improperPairs'], axis=1, inplace=True)
             print(df)
             df.to_csv(f'{shortcuts.star_output_dir}{filename}/{options.tumor_id}_{filename}_STAR_ASE_completed.csv', sep=',', index=False)
-            end = timeit.default_timer()
-            misc.log_to_file(f'Creating CSV completed in {misc.elapsed_time(end-start)} - OK!')
+            elapsed = timeit.default_timer() - start
+            misc.log_to_file(f'Creating CSV completed in {misc.elapsed_time(elapsed)} - OK!')
             sys.exit()
         except Exception as e:
             misc.log_exception(".add_wgs_data_to_csv() in rna_seq_analysis.py:", e)
 
         #---------------------------------------------------------------------------
-    def add_gene_name(self, row, dict):
+    def add_gene_name(self, row, dict, misc):
 
         try:
             chr_pos = (str(row[0]) + "-" + str(row[1]))
@@ -210,7 +217,7 @@ class RnaSeqAnalysis():
             return None
 
     #---------------------------------------------------------------------------
-    def add_variant_type(self, row, dict):
+    def add_variant_type(self, row, dict, misc):
 
         try:
             chr_pos = (str(row[0]) + "-" + str(row[1]))
@@ -221,7 +228,7 @@ class RnaSeqAnalysis():
             misc.log_exception(".add_variant_type() in rna_seq_analysis.py:", e)
             return None
     #---------------------------------------------------------------------------
-    def ad_tumor_coverage(self, row, col, dict):
+    def ad_tumor_coverage(self, row, col, dict, misc):
         '''This function looks for the string (CHROM-POS) in the dict and returns the matching value (list with two values eg. [8,8])'''
 
         try:
@@ -234,7 +241,7 @@ class RnaSeqAnalysis():
             return None
 
     #---------------------------------------------------------------------------
-    def alt_allele_freq(self, row, dict):
+    def alt_allele_freq(self, row, dict, misc):
         '''This function uses the chrom-pos keys to retrieve altCount and totalCount values from the dict. Then divides altCount with totalCount
         and returns the alt allele frequency'''
 
@@ -252,7 +259,7 @@ class RnaSeqAnalysis():
             return None
 
     #---------------------------------------------------------------------------
-    def binominal_test(self, row):
+    def binominal_test(self, row, misc):
         '''This function reads the columns altCount, totalCount and Dna_altAlleleFreq from current row. Then runs binom_test with these inputs
         and returns the answer'''
 
@@ -267,3 +274,5 @@ class RnaSeqAnalysis():
             return None
 
     #---------------------------------------------------------------------------
+    # def vaf_ratio(self, row):
+    #
