@@ -183,8 +183,8 @@ class DnaSeqAnalysis():
                 cmd_removedup = []
                 with open(shortcuts.mergedFiles_list, 'r') as list:
                     tumor, normal = list.read().splitlines()
-                    cmd_removedup.extend([f"picard MarkDuplicates -I {shortcuts.merged_output_dir}{tumor} -O {shortcuts.removed_duplicates_output_dir}{tumor} -M {shortcuts.removed_duplicates_output_dir}marked_dup_metrics_{tumor}.txt --TMP_DIR {shortcuts.removed_duplicates_output_dir}/tmp",
-                                         f"picard MarkDuplicates -I {shortcuts.merged_output_dir}{normal} -O {shortcuts.removed_duplicates_output_dir}{normal} -M {shortcuts.removed_duplicates_output_dir}marked_dup_metrics_{normal}.txt --TMP_DIR {shortcuts.removed_duplicates_output_dir}/tmp"])
+                    cmd_removedup.extend([f"picard -Xmx70g MarkDuplicates -I {shortcuts.merged_output_dir}{tumor} -O {shortcuts.removed_duplicates_output_dir}{tumor} -M {shortcuts.removed_duplicates_output_dir}marked_dup_metrics_{tumor}.txt --TMP_DIR {shortcuts.removed_duplicates_output_dir}/tmp",
+                                         f"picard -Xmx70g MarkDuplicates -I {shortcuts.merged_output_dir}{normal} -O {shortcuts.removed_duplicates_output_dir}{normal} -M {shortcuts.removed_duplicates_output_dir}marked_dup_metrics_{normal}.txt --TMP_DIR {shortcuts.removed_duplicates_output_dir}/tmp"])
                     with mp.Pool(processes=1) as pool:
                         pool.map(partial(self.multi_processing, [f"{shortcuts.removed_duplicates_output_dir}{tumor}", f"{shortcuts.removed_duplicates_output_dir}{normal}"], options, misc, shortcuts),cmd_removedup)
                 copy(shortcuts.mergedFiles_list, shortcuts.removeDuplicates_list) # just copying because the content will be the same

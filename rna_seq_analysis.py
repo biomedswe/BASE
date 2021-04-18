@@ -166,97 +166,56 @@ class RnaSeqAnalysis():
             dict = {}
             vcf_reader = vcfpy.Reader.from_path(f'{shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het_annotated.vcf', 'r')
 
-            for record in vcf_reader:
-                chrom = record.CHROM
-                pos = record.POS
-                ref_ad = record.calls[0].data.get('AD')[0]
-                alt_ad = record.calls[0].data.get('AD')[1]
+            for i, record in enumerate(vcf_reader):
+                contig = record.CHROM
+                position = record.POS
+                refCount = record.calls[0].data.get('AD')[0]
+                altCount = record.calls[0].data.get('AD')[1]
+                totalCount = refCount + altCount
                 geneName = record.__dict__['INFO']['ANN'][0].split('|')[3]
                 variantType = record.__dict__['INFO']['ANN'][0].split('|')[1]
-                dict[f"{chrom}-{pos}"] = [ref_ad, alt_ad, geneName, variantType]
+                dict[i] = [f"{contig}-{position}", contig, position, refCount, altCount, totalCount, geneName, variantType]
 
-            df_dict = pd.DataFrame.from_dict(dict, orient="index", columns=[ "DNA_ref_AD", "DNA_alt_AD", "geneName", "variantType"])
-            print(df_dict)
-            sys.exit()
-
-
+            df_vcf = pd.DataFrame.from_dict(dict, orient="index", columns=["key", "contig", "position", "DNA_refCount", "DNA_altCount", "DNA_totalCount", "geneName", "variantType"])
 
             df = pd.read_csv(f'{shortcuts.star_output_dir}{filename}/{options.tumor_id}_{filename}_STAR_ASE.csv')
 
 
 
-            df['Dna_refCount'] = df.apply(lambda row: self.ad_tumor_coverage(row, 0, dict, misc), axis=1)
-            df['Dna_altCount'] = df.apply(lambda row: self.ad_tumor_coverage(row, 1, dict, misc), axis=1)
-            df['Dna_totalCount'] = df.apply(lambda row: self.ad_tumor_coverage(row, 'both', dict, misc), axis=1)
+
+            df["clinicalID"] = options.tumor_id
+            # df = df[['clinicalID', 'key', 'contig', 'position', 'Dna_refCount', 'Dna_altCount', 'Dna_totalCount', 'geneName', 'variantType']]
+
+
+            df_merge = pd.merge(df_vcf, df, on=["contig", "position"])
+            pd.set_option('display.max_columns', 85)
+
+            df_merge = df_merge[['clinicalID', 'contig', 'position', 'variantID', 'refAllele', 'altAllele', 'refCount', 'altCount', 'totalCount', 'DNA_refCount', 'DNA_altCount']]
+            df_merge['Dna_altAlleleFreq'] = df_merge.apply(lambda row: f"{row[10]/(row[9]+row[10]):.3f}", axis=1)
+            df_merge['pValue_dna_altAlleleFreq'] = df_merge.apply(lambda row: f"{binom_test(row[7], row[8], float(row[11])):.3f}", axis=1) #input: altCount, totalCount, Dna_altAlleleFreq
+            print(df_merge)
+
+
             # df['Copy_number'] finns i annotated.vcf filen
             # df['VAF_ratio'] = df.apply
-            df['Dna_altAlleleFreq'] = df.apply(lambda row: self.alt_allele_freq(row, dict, misc), axis=1)
-            df['pValue_dna_altAlleleFreq'] = df.apply(lambda row: self.binominal_test(row, misc), axis=1)
-            df['geneName'] = df.apply(lambda row: self.add_gene_name(row, dict, misc), axis=1)
-            df['variantType'] = df.apply(lambda row: self.add_variant_type(row, dict, misc), axis=1)
 
-            df.drop(['variantID', 'lowMAPQDepth', 'lowBaseQDepth', 'rawDepth', 'otherBases', 'improperPairs'], axis=1, inplace=True)
-            print(df)
-            df.to_csv(f'{shortcuts.star_output_dir}{filename}/{options.tumor_id}_{filename}_STAR_ASE_completed.csv', sep=',', index=False)
+
+
+
+
+
+            df_merge.to_csv(f'{shortcuts.star_output_dir}{filename}/{options.tumor_id}_{filename}_STAR_ASE_completed.csv', sep=',', index=False)
             elapsed = timeit.default_timer() - start
             misc.log_to_file(f'Creating CSV completed in {misc.elapsed_time(elapsed)} - OK!')
             sys.exit()
         except Exception as e:
             misc.log_exception(".add_wgs_data_to_csv() in rna_seq_analysis.py:", e)
 
-        #---------------------------------------------------------------------------
-    def add_gene_name(self, row, dict, misc):
 
-        try:
-            chr_pos = (str(row[0]) + "-" + str(row[1]))
-            if chr_pos in list(dict.keys()):
-                return dict[chr_pos][1]
 
-        except Exception as e:
-            misc.log_exception(".add_gene_name() in rna_seq_analysis.py:", e)
-            return None
 
-    #---------------------------------------------------------------------------
-    def add_variant_type(self, row, dict, misc):
 
-        try:
-            chr_pos = (str(row[0]) + "-" + str(row[1]))
-            if chr_pos in list(dict.keys()):
-                return dict[chr_pos][2]
 
-        except Exception as e:
-            misc.log_exception(".add_variant_type() in rna_seq_analysis.py:", e)
-            return None
-    #---------------------------------------------------------------------------
-    def ad_tumor_coverage(self, row, col, dict, misc):
-        '''This function looks for the string (CHROM-POS) in the dict and returns the matching value (list with two values eg. [8,8])'''
-
-        try:
-            chr_pos = (str(row[0]) + "-" + str(row[1]))
-            if chr_pos in list(dict.keys()):
-                return (dict[chr_pos][0][0] + dict[chr_pos][0][1]) if col == 'both' else dict[chr_pos][0][col]
-
-        except Exception as e:
-            misc.log_exception(".ad_tumor_coverage() in rna_seq_analysis.py:", e)
-            return None
-
-    #---------------------------------------------------------------------------
-    def alt_allele_freq(self, row, dict, misc):
-        '''This function uses the chrom-pos keys to retrieve altCount and totalCount values from the dict. Then divides altCount with totalCount
-        and returns the alt allele frequency'''
-
-        try:
-            chr_pos = (str(row[0]) + "-" + str(row[1]))
-            altCount = dict[chr_pos][0][1]
-            totalCount = dict[chr_pos][0][0] + dict[chr_pos][0][1]
-
-            if chr_pos in list(dict.keys()):
-                alt_allele_freq = altCount/totalCount
-                return f"{alt_allele_freq:.3g}"
-
-        except Exception as e:
-            misc.log_exception(".alt_allele_freq() in rna_seq_analysis.py:", e)
-            return None
 
     #---------------------------------------------------------------------------
     def binominal_test(self, row, misc):
