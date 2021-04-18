@@ -257,7 +257,7 @@ class Misc():
             else:
                 return False
         except Exception as e:
-            self.log_exception(".step_allready_completed() in setup_anaconda3.py:", e)
+            self.log_exception(".step_allready_completed() in miscellaneous.py:", e)
             sys.exit()
 
     #---------------------------------------------------------------------------

@@ -137,12 +137,12 @@ class DnaSeqAnalysis():
                             normal_sort_str += f" -I {shortcuts.sorted_output_dir}{sample}".rstrip()
                     write_to_file = f"{tumor_sort_str.lstrip()}\n{normal_sort_str.lstrip()}"
 
-                    with mp.Pool(processes=2) as pool:
+                    with mp.Pool(processes=1) as pool:
                         pool.map(partial(self.multi_processing, f"{shortcuts.sorted_output_dir}{sample}", options, misc, shortcuts),cmd_sort)
                     misc.create_outputList_dna(shortcuts.sortedFiles_list, write_to_file)
                 elapsed = timeit.default_timer() - start
                 misc.log_to_file(f'Picard SortSam succesfully completed in {misc.elapsed_time(elapsed)} - OK!')
-                # misc.run_command(f"rm {shortcuts.aligned_output_dir}*.bam", 'Removing aligned BAM files to save space', None, None)
+                misc.run_command(f"rm {shortcuts.aligned_output_dir}*.bam", 'Removing aligned BAM files to save space', None, None)
         except Exception as e:
             misc.log_exception(".sort() in dna_seq_analysis.py:", e)
             sys.exit()
@@ -157,57 +157,67 @@ class DnaSeqAnalysis():
                 misc.log_to_file("Starting: merging SAM/BAM files using Picard MergeSamFiles")
                 cmd_merge = []
                 with open(shortcuts.sortedFiles_list, 'r') as list:
-                    tumor, normal = list.read().splitlines()
+                    for sample in list.read().splitlines():
+                        if options.tumor_id in sample: tumor = sample
+                        else: normal = sample
                     cmd_merge.extend([f"picard MergeSamFiles {tumor} -O {shortcuts.merged_output_dir}{options.tumor_id}.bam", f"picard MergeSamFiles {normal} -O {shortcuts.merged_output_dir}{options.normal_id}.bam"])
                     misc.create_outputList_dna(shortcuts.mergedFiles_list, f"{options.tumor_id}.bam")
                     misc.create_outputList_dna(shortcuts.mergedFiles_list, f"{options.normal_id}.bam")
                     with mp.Pool() as pool:
-                        pool.map(partial(self.multi_processing, f"{shortcuts.merged_output_dir}{options.tumor_id}.bam", options, misc, shortcuts),cmd_merge) # how can I fix so i swithes between tumor and normal?
+                        pool.map(partial(self.multi_processing, [f"{shortcuts.merged_output_dir}{options.tumor_id}.bam", f"{shortcuts.merged_output_dir}{options.normal_id}.bam" ], options, misc, shortcuts),cmd_merge)
                 elapsed = timeit.default_timer() - start
                 misc.log_to_file(f'Picard MergeSamFiles succesfully completed in {misc.elapsed_time(elapsed)} - OK!')
-                # misc.run_command(f"rm {shortcuts.sorted_output_dir}*.bam", 'Removing sorted BAM files to save space', None, None)
+                misc.run_command(f"rm {shortcuts.sorted_output_dir}*.bam", 'Removing sorted BAM files to save space', None, None)
         except Exception as e:
             misc.log_exception(".merge() in dna_seq_analysis.py:", e)
             sys.exit()
 
     #---------------------------------------------------------------------------
-    def remove_duplicate(self, misc, shortcuts):
+    def remove_duplicate(self, options, misc, shortcuts):
         '''This function removes duplicates '''
 
         try:
             if not misc.step_allready_completed(shortcuts.removeDuplicates_list, "Picard MarkDuplicates"):
                 start = timeit.default_timer()
                 misc.log_to_file("Starting: removing duplicates in SAM/BAM files using Picard MarkDuplicates")
+                cmd_removedup = []
                 with open(shortcuts.mergedFiles_list, 'r') as list:
-                    for sample in list.read().splitlines():
-                        cmd_rd = f"picard MarkDuplicates -I {shortcuts.merged_output_dir}{sample} -O {shortcuts.removed_duplicates_output_dir}{sample} -M {shortcuts.removed_duplicates_output_dir}marked_dup_metrics_{sample}.txt --TMP_DIR {shortcuts.removed_duplicates_output_dir}/tmp"
-                        misc.run_command(cmd_rd, f"Removing duplicates for {sample}", f"{shortcuts.removed_duplicates_output_dir}{sample}", None)
-                        copy(shortcuts.mergedFiles_list, shortcuts.removeDuplicates_list) # just copying because the content will be the same
+                    tumor, normal = list.read().splitlines()
+                    cmd_removedup.extend([f"picard MarkDuplicates -I {shortcuts.merged_output_dir}{tumor} -O {shortcuts.removed_duplicates_output_dir}{tumor} -M {shortcuts.removed_duplicates_output_dir}marked_dup_metrics_{tumor}.txt --TMP_DIR {shortcuts.removed_duplicates_output_dir}/tmp",
+                                         f"picard MarkDuplicates -I {shortcuts.merged_output_dir}{normal} -O {shortcuts.removed_duplicates_output_dir}{normal} -M {shortcuts.removed_duplicates_output_dir}marked_dup_metrics_{normal}.txt --TMP_DIR {shortcuts.removed_duplicates_output_dir}/tmp"])
+                    with mp.Pool(processes=1) as pool:
+                        pool.map(partial(self.multi_processing, [f"{shortcuts.removed_duplicates_output_dir}{tumor}", f"{shortcuts.removed_duplicates_output_dir}{normal}"], options, misc, shortcuts),cmd_removedup)
+                copy(shortcuts.mergedFiles_list, shortcuts.removeDuplicates_list) # just copying because the content will be the same
                 elapsed = timeit.default_timer() - start
                 misc.log_to_file(f'Picard MarkDuplicates succesfully completed in {misc.elapsed_time(elapsed)} - OK!')
-                # misc.run_command(f"rm {shortcuts.merged_output_dir}*.bam", 'Removing merged BAM files to save space', None, None)
+                misc.run_command(f"rm {shortcuts.merged_output_dir}*.bam", 'Removing merged BAM files to save space', None, None)
         except Exception as e:
             misc.log_exception(".remove_duplicate() in dna_seq_analysis.py:", e)
             sys.exit()
 
     #---------------------------------------------------------------------------
-    def realign(self, misc, shortcuts):
+    def realign(self, options, misc, shortcuts):
         '''This function realigns the bam files'''
 
         try:
             if not misc.step_allready_completed(shortcuts.realignedFiles_list, "GATK LeftAlignIndels"):
                 start = timeit.default_timer()
                 misc.log_to_file("Starting: realigning SAM/BAM files using GATK LeftAlignIndels")
+                cmd_index = []
+                cmd_leftAlignIndels = []
                 with open(shortcuts.removeDuplicates_list, 'r') as list:
-                    for sample in list.read().splitlines():
-                        cmd_index = f"samtools index {shortcuts.removed_duplicates_output_dir}{sample}"
-                        misc.run_command(cmd_index, f"Indexing {sample}", None, None)
-                        cmd_leftAlignIndels = f"gatk LeftAlignIndels -R {shortcuts.reference_genome_file} -I {shortcuts.removed_duplicates_output_dir}{sample} -O {shortcuts.realigned_output_dir}{sample}"
-                        misc.run_command(cmd_leftAlignIndels, f"Realigning {sample}", f"{shortcuts.realigned_output_dir}{sample}", None)
-                        copy(shortcuts.removeDuplicates_list, shortcuts.realignedFiles_list)
+                    tumor, normal = list.read().splitlines()
+                    cmd_index.extend([f"samtools index {shortcuts.removed_duplicates_output_dir}{tumor}", f"samtools index {shortcuts.removed_duplicates_output_dir}{normal}"])
+                    with mp.Pool() as pool:
+                        pool.map(partial(self.multi_processing, "N/A", options, misc, shortcuts),cmd_index)
+                    cmd_leftAlignIndels.extend([f"gatk LeftAlignIndels -R {shortcuts.reference_genome_file} -I {shortcuts.removed_duplicates_output_dir}{tumor} -O {shortcuts.realigned_output_dir}{tumor}",
+                                                f"gatk LeftAlignIndels -R {shortcuts.reference_genome_file} -I {shortcuts.removed_duplicates_output_dir}{normal} -O {shortcuts.realigned_output_dir}{normal}"])
+                    with mp.Pool() as pool:
+                        pool.map(partial(self.multi_processing, "N/A", options, misc, shortcuts),cmd_leftAlignIndels)
+                    copy(shortcuts.removeDuplicates_list, shortcuts.realignedFiles_list)
                 elapsed = timeit.default_timer() - start
                 misc.log_to_file(f'gatk LeftAlignIndels succesfully completed in {misc.elapsed_time(elapsed)} - OK!')
-                # misc.run_command(f"rm {shortcuts.removed_duplicates_output_dir}*.bam", 'Removing remove_duplicate BAM files to save space', None, None)
+                misc.run_command(f"rm {shortcuts.removed_duplicates_output_dir}*.bam", 'Removing remove_duplicate BAM files to save space', None, None)
         except Exception as e:
             misc.log_exception(".realign() in dna_seq_analysis.py:", e)
             sys.exit()
@@ -216,6 +226,8 @@ class DnaSeqAnalysis():
     def multi_processing(self, file, options, misc, shortcuts, input):
         '''This function runs pipeline steps in parallell'''
         try:
+            if "picard MergeSamFiles" or "picard MarkDuplicates" in input:
+                file = file[0] if options.tumor_id in input else file[1]
             misc.run_command(input, None, file, None)
         except Exception as e:
             misc.log_exception(".multi_processing() in dna_seq_analysis.py:", e)

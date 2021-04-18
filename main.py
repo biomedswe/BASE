@@ -96,8 +96,8 @@ def main():
                     if dna_analysis.validate_bam_dna(misc, shortcuts):
                         dna_analysis.sort(options, misc, shortcuts)
                         dna_analysis.merge(options, misc, shortcuts)
-                        dna_analysis.remove_duplicate(misc, shortcuts)
-                        dna_analysis.realign(misc, shortcuts)
+                        dna_analysis.remove_duplicate(options, misc, shortcuts)
+                        dna_analysis.realign(options, misc, shortcuts)
                         dna_analysis.gatk_haplotype(options, misc, shortcuts)
                         dna_analysis.delly(options, misc, shortcuts)
                         dna_analysis.manta(misc, shortcuts)
