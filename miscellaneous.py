@@ -159,14 +159,15 @@ class Misc():
                 c.write(f"{write_to_file}\n")
 
         except Exception as e:
-            misc.log_exception(".create_outputList_dna() in misc.py:", e)
+            self.log_exception(".create_outputList_dna() in misc.py:", e)
     #---------------------------------------------------------------------------
     def create_trackFile(self, file):
         '''This function creates a trackfile that step_allready_completed() function can look after when checking if step is allready completed'''
         try:
             if path.isfile(file):
-                self.log_to_file("You are trying to owerwrite an existing file. please check the code.")
-                sys.exit()
+                elf.log_to_file(f"You are trying to overwrite the existing file: {file}")
+                if not self.confirm_choice():
+                    sys.exit()
             with open(file, 'w'):
                 pass
         except Exception as e:

@@ -53,18 +53,6 @@ class DnaSeqAnalysis():
         except Exception as e:
             misc.log_exception(".index_genome_dna() in dna_seq_analysis.py:", e)
 
-
-    #---------------------------------------------------------------------------
-    def create_outputList_dna(self, misc, output_path, write_to_file):
-        '''This function creates a list file containing the output name of the files created in the pipeline step where the function is used, the list is then used in the next step'''
-
-        try:
-            with open(output_path, 'a') as c:
-                c.write(f"{write_to_file}\n")
-
-        except Exception as e:
-            misc.log_exception(".create_outputList_dna() in dna_seq_analysis.py:", e)
-
     #---------------------------------------------------------------------------
     def validate_bam_dna(self, misc, shortcuts):
         '''This function runs picard ValidateSamFile to check if any errors are present in the aligned files.
@@ -237,8 +225,8 @@ class DnaSeqAnalysis():
     def gatk_haplotype(self, options, misc, shortcuts):
 
         try:
+            start = timeit.default_timer()
             if not misc.step_allready_completed(shortcuts.haplotypecaller_complete, "GATK haplotypeCaller"):
-                start = timeit.default_timer()
                 cmd_haplotypecaller = []
                 misc.log_to_file("Starting: looking for SNV's using GATK HaplotypeCaller (multiprocessing)")
                 with open(shortcuts.realignedFiles_list, 'r') as list:
@@ -283,14 +271,14 @@ class DnaSeqAnalysis():
             -v GRCh38.99 -canon -noInteraction -noNextProt -noMotif -strict \\
             -onlyProtein {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het.vcf \\
             > {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het_annotated.vcf'''
-            misc.run_command(cmd_annotate, "GATK haplotypeCaller step 5 (annotate vcf file)", f"{shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het_annotated.vcf", shortcuts.haplotypecaller_complete)
+            misc.run_command(cmd_annotate, "GATK haplotypeCaller step 5 (annotate vcf file)", f"{shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het_annotated.vcf", None)
         except Exception as e:
             misc.log_exception(".gatk_haplotype step 5 (annotate vcf file) in dna_seq_analysis.py:", e)
 
 
         try:
             cmd_indexFeatureFile = f"gatk IndexFeatureFile -I {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het_annotated.vcf"
-            if misc.run_command(cmd_indexFeatureFile, "GATK haplotypeCaller step 6 (index fearure file)", f"{shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het_annotated.vcf.idx", None):
+            if misc.run_command(cmd_indexFeatureFile, "GATK haplotypeCaller step 6 (index fearure file)", f"{shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het_annotated.vcf.idx", shortcuts.haplotypecaller_complete):
                 elapsed = timeit.default_timer() - start
                 misc.log_to_file(f'All steps in GATK HaplotypeCaller succesfully completed in {misc.elapsed_time(elapsed)} - OK!')
         except Exception as e:

@@ -162,7 +162,7 @@ class RnaSeqAnalysis():
 
         try:
             start = timeit.default_timer()
-            misc.log_to_file(f"Starting: Creating CSV, this might take some time...")
+            misc.log_to_file(f"Starting: Creating CSV...")
             dict = {}
             vcf_reader = vcfpy.Reader.from_path(f'{shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het_annotated.vcf', 'r')
 
@@ -176,34 +176,25 @@ class RnaSeqAnalysis():
                 variantType = record.__dict__['INFO']['ANN'][0].split('|')[1]
                 dict[i] = [f"{contig}-{position}", contig, position, refCount, altCount, totalCount, geneName, variantType]
 
-            df_vcf = pd.DataFrame.from_dict(dict, orient="index", columns=["key", "contig", "position", "DNA_refCount", "DNA_altCount", "DNA_totalCount", "geneName", "variantType"])
+            df_cn = pd.read_excel(f'{shortcuts.star_output_dir}{filename}/3751-04_CN.xlsx')
 
+
+
+            df_vcf = pd.DataFrame.from_dict(dict, orient="index", columns=["key", "contig", "position", "DNA_refCount", "DNA_altCount", "DNA_totalCount", "geneName", "variantType"])
             df = pd.read_csv(f'{shortcuts.star_output_dir}{filename}/{options.tumor_id}_{filename}_STAR_ASE.csv')
 
-
-
-
             df["clinicalID"] = options.tumor_id
-            # df = df[['clinicalID', 'key', 'contig', 'position', 'Dna_refCount', 'Dna_altCount', 'Dna_totalCount', 'geneName', 'variantType']]
-
-
             df_merge = pd.merge(df_vcf, df, on=["contig", "position"])
-            pd.set_option('display.max_columns', 85)
-
-            df_merge = df_merge[['clinicalID', 'contig', 'position', 'variantID', 'refAllele', 'altAllele', 'refCount', 'altCount', 'totalCount', 'DNA_refCount', 'DNA_altCount']]
-            df_merge['Dna_altAlleleFreq'] = df_merge.apply(lambda row: f"{row[10]/(row[9]+row[10]):.3f}", axis=1)
-            df_merge['pValue_dna_altAlleleFreq'] = df_merge.apply(lambda row: f"{binom_test(row[7], row[8], float(row[11])):.3f}", axis=1) #input: altCount, totalCount, Dna_altAlleleFreq
-            print(df_merge)
-
-
-            # df['Copy_number'] finns i annotated.vcf filen
-            # df['VAF_ratio'] = df.apply
-
-
-
-
-
-
+            df_merge.rename(columns={'refCount': 'RNA_refCount', 'altCount': 'RNA_altCount', 'totalCount': 'RNA_totalCount'}, inplace=True)
+            pd.set_option('display.max_columns', 20)
+            df_merge = df_merge[['clinicalID', 'contig', 'position', 'variantID', 'refAllele', 'altAllele', 'RNA_refCount', 'RNA_altCount', 'RNA_totalCount', 'DNA_refCount', 'DNA_altCount', 'DNA_totalCount']]
+            df_merge['RNA_VAF'] = df_merge.apply(lambda row: f"{row[7]/row[8]:.3f}", axis=1) #row[12]
+            df_merge['DNA_VAF'] = df_merge.apply(lambda row: f"{row[10]/row[11]:.3f}", axis=1) #row[13]
+            df_merge['pValue_WGS_data'] = df_merge.apply(lambda row: f"{binom_test(row[7], row[8], float(row[13])):.3f}", axis=1) #input: RNA_altCount, RNA_totalCount, DNA_VAF
+            df_merge['VAF_ratio_WGS_data'] = df_merge.apply(lambda row: f"{float(row[12])/float(row[13]):.3f}", axis=1) # RNA_VAF/DNA_VAF
+            df_merge['CN'] = df_merge.apply(lambda row: self.add_CNV(misc, df_cn, row), axis=1) # row[16]
+            df_merge['pValue_CNV_data'] = df_merge.apply(lambda row: f"{binom_test(row[7], row[8], float(1/row[16])):.3f}", axis=1) #input: altCount, totalCount,
+            df_merge['VAF_ratio_CNV_data'] = df_merge.apply(lambda row: f"{float(row[12])/float(1/row[16]):.3f}", axis=1) # RNA_VAF/DNA_VAF
             df_merge.to_csv(f'{shortcuts.star_output_dir}{filename}/{options.tumor_id}_{filename}_STAR_ASE_completed.csv', sep=',', index=False)
             elapsed = timeit.default_timer() - start
             misc.log_to_file(f'Creating CSV completed in {misc.elapsed_time(elapsed)} - OK!')
@@ -211,27 +202,10 @@ class RnaSeqAnalysis():
         except Exception as e:
             misc.log_exception(".add_wgs_data_to_csv() in rna_seq_analysis.py:", e)
 
-
-
-
-
-
-
-    #---------------------------------------------------------------------------
-    def binominal_test(self, row, misc):
-        '''This function reads the columns altCount, totalCount and Dna_altAlleleFreq from current row. Then runs binom_test with these inputs
-        and returns the answer'''
-
+    def add_CNV(self, misc, df_cn, row):
         try:
-            altCount = row[6]
-            totalCount = row[7]
-            Dna_altAlleleFreq = row[16]
-            avg_pvalue = binom_test(altCount, totalCount, float(Dna_altAlleleFreq))
-            return f"{avg_pvalue:.3f}"
+            for i in df_cn.index:
+                if row[1] == df_cn["Chromosome"].iloc[i] and df_cn["Start"].iloc[i] <= row[2] < df_cn["End"].iloc[i]:
+                    return df_cn["Cn"].iloc[i]
         except Exception as e:
-            misc.log_exception(".binominal_test() in rna_seq_analysis.py:", e)
-            return None
-
-    #---------------------------------------------------------------------------
-    # def vaf_ratio(self, row):
-    #
+            misc.log_exception(".add_CNV() in rna_seq_analysis.py:", e)
