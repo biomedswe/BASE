@@ -24,7 +24,7 @@ def main():
     parser.add_argument("-n", "--normal_id", metavar="", required=False, help="Input clinical id of normal samples")
     parser.add_argument("-i", "--intervals", metavar="", required=False, help="Input path to reference-genome interval if you have any (for use in SNV calling)")
     options = parser.parse_args() # all arguments will be passed to the functions
-    filename = None
+    filename = "GRCh38.p13.genome"
     # hur göra här? options måste med i shortcuts
     misc = Misc()
     all_menus = Menus(misc)
@@ -119,59 +119,16 @@ def main():
                 # Index reference genome
                 elif rna_choice == '1':
                     misc.log_to_file('User input: index reference genome')
-                    while True:
-                        misc.clear_screen()
-                        index_reference_genome_choice = all_menus.menu(misc, all_menus.reference_genome_index_menu)
-                        misc.log_to_file('Program at reference genome index menu')
-                        if index_reference_genome_choice == '':
-                            misc.log_to_file('User input: return to previous menu')
-                            break
-
-                        # Index whole genome
-                        elif index_reference_genome_choice == '1':
-                            misc.log_to_file('User input: Index whole genome')
-                            rna_analysis.index_genome_rna(1, filename, misc, shortcuts)
-
-
-
-                        # Index parts of genome
-                        elif index_reference_genome_choice == '2':
-                            misc.log_to_file('User input: Index parts of genome')
-                            chromosomes = misc.choose_chromosomes_to_index(all_menus, shortcuts)
-                            if not chromosomes:
-                                continue
-                            else:
-                                filename = misc.create_new_fasta(chromosomes, shortcuts)
-                                misc.create_new_gtf(chromosomes, filename, shortcuts)
-                                rna_analysis.index_genome_rna(2, filename, misc, shortcuts)
-                                break
+                    rna_analysis.index_genome_rna(filename, misc, shortcuts)
 
                 # Map reads to reference genome
                 elif rna_choice == '2':
                     misc.log_to_file('User input: Map reads to reference genome')
-                    while True:
-                        misc.log_to_file('Program at Map reads to reference genome menu')
-                        map_reads_choice = all_menus.menu(misc, all_menus.map_reads_menu)
+                    rna_analysis.map_reads(options, filename, misc, shortcuts)
+                    rna_analysis.ASEReadCounter(options, filename, misc, shortcuts)
+                    rna_analysis.add_wgs_data_to_csv(options, filename, misc, shortcuts)
+                    sys.exit()
 
-                        if map_reads_choice == '':
-                            misc.log_to_file('User input: return to previous menu')
-                            break
-
-                        # Map to whole genome
-                        elif map_reads_choice == '1':
-                            filename = "GRCh38.p13.genome"
-                            misc.log_to_file('User input: Map reads to whole genome')
-                            rna_analysis.map_reads(options, filename, misc, shortcuts)
-                            rna_analysis.ASEReadCounter(options, filename, misc, shortcuts)
-                            rna_analysis.add_wgs_data_to_csv(options, filename, misc, shortcuts)
-                            sys.exit()
-
-                        # Map to parts of genome
-                        elif map_reads_choice == '2':
-                            misc.log_to_file('User input: Map reads to parts of genome')
-                            rna_analysis.map_reads(options, filename, misc, shortcuts)
-                            rna_analysis.ASEReadCounter(options, filename, misc, shortcuts)
-                            rna_analysis.add_wgs_data_to_csv(options, filename, misc, shortcuts)
 
 
 

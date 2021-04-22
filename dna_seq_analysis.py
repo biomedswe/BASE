@@ -251,7 +251,7 @@ class DnaSeqAnalysis():
 
         try:
             # Remove all reads with read depth less than 10, selects only snps, exludes normal samples
-            cmd_filter_read_depth = f"bcftools view -i 'MIN(FMT/DP)>10' -v snps -s ^{options.normal_id} {shortcuts.haplotypecaller_output_dir}{options.tumor_id}.vcf > {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor.vcf"
+            cmd_filter_read_depth = f"bcftools view -i 'MIN(FMT/DP)>10' -m2 -M2 -v snps -s ^{options.normal_id} {shortcuts.haplotypecaller_output_dir}{options.tumor_id}.vcf > {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor.vcf"
             misc.run_command(cmd_filter_read_depth, "GATK haplotypeCaller step 3 (remove read depth < 10, selects only snps, exludes normal samples)", f"{shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor.vcf", None)
         except Exception as e:
             misc.log_exception(".gatk_haplotype step 3 in dna_seq_analysis.py:", e)
@@ -277,6 +277,7 @@ class DnaSeqAnalysis():
 
 
         try:
+            # Index feature file
             cmd_indexFeatureFile = f"gatk IndexFeatureFile -I {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het_annotated.vcf"
             if misc.run_command(cmd_indexFeatureFile, "GATK haplotypeCaller step 6 (index fearure file)", f"{shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het_annotated.vcf.idx", shortcuts.haplotypecaller_complete):
                 elapsed = timeit.default_timer() - start

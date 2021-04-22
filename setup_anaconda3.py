@@ -125,6 +125,7 @@ Burrows-Wheeler aligner (bwa)
 Delly (structural variant caller)
 Genome analysis tool kit 4 (gatk)
 Manta (structural variant caller)
+Openpyxl
 Pandas
 Picard tools
 Python 3.7.6
@@ -135,28 +136,26 @@ STAR
 Vcfpy
 ''')
 
-            cmd_env = "conda create -n sequencing -c bioconda bedtools bcftools biopython bwa gatk4 picard python=3.7.6 samtools=1.9 star pandas vcfpy scipy snpeff"
-            misc.run_command(cmd_env, "Installing bedtools bcftools biopython bwa gatk4 picard python=3.7.6 samtools=1.9 star pandas vcfpy scipy snpeff=5.0", None, None)
+            cmd_env = "conda create -n sequencing -c bioconda bedtools bcftools biopython bwa gatk4 picard python=3.7.6 samtools=1.9 star pandas vcfpy scipy snpeff openpyxl"
+            if misc.run_command(cmd_env, "Installing bedtools bcftools biopython bwa gatk4 picard python=3.7.6 samtools=1.9 star pandas vcfpy scipy snpeff=5.0", None, None):
 
-            # Delly in bioconda didn't work so I had to do a workaround
-            cmd_download_delly = "wget https://github.com/dellytools/delly/releases/download/v0.8.7/delly_v0.8.7_linux_x86_64bit -P $HOME/anaconda3/envs/sequencing/bin"
-            misc.run_command(cmd_download_delly, 'Downloading delly', None, None)
+                # Delly in bioconda didn't work so I had to do a workaround
+                cmd_download_delly = "wget https://github.com/dellytools/delly/releases/download/v0.8.7/delly_v0.8.7_linux_x86_64bit -P $HOME/anaconda3/envs/sequencing/bin"
+                misc.run_command(cmd_download_delly, 'Downloading delly', None, None)
 
-            cmd_chmod_delly = "chmod a=xrw $HOME/anaconda3/envs/sequencing/bin/delly_v0.8.7_linux_x86_64bit"
-            misc.run_command(cmd_chmod_delly, 'Granting permission to move delly', None, None)
-            cmd_mv = "mv $HOME/anaconda3/envs/sequencing/bin/delly_v0.8.7_linux_x86_64bit $HOME/anaconda3/envs/sequencing/bin/delly"
-            misc.run_command(cmd_mv, "Moving Delly to $HOME/anaconda3/envs/sequencing/bin/delly", None, None)
+                cmd_chmod_delly = "chmod a=xrw $HOME/anaconda3/envs/sequencing/bin/delly_v0.8.7_linux_x86_64bit"
+                misc.run_command(cmd_chmod_delly, 'Granting permission to move delly', None, None)
+                cmd_mv = "mv $HOME/anaconda3/envs/sequencing/bin/delly_v0.8.7_linux_x86_64bit $HOME/anaconda3/envs/sequencing/bin/delly"
+                misc.run_command(cmd_mv, "Moving Delly to $HOME/anaconda3/envs/sequencing/bin/delly", None, None)
 
-            # Manta in bioconda didn't work so I had to do a workaround
-            cmd_download_manta = "wget https://github.com/Illumina/manta/releases/download/v1.6.0/manta-1.6.0.centos6_x86_64.tar.bz2 -P $HOME/anaconda3/envs/sequencing/bin"
-            misc.run_command(cmd_download_manta, "Downloading Manta", None, None)
-            cmd_unpack = "tar -xf $HOME/anaconda3/envs/sequencing/bin/manta-1.6.0.centos6_x86_64.tar.bz2 -C $HOME/anaconda3/envs/sequencing/bin/"
-            misc.run_command(cmd_unpack, "Unpacking Manta", None, None)
+                # Manta in bioconda didn't work so I had to do a workaround
+                cmd_download_manta = "wget https://github.com/Illumina/manta/releases/download/v1.6.0/manta-1.6.0.centos6_x86_64.tar.bz2 -P $HOME/anaconda3/envs/sequencing/bin"
+                misc.run_command(cmd_download_manta, "Downloading Manta", None, None)
+                cmd_unpack = "tar -xf $HOME/anaconda3/envs/sequencing/bin/manta-1.6.0.centos6_x86_64.tar.bz2 -C $HOME/anaconda3/envs/sequencing/bin/"
+                misc.run_command(cmd_unpack, "Unpacking Manta", None, None)
 
-
-
-            print("\n\n\nEnvironment named \"sequencing\" was successfully created\n")
-            print("You must manually activate the created environment.\nTo do this, type \"conda activate sequencing\" in the shell before restarting the program\n")
+                print("\n\n\nEnvironment named \"sequencing\" was successfully created\n")
+                print("You must manually activate the created environment.\nTo do this, type \"conda activate sequencing\" in the shell before restarting the program\n")
             input("Press any key to exit program...")
             sys.exit()
         except Exception as e:
