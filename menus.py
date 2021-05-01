@@ -58,7 +58,7 @@ class Menus():
                     misc.log_to_file(f'User input: confirmed choice: {choice}')
                     misc.clear_screen()
                     files = listdir(shortcuts.dna_reads_dir)
-                    with open(f"{shortcuts.dna_seq_dir}library.txt", 'w') as out_file:
+                    with open(f"{shortcuts.dna_seq_dir}{options.tumor_id}_library.txt", 'w') as out_file:
                         for line, library_id in enumerate(files, start=1):
                             if choice == '1': # Single-end sequencing
                                 if options.tumor_id in library_id:

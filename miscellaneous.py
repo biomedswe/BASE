@@ -45,7 +45,7 @@ class Misc():
                 else:
                     print('Invalid syntax, please check spelling!')
         except Exception as e:
-            self.log_exception(".choose_chromosomes_to_index() in misc.py:", e)
+            self.log_exception(".choose_chromosomes_to_index() in miscellaneous.py:", e)
             sys.exit()
 
     #---------------------------------------------------------------------------
@@ -54,7 +54,7 @@ class Misc():
         try:
             subprocess.run("clear", shell=True)
         except Exception as e:
-            self.log_exception(".clear_screen() in misc.py:", e)
+            self.log_exception(".clear_screen() in miscellaneous.py:", e)
             sys.exit()
 
     #---------------------------------------------------------------------------
@@ -63,7 +63,7 @@ class Misc():
         try:
             kill(getppid(), signal.SIGHUP)
         except Exception as e:
-            self.log_exception(".close_terminal() in misc.py:", e)
+            self.log_exception(".close_terminal() in miscellaneous.py:", e)
             sys.exit()
 
     #---------------------------------------------------------------------------
@@ -80,7 +80,7 @@ class Misc():
                 else:
                     print("Invalid choice, type 'n' or 'y'!")
         except Exception as e:
-            self.log_exception(".confirm_choice() in misc.py:", e)
+            self.log_exception(".confirm_choice() in miscellaneous.py:", e)
             sys.exit()
 
     #---------------------------------------------------------------------------
@@ -95,7 +95,7 @@ class Misc():
             except FileExistsError:
                 self.log_to_file(f"{path} allready exists - skips step...")
             except Exception as e:
-                self.log_exception(".create_directory() in misc.py:", e)
+                self.log_exception(".create_directory() in miscellaneous.py:", e)
                 sys.exit()
 
     #---------------------------------------------------------------------------
@@ -120,7 +120,7 @@ class Misc():
                 self.log_to_file(f"Creating fasta for {filename} succesfully completed in {self.elapsed_time(end-start)} - OK!)")
             return filename
         except Exception as e:
-            self.log_exception(".create_new_fasta() in misc.py:", e)
+            self.log_exception(".create_new_fasta() in miscellaneous.py:", e)
             sys.exit()
 
     #---------------------------------------------------------------------------
@@ -147,7 +147,7 @@ class Misc():
                 self.log_to_file(f"Creating Gtf for {filename} succesfully completed in {self.elapsed_time(end-start)} - OK!)")
                 remove(f'{ref_dir}{filename}/{filename}.bed')
         except Exception as e:
-            self.log_exception(".create_new_gtf() in misc.py:", e)
+            self.log_exception(".create_new_gtf() in miscellaneous.py:", e)
             sys.exit()
 
     #---------------------------------------------------------------------------
@@ -159,19 +159,19 @@ class Misc():
                 c.write(f"{write_to_file}\n")
 
         except Exception as e:
-            self.log_exception(".create_outputList_dna() in misc.py:", e)
+            self.log_exception(".create_outputList_dna() in miscellaneous.py:", e)
     #---------------------------------------------------------------------------
     def create_trackFile(self, file):
         '''This function creates a trackfile that step_allready_completed() function can look after when checking if step is allready completed'''
         try:
             if path.isfile(file):
-                elf.log_to_file(f"You are trying to overwrite the existing file: {file}")
+                self.log_to_file(f"You are trying to overwrite the existing file: {file}")
                 if not self.confirm_choice():
                     sys.exit()
             with open(file, 'w'):
                 pass
         except Exception as e:
-            self.log_exception(".create_trackFile() in misc.py:", e)
+            self.log_exception(".create_trackFile() in miscellaneous.py:", e)
             sys.exit()
 
     #---------------------------------------------------------------------------
@@ -188,7 +188,7 @@ class Misc():
             else:
                 return 'error'
         except Exception as e:
-            self.log_exception(".elapsed_time() in misc.py:", e)
+            self.log_exception(".elapsed_time() in miscellaneous.py:", e)
             sys.exit()
 
     #---------------------------------------------------------------------------
@@ -197,7 +197,7 @@ class Misc():
             self.log_to_file(f'{exception}: {text}. Exiting program...')
             sys.exit()
         except Exception as e:
-            self.log_to_file(f"Error with .log_exception() in misc.py: {e}. Exiting program...")
+            self.log_to_file(f"Error with .log_exception() in miscellaneous.py: {e}. Exiting program...")
 
     #---------------------------------------------------------------------------
     def log_to_file(self, text):
@@ -205,7 +205,7 @@ class Misc():
             print(f'{text}\n')
             logging.info(f"{text}\n")
         except Exception as e:
-            logging.info(f'Error with {self}.log_to_file() in misc.py: {e}. Exiting program...')
+            logging.info(f'Error with {self}.log_to_file() in miscellaneous.py: {e}. Exiting program...')
             sys.exit()
 
     #---------------------------------------------------------------------------
@@ -217,7 +217,7 @@ class Misc():
                 self.log_to_file(f'Incomplete {file} removed - OK!')
         except OSError: pass
         except Exception as e:
-            self.log_exception("remove_file() in misc.py:", e)
+            self.log_exception("remove_file() in miscellaneous.py:", e)
             sys.exit()
 
     #---------------------------------------------------------------------------
@@ -240,7 +240,7 @@ class Misc():
                 self.remove_file(file)
                 sys.exit()
         except Exception as e:
-            self.log_exception("run_command() in misc.py:", e)
+            self.log_exception("run_command() in miscellaneous.py:", e)
             sys.exit()
 
     #---------------------------------------------------------------------------
@@ -275,7 +275,7 @@ class Misc():
                 else:
                     return choice
         except Exception as e:
-            self.log_exception(".validate_choice() in misc.py:", e)
+            self.log_exception(".validate_choice() in miscellaneous.py:", e)
             sys.exit()
 
     #---------------------------------------------------------------------------
@@ -291,5 +291,5 @@ class Misc():
                 input("Press any key to exit program")
                 sys.exit()
         except Exception as e:
-            self.log_exception(".validate_id() in misc.py:", e)
+            self.log_exception(".validate_id() in miscellaneous.py:", e)
             sys.exit()

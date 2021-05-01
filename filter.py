@@ -1,21 +1,21 @@
 import pandas as pd
-from os import sys
 import argparse
-import numpy as np
+
 
 
 def filter_csv(options):
     df = pd.read_csv(options.input)
-    variants = {}
+
 
     # create a dict with all genes ass key
+    variants = {}
     for index, row in df.iterrows():
         variants[row.loc['geneName']] = [0,0]
 
-    # iterate trough rows in df. if conditions are fullfilled, add the variantType as key and +1 for total variant and +1 for those that fullfill condition.
+    # iterate trough rows in df. if conditions are fullfilled, add the variantType as key and +1 for total variant and +1 for those that fullfill condition, i.e., significant.
     # dict will show: variantType : {[total counts, matching counts]}
     for index, row in df.iterrows():
-        if row.loc['pValue_WGS_data'] <= float(options.pvalue) and row.loc['pValue_CNV_data'] <= float(options.pvalue) and not 0.5 < row.loc['VAF_ratio_WGS_data'] < 2 and not 0.5 < row.loc['VAF_ratio_CNV_data'] < 2:
+        if row.loc['pValue_WGS_data'] <= float(options.pvalue) and row.loc['pValue_CNV_data'] <= float(options.pvalue) and not float(options.lower_foldchange) < row.loc['VAF_ratio_WGS_data'] < float(options.upper_foldchange) and not float(options.lower_foldchange) < row.loc['VAF_ratio_CNV_data'] <  float(options.upper_foldchange):
             variants[row.loc['geneName']][0] += 1
             variants[row.loc['geneName']][1] += 1
         else:
@@ -23,28 +23,23 @@ def filter_csv(options):
 
 
     for index, row in df.iterrows():
-        # if not significant. (significant gene entries are not equal or bigger than the total entries)
-        if not variants[row.loc['geneName']][1] >= (variants[row.loc['geneName']][0]/2): # if not significant >= total
-            print(index+2, 'not significant:', row.loc['geneName'])
+        # if not significant. (if significant gene entries are not bigger than 50% of total entries)
+        if not variants[row.loc['geneName']][1] > (variants[row.loc['geneName']][0]/2): # if not significant > total/2
             df.drop(index, inplace=True)
-        else:
-            print(index+2, 'significant:', row.loc['geneName'])
-
-    # df.dropna(inplace=True)
-
-
-
 
     # print filtered file to csv
     df.to_csv(options.output, sep=',', index=False)
 
 
 def main():
+    # argparse lets ju input arguments to the script before starting it
     parser = argparse.ArgumentParser(description='''This script is used to filter out genes with significant ASE''')
     parser.add_argument("-i", "--input", metavar="", required=True, help="Enter input file")
     parser.add_argument("-o", "--output", metavar="", required=True, help="Enter output file")
     parser.add_argument("-p", "--pvalue", metavar="", required=True, help="Enter threshold pValue")
-    options = parser.parse_args() # all arguments will be passed to the functions
+    parser.add_argument("-l", "--lower_foldchange", metavar="", required=True, help="Enter lower threshold foldchange")
+    parser.add_argument("-u", "--upper_foldchange", metavar="", required=True, help="Enter upper threshold foldchange")
+    options = parser.parse_args() # all arguments can be called by options. e.g. options.input
     filter_csv(options)
 
 if __name__ == '__main__':

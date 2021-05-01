@@ -24,7 +24,6 @@ def main():
     parser.add_argument("-n", "--normal_id", metavar="", required=False, help="Input clinical id of normal samples")
     parser.add_argument("-i", "--intervals", metavar="", required=False, help="Input path to reference-genome interval if you have any (for use in SNV calling)")
     options = parser.parse_args() # all arguments will be passed to the functions
-    filename = "GRCh38.p13.genome"
     # hur göra här? options måste med i shortcuts
     misc = Misc()
     all_menus = Menus(misc)
@@ -92,15 +91,15 @@ def main():
                     misc.log_to_file('User input: 3. Run analysis')
                     misc.clear_screen()
                     misc.validate_id(options, shortcuts)
-                    dna_analysis.alignment(misc, shortcuts)
-                    if dna_analysis.validate_bam_dna(misc, shortcuts):
+                    dna_analysis.alignment(options, misc, shortcuts)
+                    if dna_analysis.validate_bam_dna(options, misc, shortcuts):
                         dna_analysis.sort(options, misc, shortcuts)
                         dna_analysis.merge(options, misc, shortcuts)
                         dna_analysis.remove_duplicate(options, misc, shortcuts)
                         dna_analysis.realign(options, misc, shortcuts)
                         dna_analysis.gatk_haplotype(options, misc, shortcuts)
                         dna_analysis.delly(options, misc, shortcuts)
-                        dna_analysis.manta(misc, shortcuts)
+                        dna_analysis.manta(options, misc, shortcuts)
                         elapsed = timeit.default_timer() - start
                         misc.log_to_file(f'GDC DNA-Seq analysis pipeline successfully completed in {misc.elapsed_time(elapsed)} - OK!')
                         sys.exit()
@@ -119,14 +118,14 @@ def main():
                 # Index reference genome
                 elif rna_choice == '1':
                     misc.log_to_file('User input: index reference genome')
-                    rna_analysis.index_genome_rna(filename, misc, shortcuts)
+                    rna_analysis.index_genome_rna(misc, shortcuts)
 
                 # Map reads to reference genome
                 elif rna_choice == '2':
                     misc.log_to_file('User input: Map reads to reference genome')
-                    rna_analysis.map_reads(options, filename, misc, shortcuts)
-                    rna_analysis.ASEReadCounter(options, filename, misc, shortcuts)
-                    rna_analysis.add_wgs_data_to_csv(options, filename, misc, shortcuts)
+                    rna_analysis.map_reads(options, misc, shortcuts)
+                    rna_analysis.ASEReadCounter(options, misc, shortcuts)
+                    rna_analysis.add_wgs_data_to_csv(options, misc, shortcuts)
                     sys.exit()
 
 

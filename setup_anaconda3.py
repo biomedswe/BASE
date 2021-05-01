@@ -98,10 +98,8 @@ class SetupAnaconda3():
             shortcuts.rna_reads_dir,
             shortcuts.dna_reads_dir,
             shortcuts.star_output_dir,
-            shortcuts.GRCh38_dir,
-            shortcuts.star_index_dir_whole_genome,
-            shortcuts.GRCh38_chunks_dir,
-            shortcuts.haplotypecaller_chunks_dir
+            shortcuts.star_index_dir,
+            shortcuts.reference_genome_chunks_dir,
             ])
 
             if path.isdir(getenv("HOME")+'/anaconda3/envs/sequencing'):
