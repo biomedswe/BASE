@@ -3,6 +3,7 @@ import signal
 import subprocess
 import logging
 import timeit
+import time
 logging.basicConfig(filename=getenv("HOME")+'/sequencing_project/Logfile.txt', filemode='a', format='%(asctime)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S', level=logging.DEBUG)
 
 try:
@@ -230,13 +231,13 @@ class Misc():
             if file:
                 if self.step_allready_completed(file, text):
                     return False
-            return_code = subprocess.run(command, shell=True)
-            if return_code.returncode == 0:
+            result = subprocess.run(command, shell=True, capture_output=True)
+            if result.returncode == 0:
                 if text: self.log_to_file(f"{text} succesfully completed - OK!")
                 if trackfile: self.create_trackFile(trackfile)
                 return True
             else:
-                self.log_to_file(f'Process ended with returncode != 0: {command} - ERROR!')
+                self.log_to_file(f'Process ended with returncode != 0: {command} - {result.stderr} - ERROR!')
                 self.remove_file(file)
                 sys.exit()
         except Exception as e:
@@ -252,6 +253,7 @@ class Misc():
             if file:
                 if path.isfile(file):
                     if text: self.log_to_file(f"{text} allready completed, skips step...")
+                    input("Press any key to continue")
                     return True
                 else:
                     return False

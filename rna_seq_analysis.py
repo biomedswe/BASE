@@ -102,6 +102,7 @@ class RnaSeqAnalysis():
                 misc.run_command(cmd_sortsam, "Sorting BAM with Picard SortSam", f"{shortcuts.star_output_dir}{options.tumor_id}/{options.tumor_id}_Aligned_sorted.out.bam", None)
                 cmd_samtools_index = f"samtools index {shortcuts.star_output_dir}{options.tumor_id}/{options.tumor_id}_Aligned_sorted.out.bam"
                 misc.run_command(cmd_samtools_index, "Indexing BAM with Samtools index", f"{shortcuts.star_output_dir}{options.tumor_id}/{options.tumor_id}_Aligned_sorted.out.bam.bai",  f"{shortcuts.star_output_dir}{options.tumor_id}/map.complete")
+                # add star wasp
                 elapsed = timeit.default_timer() - start
                 misc.log_to_file(f'All steps in mapping reads to gemome with STAR succesfully completed in {misc.elapsed_time(elapsed)} - OK!')
         except Exception as e:
@@ -173,12 +174,12 @@ class RnaSeqAnalysis():
             df_merge = df_merge[['clinicalID', 'geneName', 'variantType', 'contig', 'position', 'variantID', 'refAllele', 'altAllele', 'RNA_refCount', 'RNA_altCount', 'RNA_totalCount', 'DNA_refCount', 'DNA_altCount', 'DNA_totalCount']]
             df_merge['RNA_VAF'] = df_merge.apply(lambda row: f"{row[9]/row[10]:.3f}", axis=1) #row[14]
             df_merge['DNA_VAF'] = df_merge.apply(lambda row: f"{row[12]/row[13]:.3f}", axis=1) #row[15]
-            df_merge['pValue_WGS_data'] = df_merge.apply(lambda row: f"{binom_test(row[9], row[10], float(row[15])):.3f}", axis=1) #input: RNA_altCount, RNA_totalCount, DNA_VAF
-            df_merge['VAF_ratio_WGS_data'] = df_merge.apply(lambda row: f"{float(row[14])/float(row[15]):.3f}", axis=1) # RNA_VAF/DNA_VAF
+            df_merge['pValue_WGS'] = df_merge.apply(lambda row: f"{binom_test(row[9], row[10], float(row[15])):.3f}", axis=1) #input: RNA_altCount, RNA_totalCount, DNA_VAF
+            df_merge['VAF_ratio_WGS'] = df_merge.apply(lambda row: f"{float(row[14])/float(row[15]):.3f}", axis=1) # RNA_VAF/DNA_VAF
             df_merge['CN'] = df_merge.apply(lambda row: self.add_CNV(misc, df_cn, row), axis=1) # row[18]
             df_merge.dropna(inplace=True)
-            df_merge['pValue_CNV_data'] = df_merge.apply(lambda row: f"{binom_test(row[9], row[10], float(1/row[18])):.3f}", axis=1) #input: RNA_altCount, RNA_totalCount,
-            df_merge['VAF_ratio_CNV_data'] = df_merge.apply(lambda row: self.caluculate_alt_chromosomes(misc, row), axis=1) # RNA_VAF/CN
+            df_merge['pValue_CNV'] = df_merge.apply(lambda row: self.calculate_pValue_CNV_data(misc, row), axis=1) #input: RNA_altCount, RNA_totalCount, CN
+            df_merge['VAF_ratio_CNV'] = df_merge.apply(lambda row: self.caluculate_VAF_ratio_CNV_data(misc, row), axis=1) # RNA_VAF/CN
             df_merge.to_csv(f'{shortcuts.star_output_dir}{options.tumor_id}/{options.tumor_id}_STAR_ASE_completed.csv', sep=',', index=False)
             elapsed = timeit.default_timer() - start
             misc.log_to_file(f'Creating CSV completed in {misc.elapsed_time(elapsed)} - OK!')
@@ -187,6 +188,7 @@ class RnaSeqAnalysis():
             misc.log_exception(".add_wgs_data_to_csv() in rna_seq_analysis.py:", e)
 
     def add_CNV(self, misc, df_cn, row):
+        '''This function fetch the CN data from the CN.xlsx document for the specific position'''
         try:
             for i in df_cn.index:
                 if row[3] == df_cn["Chromosome"].iloc[i] and df_cn["Start"].iloc[i] <= row[4] < df_cn["End"].iloc[i]:
@@ -194,26 +196,51 @@ class RnaSeqAnalysis():
         except Exception as e:
             misc.log_exception(".add_CNV() in rna_seq_analysis.py:", e)
 
-    def caluculate_alt_chromosomes(self, misc, row):
-        '''if the CN is != 2, This function compares ref and alt reads to the copy number and determines how many chromosomes that show the alt haplotype'''
+    def caluculate_VAF_ratio_CNV_data(self, misc, row):
+        '''This function determines what CN value that should be used when calculating the VAF_ratio_CNV'''
         try:
-            if row[18] <= 2:
-                return f"{float(row[14])/float(1/row[18]):.3f}"
 
-            if row[18] == 3:
+            if row[18] <= 2:
+                return f"{float(row[14])/float(1/row[18]):.3f}" #1/2
+
+            elif row[18] == 3:
                 # if refCount < altCount
-                if row[6] < row[7]:
+                if row[8] < row[9]:
                     return f"{float(row[14])/float(2/row[18]):.3f}" # 2/3
                 # if refCount > altCount
-                if row[6] > row[7]:
+                if row[8] > row[9]:
                     return f"{float(row[14])/float(1/row[18]):.3f}" #1/3
 
-            if row[18] == 4:
-                if row[6] < row[7]:
+            elif row[18] == 4:
+                if row[8] < row[9]:
                     return f"{float(row[14])/float(3/row[18]):.3f}" # 3/4
-                elif row[6] > row[7]:
+                elif row[8] > row[9]:
                     return f"{float(row[14])/float(1/row[18]):.3f}" # 1/4
                 else:
                     return f"{float(row[14])/float(2/row[18]):.3f}" # 2/4
+        except Exception as e:
+            misc.log_exception(".caluculate_alt_chromosomes() in rna_seq_analysis.py:", e)
+
+    def calculate_pValue_CNV_data(self, misc, row):
+        '''This function determines what CN value that should be used when calculating the pValue_CNV'''
+        try:
+            if row[18] <= 2:
+                return f"{binom_test(row[9], row[10], float(1/row[18])):.3f}" # 1/1, 1/2
+
+            if row[18] == 3:
+                # if refCount < altCount
+                if row[8] < row[9]:
+                    return f"{binom_test(row[9], row[10], float(2/row[18])):.3f}" # 2/3
+                # if refCount > altCount
+                if row[8] > row[9]:
+                    return f"{binom_test(row[9], row[10], float(1/row[18])):.3f}" #1/3
+
+            if row[18] == 4:
+                if row[8] < row[9]:
+                    return f"{binom_test(row[9], row[10], float(3/row[18])):.3f}" # 3/4
+                elif row[8] > row[9]:
+                    return f"{binom_test(row[9], row[10], float(1/row[18])):.3f}" # 1/4
+                else:
+                    return f"{binom_test(row[9], row[10], float(2/row[18])):.3f}" # 2/4
         except Exception as e:
             misc.log_exception(".caluculate_alt_chromosomes() in rna_seq_analysis.py:", e)

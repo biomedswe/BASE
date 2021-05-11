@@ -18,7 +18,7 @@ class Menus():
     def info_script(self, misc):
         '''Prints information about the creator of the program'''
         try:
-            print( "\033[1m""Biomedswe Allele-specific expression analyser pipeline (BASEAP) v.1.0. 2021\n" "\033[0m")
+            print( "\033[1m""Biomedswe Allele-specific expression analyser pipeline (BASE) v.1.0. 2021\n" "\033[0m")
             print("This program was created during a masterproject about B-cell precursor acute lymphoblastic leukemia (BCP-ALL) in 2020-2021.\n")
             print("Created by:\nJonas Andersson\nMaster's programme in biomedicine\nLund University\nLund, Sweden\n")
             print("Github: https://github.com/biomedswe/sequencing_project")
@@ -57,7 +57,7 @@ class Menus():
                 elif misc.confirm_choice():
                     misc.log_to_file(f'User input: confirmed choice: {choice}')
                     misc.clear_screen()
-                    files = listdir(shortcuts.dna_reads_dir)
+                    files = sorted(listdir(shortcuts.dna_reads_dir))
                     with open(f"{shortcuts.dna_seq_dir}{options.tumor_id}_library.txt", 'w') as out_file:
                         for line, library_id in enumerate(files, start=1):
                             if choice == '1': # Single-end sequencing
