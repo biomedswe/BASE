@@ -11,7 +11,7 @@ class Shortcuts():
         self.rna_seq_dir =  f"{self.sequencing_project_dir}rna_seq/"
 
         # Shortcuts to input folders
-        self.dna_reads_dir  = f"{self.dna_seq_dir}reads/"
+        self.dna_reads_dir  = f"{self.dna_seq_dir}reads/{options.tumor_id}/"
         self.reference_genome_dir = f"{self.sequencing_project_dir}reference_genome/"
         self.reference_genome_chunks_dir = f"{self.reference_genome_dir}chunks/"
 
@@ -33,9 +33,9 @@ class Shortcuts():
         self.runWorkflow_file = getenv("HOME")+f"/sequencing_project/dna_seq/manta/{options.tumor_id}/runWorkflow.py"
 
         # Shortcuts to folders used in RNA sequencing analysis
-        self.rna_reads_dir  = f"{self.rna_seq_dir}reads/"
-        self.star_output_dir = f"{self.rna_seq_dir}star/"
-        self.star_index_dir =  f"{self.reference_genome_dir}star_index/"
+        self.rna_reads_dir  = f"{self.rna_seq_dir}reads/{options.tumor_id}/"
+        self.star_output_dir = f"{self.rna_seq_dir}star/{options.tumor_id}/"
+        self.star_index_dir =  f"{self.reference_genome_dir}star_index/{options.tumor_id}/"
 
 
 

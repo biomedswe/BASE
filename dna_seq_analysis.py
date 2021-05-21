@@ -33,7 +33,7 @@ class DnaSeqAnalysis():
             if not misc.step_allready_completed(allready_completed, "Indexing GRCh38.p13.genome"):
                 misc.clear_screen()
                 misc.log_to_file('Starting: indexing GRCh38.p13.genome with bwa index')
-                cmd_bwa_index = f"bwa index -b 500000000 {ref_file}" # b = blocksize, makes each block utilize more memory, may be effective
+                cmd_bwa_index = f"bwa index {ref_file}" # b = blocksize, makes each block utilize more memory, may be effective
                 misc.run_command(cmd_bwa_index, "Bwa index", f"{ref_file}.sa", None)
                 cmd_create_dict = f"samtools dict {ref_file} -o {ref_file[:-2]}dict"
                 misc.run_command(cmd_create_dict, "Creating .dict with samtools dict", f"{ref_file[:-2]}dict", None)
@@ -41,7 +41,7 @@ class DnaSeqAnalysis():
                 misc.run_command(cmd_create_fai, "Creating .fai with samtools faidx", f"{ref_file}.fai", None)
             cmd_split_fasta = f"bedtools makewindows -w 10000000 -g {ref_file}.fai > {chunks_dir}chunk.bed"
             misc.run_command(cmd_split_fasta, "Spliting fa.fai with bedtools makewindows", f"{chunks_dir}chunk.bed", None)
-            cmd_split_bed = f"split -l 3 {chunks_dir}chunk.bed {chunks_dir}chunk_"
+            cmd_split_bed = f"split -l 2 {chunks_dir}chunk.bed {chunks_dir}chunk_"
             misc.run_command(cmd_split_bed, "Splitting chunk.bed", None, allready_completed)
 
             # add suffix .bed to split files
@@ -83,8 +83,8 @@ class DnaSeqAnalysis():
             if not misc.step_allready_completed(shortcuts.alignedFiles_list, "Burrows Wheeler aligner"):
                 misc.create_directory([f"{shortcuts.aligned_output_dir}{options.tumor_id}/"])
                 start = timeit.default_timer()
-                threads = mp.cpu_count() - 2
-                misc.log_to_file(f'Starting: Burrows Wheeler aligner Using {threads} out of {threads+2} available threads')
+                threads = mp.cpu_count()
+                misc.log_to_file(f'Starting: Burrows Wheeler aligner Using {threads} out of {threads} available threads')
                 with open(f'{shortcuts.dna_seq_dir}{options.tumor_id}_library.txt', 'r') as fastq_list:
                     for line in fastq_list.readlines():
                         clinical_id, library_id, read1, read2 = line.split()
@@ -123,7 +123,7 @@ class DnaSeqAnalysis():
                 write_to_file = ""
                 with open(shortcuts.alignedFiles_list, 'r') as list:
                     for sample in list.read().splitlines():
-                        cmd_sort.append(f"picard SortSam -I {shortcuts.aligned_output_dir}{options.tumor_id}/{sample} -O {shortcuts.sorted_output_dir}{options.tumor_id}/{sample} --SORT_ORDER coordinate --MAX_RECORDS_IN_RAM 500000000 --TMP_DIR {shortcuts.sorted_output_dir}{options.tumor_id}/tmp")
+                        cmd_sort.append(f"java -Xmx60g -jar $HOME/anaconda3/envs/sequencing/share/picard-2.25.2-0/picard.jar SortSam -I {shortcuts.aligned_output_dir}{options.tumor_id}/{sample} -O {shortcuts.sorted_output_dir}{options.tumor_id}/{sample} --SORT_ORDER coordinate --MAX_RECORDS_IN_RAM 7000000 --TMP_DIR {shortcuts.sorted_output_dir}{options.tumor_id}/tmp")
                         if options.tumor_id in sample:
                             tumor_sort_str += f" -I {shortcuts.sorted_output_dir}{options.tumor_id}/{sample}".rstrip()
                         else:
@@ -183,12 +183,12 @@ class DnaSeqAnalysis():
                     cmd_removedup.extend([f"picard -Xmx70g MarkDuplicates -I {shortcuts.merged_output_dir}{options.tumor_id}/{tumor} -O {shortcuts.removed_duplicates_output_dir}{options.tumor_id}/{tumor} -M {shortcuts.removed_duplicates_output_dir}{options.tumor_id}/marked_dup_metrics_{tumor}.txt --TMP_DIR {shortcuts.removed_duplicates_output_dir}{options.tumor_id}/tmp",
                                          f"picard -Xmx70g MarkDuplicates -I {shortcuts.merged_output_dir}{options.tumor_id}/{normal} -O {shortcuts.removed_duplicates_output_dir}{options.tumor_id}/{normal} -M {shortcuts.removed_duplicates_output_dir}{options.tumor_id}/marked_dup_metrics_{normal}.txt --TMP_DIR {shortcuts.removed_duplicates_output_dir}{options.tumor_id}/tmp"])
                     # Runs multiprocessing
-                    with mp.Pool(processes=1) as pool:
+                    with mp.Pool(processes=2) as pool:
                         pool.map(partial(self.multi_processing, [f"{shortcuts.removed_duplicates_output_dir}{options.tumor_id}/{tumor}", f"{shortcuts.removed_duplicates_output_dir}{options.tumor_id}/{normal}"], options, misc, shortcuts),cmd_removedup)
                 copy(shortcuts.mergedFiles_list, shortcuts.removeDuplicates_list) # just copying because the content will be the same
                 elapsed = timeit.default_timer() - start
                 misc.log_to_file(f'Picard MarkDuplicates succesfully completed in {misc.elapsed_time(elapsed)} - OK!')
-                # misc.run_command(f"rm {shortcuts.merged_output_dir}{options.tumor_id}/*.bam", 'Removing merged BAM files to save space', None, None)
+                misc.run_command(f"rm {shortcuts.merged_output_dir}{options.tumor_id}/*.bam", 'Removing merged BAM files to save space', None, None)
         except Exception as e:
             misc.log_exception(".remove_duplicate() in dna_seq_analysis.py:", e)
             sys.exit()
@@ -207,12 +207,12 @@ class DnaSeqAnalysis():
                 with open(shortcuts.removeDuplicates_list, 'r') as list:
                     tumor, normal = list.read().splitlines()
                     cmd_index.extend([f"samtools index {shortcuts.removed_duplicates_output_dir}{options.tumor_id}/{tumor}", f"samtools index {shortcuts.removed_duplicates_output_dir}{options.tumor_id}/{normal}"])
-                    with mp.Pool(processes=1) as pool:
-                        pool.map(partial(self.multi_processing, "N/A", options, misc, shortcuts),cmd_index)
+                    with mp.Pool(processes=2) as pool:
+                        pool.map(partial(self.multi_processing, [f"{shortcuts.removed_duplicates_output_dir}{options.tumor_id}/{tumor}.bai", f"{shortcuts.removed_duplicates_output_dir}{options.tumor_id}/{normal}.bai"], options, misc, shortcuts),cmd_index)
                     cmd_leftAlignIndels.extend([f"gatk LeftAlignIndels -R {shortcuts.reference_genome_file} -I {shortcuts.removed_duplicates_output_dir}{options.tumor_id}/{tumor} -O {shortcuts.realigned_output_dir}{options.tumor_id}/{tumor}",
                                                 f"gatk LeftAlignIndels -R {shortcuts.reference_genome_file} -I {shortcuts.removed_duplicates_output_dir}{options.tumor_id}/{normal} -O {shortcuts.realigned_output_dir}{options.tumor_id}/{normal}"])
-                    with mp.Pool(processes=1) as pool:
-                        pool.map(partial(self.multi_processing, "N/A", options, misc, shortcuts),cmd_leftAlignIndels)
+                    with mp.Pool(processes=2) as pool:
+                        pool.map(partial(self.multi_processing, [f"{shortcuts.realigned_output_dir}{options.tumor_id}/{tumor}", f"{shortcuts.realigned_output_dir}{options.tumor_id}/{normal}"], options, misc, shortcuts),cmd_leftAlignIndels)
                     copy(shortcuts.removeDuplicates_list, shortcuts.realignedFiles_list)
                 elapsed = timeit.default_timer() - start
                 misc.log_to_file(f'gatk LeftAlignIndels succesfully completed in {misc.elapsed_time(elapsed)} - OK!')
@@ -225,10 +225,10 @@ class DnaSeqAnalysis():
     def multi_processing(self, file, options, misc, shortcuts, input):
         '''This function runs pipeline steps in parallell'''
         try:
-            if "picard MergeSamFiles" or "picard MarkDuplicates" in input:
-                file = file[0] if options.tumor_id in input else file[1]
-                text = f"{options.tumor_id}.bam" if options.tumor_id in input else f"{options.normal_id}.bam"
-            misc.run_command(input, None, file, None)
+            if "MergeSamFiles" or "MarkDuplicates" in input:
+                file = file[0] if f"{options.tumor_id}.bam" in input else file[1]
+            text = f"{options.tumor_id}.bam" if f"{options.tumor_id}.bam" in input else f"{options.normal_id}.bam"
+            misc.run_command(input, text, file, None)
         except Exception as e:
             misc.log_exception(".multi_processing() in dna_seq_analysis.py:", e)
             sys.exit()
@@ -247,10 +247,10 @@ class DnaSeqAnalysis():
                     for chunk in listdir(shortcuts.reference_genome_chunks_dir):
                         cmd_haplotypecaller.append(f"gatk HaplotypeCaller -R {shortcuts.reference_genome_file} -I {shortcuts.realigned_output_dir}{options.tumor_id}/{sample_1} -I {shortcuts.realigned_output_dir}{options.tumor_id}/{sample_2} -O {shortcuts.haplotypecaller_output_dir}{options.tumor_id}/chunks/{options.tumor_id}_{chunk}.vcf -L {shortcuts.reference_genome_chunks_dir}{chunk}")
                         misc.create_outputList_dna(shortcuts.gatk_chunks_list, f"{shortcuts.haplotypecaller_output_dir}{options.tumor_id}/chunks/{options.tumor_id}_{chunk}.vcf")
-                with mp.Pool(processes=20) as pool:
+                with mp.Pool(processes=60) as pool:
                     pool.map(partial(self.multi_processing, "gatk", options, misc, shortcuts),cmd_haplotypecaller)
                 elapsed = timeit.default_timer() - start
-                misc.log_to_file(f'gatk haplotypecaller (multiprocessing) succesfully completed in {misc.elapsed_time(elapsed)} - OK!')
+                misc.log_to_file(f'gatk haplotypecaller step 1 (multiprocessing) succesfully completed in {misc.elapsed_time(elapsed)} - OK!')
         except Exception as e:
             misc.log_exception(".gatk_haplotype step 1 (snv calling) in dna_seq_analysis.py:", e)
 

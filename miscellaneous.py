@@ -231,7 +231,7 @@ class Misc():
             if file:
                 if self.step_allready_completed(file, text):
                     return False
-            result = subprocess.run(command, shell=True, capture_output=True)
+            result = subprocess.run(command, shell=True)
             if result.returncode == 0:
                 if text: self.log_to_file(f"{text} succesfully completed - OK!")
                 if trackfile: self.create_trackFile(trackfile)
@@ -253,7 +253,7 @@ class Misc():
             if file:
                 if path.isfile(file):
                     if text: self.log_to_file(f"{text} allready completed, skips step...")
-                    input("Press any key to continue")
+                    time.sleep(2)
                     return True
                 else:
                     return False

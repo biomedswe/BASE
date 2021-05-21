@@ -20,9 +20,9 @@ import timeit
 
 def main():
     parser = argparse.ArgumentParser(description='''This script is used to simplify installation and set up of Anaconda, download reference genome and perform DNA and RNA analysis. Please read the README file first!''')
-    parser.add_argument("-t", "--tumor_id", metavar="", required=False, help="Input clinical id of tumor samples")
-    parser.add_argument("-n", "--normal_id", metavar="", required=False, help="Input clinical id of normal samples")
-    parser.add_argument("-i", "--intervals", metavar="", required=False, help="Input path to reference-genome interval if you have any (for use in SNV calling)")
+    parser.add_argument("-t", "--tumor_id", metavar="", required=True, help="Input clinical id of tumor samples")
+    parser.add_argument("-n", "--normal_id", metavar="", required=True, help="Input clinical id of normal samples")
+    parser.add_argument("-sg", "--subgroup", metavar="", required=True, help="Input subgroup of your sample")
     options = parser.parse_args() # all arguments will be passed to the functions
     # hur göra här? options måste med i shortcuts
     misc = Misc()
@@ -123,8 +123,8 @@ def main():
                 # Map reads to reference genome
                 elif rna_choice == '2':
                     misc.log_to_file('User input: Map reads to reference genome')
-                    rna_analysis.map_reads(options, misc, shortcuts)
-                    rna_analysis.ASEReadCounter(options, misc, shortcuts)
+                    # rna_analysis.map_reads(options, misc, shortcuts)
+                    # rna_analysis.ASEReadCounter(options, misc, shortcuts)
                     rna_analysis.add_wgs_data_to_csv(options, misc, shortcuts)
                     sys.exit()
 

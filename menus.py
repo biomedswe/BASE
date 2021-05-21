@@ -18,11 +18,12 @@ class Menus():
     def info_script(self, misc):
         '''Prints information about the creator of the program'''
         try:
-            print( "\033[1m""Biomedswe Allele-specific expression analyser pipeline (BASE) v.1.0. 2021\n" "\033[0m")
-            print("This program was created during a masterproject about B-cell precursor acute lymphoblastic leukemia (BCP-ALL) in 2020-2021.\n")
-            print("Created by:\nJonas Andersson\nMaster's programme in biomedicine\nLund University\nLund, Sweden\n")
+            print( "\033[1m""Biomedswe Allele-Specific Expression analyser (BASE) v.1.0. 2021\n" "\033[0m")
+            print("This program was created during a master thesis project\nabout B-cell precursor acute lymphoblastic leukemia (BCP-ALL) in 2020-2021.\n")
+            print("Developer:\nJonas Andersson\nMaster's programme in biomedicine\nDivision of Clinical Genetics\nLund University, BMC C13\nSE-221 84 Lund, Sweden\n")
+            print("Acknowledgment:\nSpecial thanks to Prof. Kajsa Paulsson and assistant researcher Minjun Yang\n")
             print("Github: https://github.com/biomedswe/sequencing_project")
-            print("For correspondence please contact jonas870318@gmail.com\n\n")
+            print("For correspondence please contact jonas.andersson@med.lu.se\n\n")
         except Exception as e:
             misc.log_exception('.info_script() in menus.py:', e)
 

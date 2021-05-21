@@ -134,7 +134,7 @@ STAR
 Vcfpy
 ''')
 
-            cmd_env = "conda create -n sequencing -c bioconda bedtools bcftools biopython bwa gatk4 picard python=3.7.6 samtools=1.9 star pandas vcfpy scipy snpeff openpyxl"
+            cmd_env = "conda create -n sequencing -c bioconda bedtools bcftools biopython bwa gatk4 picard=2.25.2-0 python=3.7.6 samtools=1.9 star pandas vcfpy scipy snpeff openpyxl"
             if misc.run_command(cmd_env, "Installing bedtools bcftools biopython bwa gatk4 picard python=3.7.6 samtools=1.9 star pandas vcfpy scipy snpeff=5.0", None, None):
 
                 # Delly in bioconda didn't work so I had to do a workaround
