@@ -27,7 +27,7 @@ class Shortcuts():
         self.manta_variants_dir = f"{self.dna_seq_dir}manta/{options.tumor_id}/results/variants/"
 
         # Shortcuts to files used in DNA sequencing analysis
-        self.reference_genome_file = f"{self.reference_genome_dir}GRCh38.p13.genome.fa"
+        self.reference_genome_file = f"{self.reference_genome_dir}human_g1k_v37.fasta"
         self.reference_genome_exclude_template_file = f"{self.sequencing_project_dir}excludeTemplate/human.hg38.excl.tsv"
         self.configManta_file = getenv("HOME")+"/anaconda3/envs/sequencing/bin/manta-1.6.0.centos6_x86_64/bin/configManta.py"
         self.runWorkflow_file = getenv("HOME")+f"/sequencing_project/dna_seq/manta/{options.tumor_id}/runWorkflow.py"

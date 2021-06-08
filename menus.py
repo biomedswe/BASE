@@ -22,7 +22,7 @@ class Menus():
             print("This program was created during a master thesis project\nabout B-cell precursor acute lymphoblastic leukemia (BCP-ALL) in 2020-2021.\n")
             print("Developer:\nJonas Andersson\nMaster's programme in biomedicine\nDivision of Clinical Genetics\nLund University, BMC C13\nSE-221 84 Lund, Sweden\n")
             print("Acknowledgment:\nSpecial thanks to Prof. Kajsa Paulsson and assistant researcher Minjun Yang\n")
-            print("Github: https://github.com/biomedswe/sequencing_project")
+            print("Github: https://github.com/biomedswe/Biomedswe-Allele-Specific-Expression-analyser-BASE-")
             print("For correspondence please contact jonas.andersson@med.lu.se\n\n")
         except Exception as e:
             misc.log_exception('.info_script() in menus.py:', e)
@@ -53,10 +53,10 @@ class Menus():
                 print("2. Paired end sequencing\n")
                 choice = misc.validate_choice(2, "(leave blank to return to DNA-analysis menu)")
                 if choice == "":
-                    misc.log_to_file('User input: return to DNA-analysis menu')
+                    misc.log_to_file("info", "User input: return to DNA-analysis menu")
                     return ""
                 elif misc.confirm_choice():
-                    misc.log_to_file(f'User input: confirmed choice: {choice}')
+                    misc.log_to_file("info", f'User input: confirmed choice: {choice}')
                     misc.clear_screen()
                     files = sorted(listdir(shortcuts.dna_reads_dir))
                     with open(f"{shortcuts.dna_seq_dir}{options.tumor_id}_library.txt", 'w') as out_file:
@@ -75,7 +75,7 @@ class Menus():
                                         out_file.write(f"{options.normal_id} {library_id.split('_')[0]} {library_id} ")
                                 else: # even
                                     out_file.write(f"{library_id}\n")
-                    misc.log_to_file('Library list file created!')
+                    misc.log_to_file("info", "Library list file created!")
                     print("Now that you have created your list library file, you can run the analysis!\n")
                     input("Press any key to return to DNA-analysis menu...")
                     return

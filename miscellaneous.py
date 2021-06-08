@@ -4,7 +4,10 @@ import subprocess
 import logging
 import timeit
 import time
-logging.basicConfig(filename=getenv("HOME")+'/sequencing_project/Logfile.txt', filemode='a', format='%(asctime)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S', level=logging.DEBUG)
+logging.basicConfig(filename = getenv("HOME")+'/sequencing_project/Logfile.txt',
+                    format = '%(levelname)s %(asctime)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S',
+                    level = logging.DEBUG,
+                    filemode = 'a')
 
 try:
     from Bio import SeqIO
@@ -195,16 +198,22 @@ class Misc():
     #---------------------------------------------------------------------------
     def log_exception(self, text, exception):
         try:
-            self.log_to_file(f'{exception}: {text}. Exiting program...')
+            self.log_to_file("error", f'{exception}: {text}. Exiting program...')
             sys.exit()
         except Exception as e:
-            self.log_to_file(f"Error with .log_exception() in miscellaneous.py: {e}. Exiting program...")
+            self.log_to_file("error", f"Error with .log_exception() in miscellaneous.py: {e}. Exiting program...")
 
     #---------------------------------------------------------------------------
-    def log_to_file(self, text):
+    def log_to_file(self, level, text):
         try:
             print(f'{text}\n')
-            logging.info(f"{text}\n")
+
+            if level == "debug": logging.debug(f"{text}")
+            elif level == "info": logging.info(f"{text}")
+            elif level == "warning": logging.warning(f"{text}")
+            elif level == "error": logging.error(f"{text}")
+            elif level == "critical": logging.critical(f"{text}")
+
         except Exception as e:
             logging.info(f'Error with {self}.log_to_file() in miscellaneous.py: {e}. Exiting program...')
             sys.exit()
@@ -227,6 +236,7 @@ class Misc():
         If not completed; if process is executed without errors, it prints to logfile with time taken and passes return.
         else; if process ends  with errors, it prints error to log, removes incomplete file and then exits program'''
 
+        self.log_to_file("info", f"run_command({command}, {text}, {file}, {trackfile})")
         try:
             if file:
                 if self.step_allready_completed(file, text):
@@ -252,7 +262,7 @@ class Misc():
         try:
             if file:
                 if path.isfile(file):
-                    if text: self.log_to_file(f"{text} allready completed, skips step...")
+                    if text: self.log_to_file("info", f"{text} allready completed, skips step...")
                     time.sleep(2)
                     return True
                 else:

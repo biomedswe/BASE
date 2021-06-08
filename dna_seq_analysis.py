@@ -21,24 +21,31 @@ class DnaSeqAnalysis():
 
     #---------------------------------------------------------------------------
     def index_genome_dna(self, misc, shortcuts):
-        '''This function indexes the reference genome so it can be used in the analysis'''
+        '''Runs bwa-mem2 index in the linux shell to index the reference genome'''
+        start = timeit.default_timer()
 
         try:
-            # shortcuts
+            # Create shortcuts
+            misc.log_to_file("debug", "# Create shortcuts")
             ref_file = shortcuts.reference_genome_file
             chunks_dir = shortcuts.reference_genome_chunks_dir
             allready_completed = shortcuts.bwa_index_complete
 
-            start = timeit.default_timer()
-            if not misc.step_allready_completed(allready_completed, "Indexing GRCh38.p13.genome"):
+            misc.log_to_file("info", f'Starting: indexing {ref_file.split("/")[-1]} with bwa-mem2 index')
+
+
+            if not misc.step_allready_completed(allready_completed, f"Indexing {ref_file.split('/')[-1]}"):
                 misc.clear_screen()
-                misc.log_to_file('Starting: indexing GRCh38.p13.genome with bwa index')
-                cmd_bwa_index = f"bwa index {ref_file}" # b = blocksize, makes each block utilize more memory, may be effective
+
+                cmd_bwa_index = f"bwa-mem2 index {ref_file}" # b = blocksize, makes each block utilize more memory, may be effective
                 misc.run_command(cmd_bwa_index, "Bwa index", f"{ref_file}.sa", None)
+
                 cmd_create_dict = f"samtools dict {ref_file} -o {ref_file[:-2]}dict"
                 misc.run_command(cmd_create_dict, "Creating .dict with samtools dict", f"{ref_file[:-2]}dict", None)
+
                 cmd_create_fai = f"samtools faidx {ref_file} -o {ref_file}.fai"
                 misc.run_command(cmd_create_fai, "Creating .fai with samtools faidx", f"{ref_file}.fai", None)
+
             cmd_split_fasta = f"bedtools makewindows -w 10000000 -g {ref_file}.fai > {chunks_dir}chunk.bed"
             misc.run_command(cmd_split_fasta, "Spliting fa.fai with bedtools makewindows", f"{chunks_dir}chunk.bed", None)
             cmd_split_bed = f"split -l 2 {chunks_dir}chunk.bed {chunks_dir}chunk_"
@@ -76,23 +83,22 @@ class DnaSeqAnalysis():
             sys.exit()
     #---------------------------------------------------------------------------
     def alignment(self, options, misc, shortcuts):
-        '''This function loops through a library list containing either single-end or paired-end protocol, it will automatically detect what protocol it is.
-           For every loop, the bwa mem command will be run and the output name for each run will be saved to a txt-file for use in the next step if the command finnish without errors.'''
+        '''This function align reads >= 70 bp to reference genome using bwa-mem2'''
 
         try:
             if not misc.step_allready_completed(shortcuts.alignedFiles_list, "Burrows Wheeler aligner"):
                 misc.create_directory([f"{shortcuts.aligned_output_dir}{options.tumor_id}/"])
                 start = timeit.default_timer()
-                threads = mp.cpu_count()
-                misc.log_to_file(f'Starting: Burrows Wheeler aligner Using {threads} out of {threads} available threads')
+                threads = mp.cpu_count() - 2
+                misc.log_to_file(f'Starting: Burrows Wheeler aligner Using {threads} out of {threads + 2} available threads')
                 with open(f'{shortcuts.dna_seq_dir}{options.tumor_id}_library.txt', 'r') as fastq_list:
                     for line in fastq_list.readlines():
                         clinical_id, library_id, read1, read2 = line.split()
                         read_group_header = f'\'@RG\\tID:{library_id}\\tSM:{clinical_id}\\tLB:{library_id}\\tPL:ILLUMINA\\tPU:{library_id}\''
                         if read2 == 'N/A': # single-end
-                            cmd_bwa = f"1: bwa mem -R {read_group_header} {shortcuts.reference_genome_file} {shortcuts.dna_reads_dir}/{read1} -t {threads} | samtools view -bS -o {shortcuts.aligned_output_dir}{options.tumor_id}/{library_id}.bam" # samtools view converts SAM to BAM
+                            cmd_bwa = f"bwa-mem2 -R {read_group_header} {shortcuts.reference_genome_file} {shortcuts.dna_reads_dir}/{read1} -t {threads} | samtools view -bS -o {shortcuts.aligned_output_dir}{options.tumor_id}/{library_id}.bam" # samtools view converts SAM to BAM
                         else: # paired-end
-                            cmd_bwa = f"bwa mem -R {read_group_header} {shortcuts.reference_genome_file} {shortcuts.dna_reads_dir}/{read1} {shortcuts.dna_reads_dir}/{read2} -t {threads} | samtools view -bS -o {shortcuts.aligned_output_dir}{options.tumor_id}/{library_id}.bam"
+                            cmd_bwa = f"bwa-mem2 mem -R {read_group_header} {shortcuts.reference_genome_file} {shortcuts.dna_reads_dir}/{read1} {shortcuts.dna_reads_dir}/{read2} -t {threads} | samtools view -bS -o {shortcuts.aligned_output_dir}{options.tumor_id}/{library_id}.bam"
                         misc.run_command(cmd_bwa, f"Aligning {library_id}.bam", f"{shortcuts.aligned_output_dir}{options.tumor_id}/{library_id}.bam", None)
                         misc.create_outputList_dna(shortcuts.alignedFiles_list, f"{library_id}.bam")
                     elapsed = timeit.default_timer() - start
