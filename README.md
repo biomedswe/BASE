@@ -49,5 +49,9 @@ python3 $HOME/sequencing_project/main.py -t <tumor clinical id> -n <normal clini
 DNA-seq reads: (in fasta/fastq format) into $HOME/sequencing_project/dna_seq/reads 
 
 RNA-seq reads: (in fasta.gz) into $HOME/sequencing_project/rna_seq/reads
+
+### 4. Cite BASE
+
+Please refer to this repository when using BASE in your project
     
  
