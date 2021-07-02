@@ -30,7 +30,7 @@ def filter_csv(options):
     # dict will show: geneName : {[total counts, matching counts]}
 
     for index, row in df.iterrows():
-        if row.loc['pValue_WGS'] <= float(options.pvalue) and row.loc['pValue_CNV'] <= float(options.pvalue) and not float(options.lower_foldchange) < row.loc['VAF_ratio_WGS'] < float(options.upper_foldchange) and not float(options.lower_foldchange) < row.loc['VAF_ratio_CNV'] <  float(options.upper_foldchange):
+        if row.loc['pValue_WGS_VAF'] <= float(options.pvalue) and row.loc['pValue_CNV'] <= float(options.pvalue) and not float(options.lower_foldchange) < row.loc['RNA/DNA_ratio_WGS_VAF'] < float(options.upper_foldchange) and not float(options.lower_foldchange) < row.loc['RNA/DNA_ratio_CNV'] <  float(options.upper_foldchange):
             genes[row.loc['geneName']][0] += 1
             genes[row.loc['geneName']][1] += 1
             tot += 1
