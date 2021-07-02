@@ -6,21 +6,21 @@ class Shortcuts():
     def __init__(self, options):
 
         # Shortcut to main folders
-        self.sequencing_project_dir = getenv("HOME")+"/sequencing_project/"
-        self.dna_seq_dir = f"{self.sequencing_project_dir}dna_seq/"
-        self.rna_seq_dir =  f"{self.sequencing_project_dir}rna_seq/"
+        self.BASE_dir = getenv("HOME")+"/BASE/"
+        self.dna_seq_dir = f"{self.BASE_dir}dna_seq/"
+        self.rna_seq_dir =  f"{self.BASE_dir}rna_seq/"
 
         # Shortcuts to input folders
         self.dna_reads_dir  = f"{self.dna_seq_dir}reads/{options.tumor_id}/"
-        self.reference_genome_dir = f"{self.sequencing_project_dir}reference_genome/"
+        self.reference_genome_dir = f"{self.BASE_dir}reference_genome/"
         self.reference_genome_chunks_dir = f"{self.reference_genome_dir}chunks/"
 
         # Shortcuts to output folders in DNA sequencing analysis
-        self.aligned_output_dir = f"{self.dna_seq_dir}aligned/"
+        self.aligned_output_dir = f"{self.dna_seq_dir}aligned/{options.tumor_id}/"
         self.sorted_output_dir = f"{self.dna_seq_dir}sorted/"
         self.merged_output_dir = f"{self.dna_seq_dir}merged/"
-        self.removed_duplicates_output_dir = f"{self.dna_seq_dir}removed_duplicates/"
-        self.realigned_output_dir = f"{self.dna_seq_dir}realigned/"
+        self.removed_duplicates_output_dir = f"{self.dna_seq_dir}removed_duplicates/{options.tumor_id}/"
+        self.realigned_output_dir = f"{self.dna_seq_dir}realigned/{options.tumor_id}/"
         self.haplotypecaller_output_dir = f"{self.dna_seq_dir}gatk_haplotypecaller/"
         self.delly_output_dir = f"{self.dna_seq_dir}delly/"
         self.manta_output_dir = f"{self.dna_seq_dir}manta/"
@@ -28,9 +28,9 @@ class Shortcuts():
 
         # Shortcuts to files used in DNA sequencing analysis
         self.reference_genome_file = f"{self.reference_genome_dir}human_g1k_v37.fasta"
-        self.reference_genome_exclude_template_file = f"{self.sequencing_project_dir}excludeTemplate/human.hg38.excl.tsv"
+        self.reference_genome_exclude_template_file = f"{self.BASE_dir}excludeTemplate/human.hg38.excl.tsv"
         self.configManta_file = getenv("HOME")+"/anaconda3/envs/sequencing/bin/manta-1.6.0.centos6_x86_64/bin/configManta.py"
-        self.runWorkflow_file = getenv("HOME")+f"/sequencing_project/dna_seq/manta/{options.tumor_id}/runWorkflow.py"
+        self.runWorkflow_file = getenv("HOME")+f"/BASE/dna_seq/manta/{options.tumor_id}/runWorkflow.py"
 
         # Shortcuts to folders used in RNA sequencing analysis
         self.rna_reads_dir  = f"{self.rna_seq_dir}reads/{options.tumor_id}/"

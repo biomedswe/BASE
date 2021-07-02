@@ -2,7 +2,10 @@
 from os import sys, path, getenv
 import subprocess
 import logging
-logging.basicConfig(filename='Logfile.txt', filemode='a', format='%(asctime)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S', level=logging.DEBUG)
+logging.basicConfig(filename = getenv("HOME")+'/BASE/Logfile.txt',
+                    format = '%(levelname)s     %(asctime)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S',
+                    level = logging.DEBUG,
+                    filemode = 'a')
 
 class SetupAnaconda3():
 
@@ -71,14 +74,16 @@ class SetupAnaconda3():
         '''This function downloads anaconda via wget and the link-adress to the linux installer from anaconda.com.
            It then installs anaconda and removes the installation file after completion.'''
 
-        self.log_to_file("Downloading anaconda from https://repo.anaconda.com/archive/Anaconda3-2020.11-Linux-x86_64.sh...")
         # Download Anaconda3
-        self.run_command("wget https://repo.anaconda.com/archive/Anaconda3-2020.11-Linux-x86_64.sh -P $HOME", "Downloading Anaconda3-2020.11-Linux-x86_64.sh", getenv("HOME")+'/Anaconda3-2020.11-Linux-x86_64.sh', None)
+        self.log_to_file("Downloading anaconda from https://repo.anaconda.com/archive/Anaconda3-2020.11-Linux-x86_64.sh...")
+        self.run_command("wget https://repo.anaconda.com/archive/Anaconda3-2020.11-Linux-x86_64.sh -P $HOME", "Downloading Anaconda3-2020.11-Linux-x86_64.sh*", getenv("HOME")+'/Anaconda3-2020.11-Linux-x86_64.sh', None)
+
         # Install Anaconda3
         self.run_command("bash $HOME/Anaconda3-2020.11-Linux-x86_64.sh", "Installation of Anaconda3", getenv("HOME")+'/anaconda3/install.complete', getenv("HOME")+'/anaconda3/install.complete')
+
         # remove installation file
-        self.run_command("rm $HOME/Anaconda3-2020.11-Linux-x86_64.sh", 'Removal of installation file', None, None)
-        print("\nInstallation of Anaconda3 is now completed,\nBefore you are done, you have to Copy and paste the following in the terminal: \"source $HOME/.bashrc\" to initialize anaconda3")
+        self.run_command("rm $HOME/Anaconda3-2020.11-Linux-x86_64.sh*", 'Removal of installation file', None, None)
+        self.log_to_file("\nInstallation of Anaconda3 is now completed,\nBefore you are done, you have to Copy and paste the following in the terminal: \"source $HOME/.bashrc\" to initialize anaconda3")
 
     #---------------------------------------------------------------------------
     def create_anaconda_environment(self, misc, shortcuts):

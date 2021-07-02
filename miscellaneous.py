@@ -4,8 +4,10 @@ import subprocess
 import logging
 import timeit
 import time
-logging.basicConfig(filename = getenv("HOME")+'/sequencing_project/Logfile.txt',
-                    format = '%(levelname)s %(asctime)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S',
+import shlex
+import re
+logging.basicConfig(filename = getenv("HOME")+'/BASE/Logfile.txt',
+                    format = '%(levelname)s     %(asctime)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S',
                     level = logging.DEBUG,
                     filemode = 'a')
 
@@ -95,9 +97,9 @@ class Misc():
             try:
                 # create target directory
                 makedirs(path)
-                self.log_to_file(f"{path} folder(s) created succesfully - OK!")
+                self.log_to_file("INFO", f"{path} folder(s) created succesfully - OK!")
             except FileExistsError:
-                self.log_to_file(f"{path} allready exists - skips step...")
+                self.log_to_file("INFO", f"{path} folder(s) allready exists - skips step...")
             except Exception as e:
                 self.log_exception(".create_directory() in miscellaneous.py:", e)
                 sys.exit()
@@ -110,7 +112,7 @@ class Misc():
             filename = "".join(chromosomes) + "_GRCh38.p13.genome"
             if not self.step_allready_completed(f'{ref_dir}{filename}/{filename}.fa', f'Creating Fasta for {filename}'):
                 start = timeit.default_timer()
-                self.log_to_file(f'Starting: creating a new fasta file for {filename}...')
+                self.log_to_file("INFO", f'Starting: creating a new fasta file for {filename}...')
                 self.create_directory([f'{ref_dir}{filename}'])
                 sequences = SeqIO.parse(ref_file, 'fasta')
                 with open(f'{ref_dir}{filename}/{filename}.fa', 'w+') as fa:
@@ -121,7 +123,7 @@ class Misc():
                                 fa.write(str(line.seq)+ "\n\n")
                                 break # I use break here, otherwise it will continue with chr10,12,13 etc. if i choose chr1
                 end = timeit.default_timer()
-                self.log_to_file(f"Creating fasta for {filename} succesfully completed in {self.elapsed_time(end-start)} - OK!)")
+                self.log_to_file("INFO", f"Creating fasta for {filename} succesfully completed in {self.elapsed_time(end-start)} - OK!)")
             return filename
         except Exception as e:
             self.log_exception(".create_new_fasta() in miscellaneous.py:", e)
@@ -135,7 +137,7 @@ class Misc():
 
             if not self.step_allready_completed(f'{ref_dir}{filename}/{filename}.gtf', f'Creating Gtf for {filename}'):
                 start = timeit.default_timer()
-                self.log_to_file(f'Starting: creating a new gtf file for {filename}...')
+                self.log_to_file("INFO", f'Starting: creating a new gtf file for {filename}...')
                 sequences = SeqIO.parse(shortcuts.reference_genome_file, 'fasta')
                 with open(f'{ref_dir}{filename}/{filename}.bed', 'w') as bed:
                     for chr in chromosomes:
@@ -148,7 +150,7 @@ class Misc():
                 cmd_createGTF = f"bedtools intersect -a {shortcuts.annotation_gtf_file} -b {ref_dir}{filename}/{filename}.bed > {ref_dir}{filename}/{filename}.gtf"
                 self.run_command(cmd_createGTF, None, None, None)
                 end = timeit.default_timer()
-                self.log_to_file(f"Creating Gtf for {filename} succesfully completed in {self.elapsed_time(end-start)} - OK!)")
+                self.log_to_file("INFO", f"Creating Gtf for {filename} succesfully completed in {self.elapsed_time(end-start)} - OK!)")
                 remove(f'{ref_dir}{filename}/{filename}.bed')
         except Exception as e:
             self.log_exception(".create_new_gtf() in miscellaneous.py:", e)
@@ -169,7 +171,7 @@ class Misc():
         '''This function creates a trackfile that step_allready_completed() function can look after when checking if step is allready completed'''
         try:
             if path.isfile(file):
-                self.log_to_file(f"You are trying to overwrite the existing file: {file}")
+                self.log_to_file("warning", f"You are trying to overwrite the existing file: {file}")
                 if not self.confirm_choice():
                     sys.exit()
             with open(file, 'w'):
@@ -198,24 +200,24 @@ class Misc():
     #---------------------------------------------------------------------------
     def log_exception(self, text, exception):
         try:
-            self.log_to_file("error", f'{exception}: {text}. Exiting program...')
+            self.log_to_file("ERROR", f'{exception}: {text}. Exiting program...')
             sys.exit()
         except Exception as e:
-            self.log_to_file("error", f"Error with .log_exception() in miscellaneous.py: {e}. Exiting program...")
+            self.log_to_file("ERROR", f"Error with .log_exception() in miscellaneous.py: {e}. Exiting program...")
+            sys.exit()
 
     #---------------------------------------------------------------------------
     def log_to_file(self, level, text):
         try:
-            print(f'{text}\n')
-
-            if level == "debug": logging.debug(f"{text}")
-            elif level == "info": logging.info(f"{text}")
-            elif level == "warning": logging.warning(f"{text}")
-            elif level == "error": logging.error(f"{text}")
-            elif level == "critical": logging.critical(f"{text}")
+            print(f" {level}: {text}")
+            if level == "DEBUG": logging.debug(f"{text}")
+            elif level == "INFO": logging.info(f"{text}")
+            elif level == "WARNING": logging.warning(f"{text}")
+            elif level == "ERROR": logging.error(f"{text}")
+            elif level == "CRITICAL": logging.critical(f"{text}")
 
         except Exception as e:
-            logging.info(f'Error with {self}.log_to_file() in miscellaneous.py: {e}. Exiting program...')
+            logging.error(f'Error with {self}.log_to_file() in miscellaneous.py: {e}. Exiting program...')
             sys.exit()
 
     #---------------------------------------------------------------------------
@@ -224,34 +226,86 @@ class Misc():
         try:
             if file:
                 remove(file)
-                self.log_to_file(f'Incomplete {file} removed - OK!')
+                self.log_to_file("INFO", f'Incomplete {file} removed - OK!')
         except OSError: pass
         except Exception as e:
             self.log_exception("remove_file() in miscellaneous.py:", e)
             sys.exit()
 
     #---------------------------------------------------------------------------
-    def run_command(self, command, text, file, trackfile):
+    def run_command(self, cmd, text, file, trackfile, input):
         '''This function first calls step_allready_completed() to check if the step i allready completed.
         If not completed; if process is executed without errors, it prints to logfile with time taken and passes return.
-        else; if process ends  with errors, it prints error to log, removes incomplete file and then exits program'''
+        else; if process ends with errors, it prints error to log, removes incomplete file and then exits program'''
 
-        self.log_to_file("info", f"run_command({command}, {text}, {file}, {trackfile})")
+       
+
         try:
+            
+            if  cmd == "bwa-mem2":
+                # run_command() uses bwa-mem2 options
+                self.log_to_file("DEBUG", "# run_command() uses bwa-mem2 options")
+                text = input.split('-o')[1].split('/')[7]
+                file = trackfile = f"{input.split('-o ')[1]}.complete"
+                self.log_to_file("DEBUG", f"run_command(cmd: {input}, text: {text}, file: {file}")
+                process = subprocess.Popen(input, executable='/bin/bash', shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+                
+            elif cmd == "ValidateSamFile":
+                # run_command() uses ValidateSamFile options
+                self.log_to_file("DEBUG", "# run_command() uses ValidateSamFile options")
+                text = input.split('-I')[1].split(' ')[1].split('/')[7]
+                file = trackfile = f"{input.split('-I')[1].split(' ')[1][:-3]}validated"
+                self.log_to_file("DEBUG", f"run_command(cmd: {input}, text: {text}, file: {file}")
+
+            elif cmd == "realing index":   
+                 # run_command() uses realign index options
+                self.log_to_file("DEBUG", "# run_command() uses realign index options")
+                text = f"Indexing {input.split(' ')[2].split('/')[7]}"
+                file = trackfile = f"{input.split(' ')[2]}.bai.complete"
+                self.log_to_file("DEBUG", f"run_command(cmd: {input}, text: {text}, file: {file}")
+            
+            
+            elif cmd == "realign LeftAlignIndels":   
+                # run_command() uses realign options
+                self.log_to_file("DEBUG", "# run_command() uses realign LeftAlignIndels options")
+                text = f"Realigning {input.split('-O ')[1].split('/')[7]}"
+                file = trackfile = f"{input.split('-O ')[1]}.complete"
+                self.log_to_file("DEBUG", f"run_command(cmd: {input}, text: {text}, file: {file}")
+               
+
             if file:
                 if self.step_allready_completed(file, text):
                     return False
-            result = subprocess.run(command, shell=True)
-            if result.returncode == 0:
-                if text: self.log_to_file(f"{text} succesfully completed - OK!")
+
+
+            # invoke process if not allready invoked
+            if not process:
+                process = subprocess.Popen(input, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+            
+            # print stdout during execution
+            while process.poll() is not None:
+                output = process.stdout.readline()
+                
+                if output:
+                    latest = output
+                    print("stdout:", output.strip())
+                    
+            rc = process.poll()
+            
+            if rc == 0:
+                
+                if text: self.log_to_file("INFO", f"{text} succesfully completed")
+                
                 if trackfile: self.create_trackFile(trackfile)
                 return True
+           
             else:
-                self.log_to_file(f'Process ended with returncode != 0: {command} - {result.stderr} - ERROR!')
-                self.remove_file(file)
-                sys.exit()
+                print("Raise exception")
+                raise Exception(f"{output.strip()}")
+
         except Exception as e:
-            self.log_exception("run_command() in miscellaneous.py:", e)
+            print(f"Something went wrong: {e} in misc.run_command()")
+            logging.exception(f'Process ended with returncode != 0: {text}')
             sys.exit()
 
     #---------------------------------------------------------------------------
@@ -262,7 +316,7 @@ class Misc():
         try:
             if file:
                 if path.isfile(file):
-                    if text: self.log_to_file("info", f"{text} allready completed, skips step...")
+                    if text: self.log_to_file("INFO", f"{text} allready completed, skips step...")
                     time.sleep(2)
                     return True
                 else:
@@ -296,10 +350,10 @@ class Misc():
 
         try:
             if options.tumor_id and options.normal_id in "".join(listdir(shortcuts.dna_reads_dir)):
-                self.log_to_file(f"tumor_id {options.tumor_id} and normal_id {options.normal_id} correctly validated")
+                self.log_to_file("INFO", f"tumor_id {options.tumor_id} and normal_id {options.normal_id} correctly validated")
 
             else:
-                self.log_to_file(f'You have entered a tumor_id: {options.tumor_id} and normal_id: {options.normal_id} that is not present in your reads.\nPlease restart program and verify that you have typed in the right \"clinical_id\" for both tumor (-t) and normal (-n)!')
+                self.log_to_file("ERROR", f'You have entered a tumor_id: {options.tumor_id} and normal_id: {options.normal_id} that is not present in your reads.\nPlease restart program and verify that you have typed in the right \"clinical_id\" for both tumor (-t) and normal (-n)!')
                 input("Press any key to exit program")
                 sys.exit()
         except Exception as e:
