@@ -1,7 +1,7 @@
 # sequencing_project
-Allele-specific expression (ase) analysis pipeline
+Allele-specific expression (ASE) analysis pipeline
 
-This script automates everything from setting up anaconda to downloading reference genome and performing DNA and RNA analysis to get a result about ase
+This script automates everything from setting up anaconda to downloading reference genome and performing DNA and RNA analysis to get a result about ASE
 
 ## Requirements
 - Platform: 
@@ -16,7 +16,7 @@ Open bash (Unix shell) and type the following:
 
 
 ```
-git clone https://github.com/biomedswe/sequencing_project.git $HOME/sequencing_project
+git clone https://github.com/biomedswe/BASE.git $HOME/BASE
 ```
 
 ### 2. Run setup_anaconda3.py and follow instructions in program
@@ -24,11 +24,7 @@ Please note that you must have python: ≥ 2.7 installed first.
 
 Type the following in the shell:
 ```
-python2 setup_anaconda3.py (after navigating to $HOME/sequencing_project)
-```
-or
-```
-python2 $HOME/sequencing_project/setup_anaconda3.py
+python2 $HOME/BASE/setup_anaconda3.py
 ```
 
 Let Anaconda3 install at default location
@@ -37,18 +33,19 @@ Let Anaconda3 install at default location
 ### 3. Run main.py and follow instructions in program
 Type the following in the shell:
 ```
-python3 main.py -t <tumor clinical id> -n <normal clinical id> (after navigating to $HOME/sequencing_project)
-```
-or
-```
-python3 $HOME/sequencing_project/main.py -t <tumor clinical id> -n <normal clinical id>
+python3 $HOME/BASE/main.py -t <tumor clinical id> -n <normal clinical id> -sg < sub group>
 ```
 
 ### 4. Copy your DNA-seq/RNA-seq reads into the right folders
 
-DNA-seq reads: (in fasta/fastq format) into $HOME/sequencing_project/dna_seq/reads 
+DNA-seq reads: (in fastq.gz format) into $HOME/BASE/dna_seq/reads 
 
-RNA-seq reads: (in fasta.gz) into $HOME/sequencing_project/rna_seq/reads
+RNA-seq reads: (in fastq.gz format) into $HOME/BASE/rna_seq/reads
+
+### Optional. Copy Excel document with Copy number information into $HOME/BASE/rna_seq/star/[tumor-id]/[tumor-id]_CN.xlsx
+
+If you have Copy number information, you can copy this document into $HOME/BASE/rna_seq/star/[tumor-id]/[tumor-id]_CN.xlsx 
+in order to get calculated pValue and from CNV
 
 ### 4. Cite BASE
 
