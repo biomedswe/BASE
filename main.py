@@ -1,7 +1,6 @@
-
 # coding=utf-8
 # Packages used in script
-from os import getenv, sys, path, listdir, makedirs
+from os import sys
 import argparse
 from menus import Menus
 from miscellaneous import Misc
@@ -28,41 +27,47 @@ import signal
 
 
 def main():
+
+    # Accept arguments for the program in the command line
     parser = argparse.ArgumentParser(description='''This script is used to simplify and make ASE-analysis more time efficient''')
     parser.add_argument("-t", "--tumor_id", metavar="", required=True, help="Input clinical id of tumor samples")
     parser.add_argument("-n", "--normal_id", metavar="", required=True, help="Input clinical id of normal samples")
     parser.add_argument("-sg", "--subgroup", metavar="", required=True, help="Input subgroup of your sample (STR)")
     parser.add_argument("-T", "--threads", metavar="", required=True, help="Input number of CPU threads to use (INT)")
-    options = parser.parse_args() # all arguments will be passed to the functions
-    # hur göra här? options måste med i shortcuts
+
+    # Assign a variable to all written arguments so that they can be passed to different classes etc
+    options = parser.parse_args()
+    
+    # Assign variables to the imported classes
     misc = Misc()
-    all_menus = Menus(misc)
-    shortcuts = Shortcuts(options)
+    all_menus = Menus(misc) # Forward misc to Menus so that all methods in misc can be accessed by the Menus class
+    shortcuts = Shortcuts(options) # Forward options to Shortcuts so that all arguments in options can be accessed by the Shortcuts class
     rna_analysis = RnaSeqAnalysis()
     dna_analysis = DnaSeqAnalysis()
     ref_genome = ReferenceGenome()
     setup = SetupAnaconda3()
 
+    # Handle what happens if the user presses ctrl + c
     def signal_handler(sig, frame):
         misc.log_to_file("INFO", "Aborted by user!")
         sys.exit()
 
+    # listens for ctrl + c
     signal.signal(signal.SIGINT, signal_handler)
 
-    misc.log_to_file("info", f"--tumor_id: {options.tumor_id}")
-    misc.log_to_file("info", f"--normal_id: {options.normal_id}")
-    misc.log_to_file("info", f"--subgroup: {options.subgroup}")
-    misc.log_to_file("info", f"--thread: {options.threads}")
+    misc.log_to_file("INFO", f"--tumor_id: {options.tumor_id} --normal_id: {options.normal_id} --subgroup: {options.subgroup} --thread: {options.threads}")
+   
 
-
-
+     # Handle what happens if the user assigns more CPU threads than available
     if int(options.threads) > mp.cpu_count():
         misc.log_to_file("error", f"Threads to use: {options.threads} > Available threads: {mp.cpu_count()}")
         print(f"Threads to use: {options.threads} > Available threads: {mp.cpu_count()}")
         sys.exit()
 
+     # Handle what happens if the user assigns exactly the number of CPU threads that is avaliable
     elif int(options.threads) == mp.cpu_count():
-        misc.log_to_file("warning", f"Threads to use: {options.threads} = Available threads: {mp.cpu_count()}")
+        misc.log_to_file("warning", f"Threads to use: {options.threads} = Available threads: {mp.cpu_count()}\nIt is not recommended to use all available threads\nComputer may be unstable")
+        input("Press any key to continue")
 
 
 
@@ -124,11 +129,11 @@ def main():
                     misc.log_to_file("info", "User input: 3. Run analysis\n")
                     misc.clear_screen()
                     misc.validate_id(options, shortcuts)
-                    # dna_analysis.alignment(options, misc, shortcuts)
+                    dna_analysis.alignment(options, misc, shortcuts)
                     if dna_analysis.validate_bam_dna(options, misc, shortcuts):
-                        # dna_analysis.sort(options, misc, shortcuts)
-                        # dna_analysis.merge(options, misc, shortcuts)
-                        # dna_analysis.remove_duplicate(options, misc, shortcuts)
+                        dna_analysis.sort(options, misc, shortcuts)
+                        dna_analysis.merge(options, misc, shortcuts)
+                        dna_analysis.remove_duplicate(options, misc, shortcuts)
                         dna_analysis.realign(options, misc, shortcuts)
                         dna_analysis.gatk_haplotype(options, misc, shortcuts)
                         dna_analysis.delly(options, misc, shortcuts)
@@ -156,8 +161,8 @@ def main():
                 # Map reads to reference genome
                 elif rna_choice == '2':
                     misc.log_to_file("info", "User input: Map reads to reference genome\n")
-                    rna_analysis.map_reads(options, misc, shortcuts)
-                    rna_analysis.ASEReadCounter(options, misc, shortcuts)
+                    # rna_analysis.map_reads(options, misc, shortcuts)
+                    # rna_analysis.ASEReadCounter(options, misc, shortcuts)
                     rna_analysis.add_wgs_data_to_csv(options, misc, shortcuts)
                     sys.exit()
 

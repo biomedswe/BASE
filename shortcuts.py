@@ -17,13 +17,13 @@ class Shortcuts():
 
         # Shortcuts to output folders in DNA sequencing analysis
         self.aligned_output_dir = f"{self.dna_seq_dir}aligned/{options.tumor_id}/"
-        self.sorted_output_dir = f"{self.dna_seq_dir}sorted/"
-        self.merged_output_dir = f"{self.dna_seq_dir}merged/"
+        self.sorted_output_dir = f"{self.dna_seq_dir}sorted/{options.tumor_id}/"
+        self.merged_output_dir = f"{self.dna_seq_dir}merged/{options.tumor_id}/"
         self.removed_duplicates_output_dir = f"{self.dna_seq_dir}removed_duplicates/{options.tumor_id}/"
         self.realigned_output_dir = f"{self.dna_seq_dir}realigned/{options.tumor_id}/"
-        self.haplotypecaller_output_dir = f"{self.dna_seq_dir}gatk_haplotypecaller/"
-        self.delly_output_dir = f"{self.dna_seq_dir}delly/"
-        self.manta_output_dir = f"{self.dna_seq_dir}manta/"
+        self.haplotypecaller_output_dir = f"{self.dna_seq_dir}gatk_haplotypecaller/{options.tumor_id}/"
+        self.delly_output_dir = f"{self.dna_seq_dir}delly/{options.tumor_id}/"
+        self.manta_output_dir = f"{self.dna_seq_dir}manta/{options.tumor_id}/"
         self.manta_variants_dir = f"{self.dna_seq_dir}manta/{options.tumor_id}/results/variants/"
 
         # Shortcuts to files used in DNA sequencing analysis
@@ -40,16 +40,16 @@ class Shortcuts():
 
 
         # Shortcuts to files used in RNA sequencing analysis
-        self.annotation_gtf_file = f"{self.reference_genome_dir}gencode.v37.primary_assembly.annotation.gtf"
-        self.gatk_vcfFile = f"{self.haplotypecaller_output_dir}{options.tumor_id}/{options.tumor_id}_filtered_RD10_snps_tumor_het_annotated.vcf"
+        self.annotation_gtf_file = f"{self.reference_genome_dir}gencode.v19.annotation.gtf"
+        self.gatk_vcfFile = f"{self.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het_annotated.vcf"
 
         # Shortcuts to output lists (used for input in pipeline steps) (and also for validation if pipeline step i allready completed)
-        self.alignedFiles_list = f"{self.aligned_output_dir}{options.tumor_id}/alignedFiles.txt"
-        self.sortedFiles_list = f"{self.sorted_output_dir}{options.tumor_id}/sortedFiles.txt"
+        # not used anymore - self.alignedFiles_list = f"{self.aligned_output_dir}{options.tumor_id}/alignedFiles.txt"
+        self.sortedFiles_list = f"{self.sorted_output_dir}sortedFiles.txt"
         self.mergedFiles_list = f"{self.merged_output_dir}{options.tumor_id}/mergedFiles.txt"
         self.removeDuplicates_list = f"{self.removed_duplicates_output_dir}{options.tumor_id}/remove_duplicate.txt"
         self.realignedFiles_list = f"{self.realigned_output_dir}{options.tumor_id}/realignedFiles.txt"
-        self.gatk_chunks_list = f"{self.haplotypecaller_output_dir}{options.tumor_id}/chunks.list"
+        self.gatk_chunks_list = f"{self.haplotypecaller_output_dir}/chunks.list"
 
         # Shortcuts to files used to validate if pipeline step is allready completed
         self.bwa_index_complete = f"{self.reference_genome_dir}index.complete"

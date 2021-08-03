@@ -1,6 +1,6 @@
 from os import path, getenv, listdir, makedirs, sys, remove, kill, getppid
 import signal
-import subprocess
+from subprocess import Popen, PIPE, STDOUT, run
 import logging
 import timeit
 import time
@@ -58,7 +58,7 @@ class Misc():
     def clear_screen(self):
         '''This function clears the terminal window'''
         try:
-            subprocess.run("clear", shell=True)
+            run("clear", shell=True)
         except Exception as e:
             self.log_exception(".clear_screen() in miscellaneous.py:", e)
             sys.exit()
@@ -209,7 +209,7 @@ class Misc():
     #---------------------------------------------------------------------------
     def log_to_file(self, level, text):
         try:
-            print(f" {level}: {text}")
+            print(f"{level}: {text}\n")
             if level == "DEBUG": logging.debug(f"{text}")
             elif level == "INFO": logging.info(f"{text}")
             elif level == "WARNING": logging.warning(f"{text}")
@@ -233,79 +233,176 @@ class Misc():
             sys.exit()
 
     #---------------------------------------------------------------------------
-    def run_command(self, cmd, text, file, trackfile, input):
+    def run_command(self, input):
         '''This function first calls step_allready_completed() to check if the step i allready completed.
         If not completed; if process is executed without errors, it prints to logfile with time taken and passes return.
         else; if process ends with errors, it prints error to log, removes incomplete file and then exits program'''
 
-       
-
         try:
             
-            if  cmd == "bwa-mem2":
+            if  input.get('program') == "bwa-mem2":
                 # run_command() uses bwa-mem2 options
                 self.log_to_file("DEBUG", "# run_command() uses bwa-mem2 options")
-                text = input.split('-o')[1].split('/')[7]
-                file = trackfile = f"{input.split('-o ')[1]}.complete"
-                self.log_to_file("DEBUG", f"run_command(cmd: {input}, text: {text}, file: {file}")
-                process = subprocess.Popen(input, executable='/bin/bash', shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-                
-            elif cmd == "ValidateSamFile":
-                # run_command() uses ValidateSamFile options
-                self.log_to_file("DEBUG", "# run_command() uses ValidateSamFile options")
-                text = input.split('-I')[1].split(' ')[1].split('/')[7]
-                file = trackfile = f"{input.split('-I')[1].split(' ')[1][:-3]}validated"
-                self.log_to_file("DEBUG", f"run_command(cmd: {input}, text: {text}, file: {file}")
+                cmd = input.get('cmd')
+                text = input.get('text')
+                file = trackfile = input.get('file')
+                self.log_to_file("DEBUG", f"run_command(cmd: {cmd},\ntext: {text},\nfile: {file})")
 
-            elif cmd == "realing index":   
+
+                # Check if file is allready aligned
+                if self.step_allready_completed(file, text):
+                    return True
+                
+                
+            elif input.get('program') == "Picard ValidateSamFile":
+                # run_command() uses Picard ValidateSamFile options
+                self.log_to_file("DEBUG", "# run_command() uses Picard ValidateSamFile options")
+                cmd = input.get('cmd')
+                text = input.get('text')
+                file = trackfile = input.get('file')
+                self.log_to_file("DEBUG", f"run_command(cmd: {cmd}, \ntext: {text}, \nfile: {file}")
+
+            elif input.get('program') == "Picard SortSam":
+                # run_command() uses Picard SortSam options
+                self.log_to_file("DEBUG", "# run_command() uses Picard SortSam options")
+                cmd = input.get('cmd')
+                text = input.get('text')
+                file = trackfile = input.get('file')
+                self.log_to_file("DEBUG", f"run_command(cmd: {cmd}, \ntext: {text}, \nfile: {file}")
+
+            elif input.get('program') == "Picard MergeSamFiles":
+                # run_command() uses Picard MergeSamFiles options
+                self.log_to_file("DEBUG", "# run_command() uses Picard MergeSamFiles options")
+                cmd = input.get('cmd')
+                text = input.get('text')
+                file = trackfile = input.get('file')
+                self.log_to_file("DEBUG", f"run_command(cmd: {cmd}, \ntext: {text}, \nfile: {file}")    
+
+            elif input.get('program') == "Picard MarkDuplicates":
+                # run_command() uses Picard MMarkDuplicates options
+                self.log_to_file("DEBUG", "# run_command() uses Picard MarkDuplicates options")
+                cmd = input.get('cmd')
+                text = input.get('text')
+                file = trackfile = input.get('file')
+                self.log_to_file("DEBUG", f"run_command(cmd: {cmd}, \ntext: {text}, \nfile: {file}")    
+
+
+            elif input.get('program') == "Realign index":   
                  # run_command() uses realign index options
                 self.log_to_file("DEBUG", "# run_command() uses realign index options")
-                text = f"Indexing {input.split(' ')[2].split('/')[7]}"
-                file = trackfile = f"{input.split(' ')[2]}.bai.complete"
+                cmd = input.get('cmd')
+                text = input.get('text')
+                file = trackfile = input.get('file')
                 self.log_to_file("DEBUG", f"run_command(cmd: {input}, text: {text}, file: {file}")
             
             
-            elif cmd == "realign LeftAlignIndels":   
-                # run_command() uses realign options
+            elif input.get('program') == "gatk LeftAlignIndels":   
+                # run_command() uses realign LeftAlignIndels options
                 self.log_to_file("DEBUG", "# run_command() uses realign LeftAlignIndels options")
-                text = f"Realigning {input.split('-O ')[1].split('/')[7]}"
-                file = trackfile = f"{input.split('-O ')[1]}.complete"
+                cmd = input.get('cmd')
+                text = input.get('text')
+                file = trackfile = input.get('file')
                 self.log_to_file("DEBUG", f"run_command(cmd: {input}, text: {text}, file: {file}")
+
+            elif input.get('program') == "gatk HaplotypeCaller":
+                # run_command() uses gatk options
+                self.log_to_file("DEBUG", "# run_command() uses gatk options")
+                cmd = input.get('cmd')
+                text = input.get('text')
+                file = trackfile = input.get('file')
+                self.log_to_file("DEBUG", f"run_command(cmd: {input}, text: {text}, file: {file}")
+
+            else:
+                print("else options")
+                cmd = input.get('cmd')
+                program = input.get('program') if input.get('program') else None
+                text = input.get('text')
+                file = trackfile = input.get('file') if input.get('file') else None
+                self.log_to_file("DEBUG", f"run_command(cmd: {cmd}, \ntext: {text}, \nfile: {file}")  
                
 
             if file:
                 if self.step_allready_completed(file, text):
-                    return False
+                    return True
 
 
-            # invoke process if not allready invoked
-            if not process:
-                process = subprocess.Popen(input, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+            # invoke process for bwa-mem2
+            # bwa-mem2 requires set -o pipefail which in turn requires executable='/bin/bash'
+            if input.get('program') == "bwa-mem2":
+                process = Popen(cmd, executable='/bin/bash', shell=True, stdout=PIPE, stderr=STDOUT, text=True)
+                
+                
+                
+
+            # option2 without shell = True
+
+                # if cmd == "bwa-mem2":
+                #     p1 = Popen(shlex.split(cmd_1), stdout=PIPE, stderr=PIPE, text=True)
+                #     p2 = Popen(shlex.split(cmd_2), stdin=p1.stdout, stdout=PIPE, stderr=PIPE, text=True)
+                #     p1.stdout.close()
+                #     output, error = p2.communicate() # let p2 finish running
+                #     p1.wait()                        # ensure p1 has properly exited
+
+                #     rc_1 = p1.poll()
+                #     rc_2 = p2.poll()
+                #     print("rc_1:", rc_1)
+                #     print("rc_2:", rc_2)
+
+                #     if rc_1 == 0 and rc_2 == 0:
+                #         self.log_to_file("DEBUG", "# Process ended with returncode = 0")
+                #         if text: self.log_to_file("INFO", f"{text} succesfully completed")
+                    
+                #         # If trackfile is specified, create a ".completed" file telling python that this step is allready completed
+                #         if trackfile: self.create_trackFile(trackfile)
+                #         return True
+            
+                #     # If process didn't end with returncode = 0
+                #     else:
+                #         print("Raise exception")
+                #         raise Exception(f"stderr1: {p1.stderr.readline()}, stdout2: {output}, stderr2: {error}")
+
+
+            # invoke process for other commands
+            else:    
+                process = Popen(cmd, shell=True, stdout=PIPE, stderr=STDOUT, text=True)
+
             
             # print stdout during execution
-            while process.poll() is not None:
+            while process.poll() is None:
                 output = process.stdout.readline()
                 
                 if output:
+                    # For some reason, output is empty after process has terminated and any errors can't be logged to file
+                    # this workaround (latest = output) solves this issue
                     latest = output
                     print("stdout:", output.strip())
-                    
+
+                    if "No errors found" in output:
+                        self.log_to_file("INFO", f"{output.strip()} in {text.split()[1]}")
+
+               
+
+                              
+            # Checks the returncode after process has terminated        
             rc = process.poll()
+            print(rc)
             
+            # Do this if process ended with returncode = 0
             if rc == 0:
-                
+                self.log_to_file("DEBUG", f"# {input.get('program')} Process ended with returncode = 0")
                 if text: self.log_to_file("INFO", f"{text} succesfully completed")
                 
+                # If trackfile is specified, create a ".completed" file telling python that this step is allready completed
                 if trackfile: self.create_trackFile(trackfile)
                 return True
            
+            # If process didn't end with returncode = 0
             else:
-                print("Raise exception")
-                raise Exception(f"{output.strip()}")
+                raise Exception(f"Error message: {latest.strip()}")
+                
 
         except Exception as e:
-            print(f"Something went wrong: {e} in misc.run_command()")
-            logging.exception(f'Process ended with returncode != 0: {text}')
+            self.log_to_file("ERROR", f"{input.get('program')} Process ended with returncode != 0, {e}")
             sys.exit()
 
     #---------------------------------------------------------------------------

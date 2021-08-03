@@ -1,17 +1,14 @@
-from os import listdir, getenv, sys, path
-import subprocess
+from os import listdir, sys, path
 import multiprocessing
 import time
 import timeit
 from miscellaneous import Misc
 try:
     import vcfpy
-    import numpy as np
     import pandas as pd
-    from Bio import SeqIO
     from scipy.stats import binom_test
 except Exception as e:
-    Misc().log_to_file("info", f"importing in rna_seq_analysis.py: {e}")
+    Misc().log_to_file("info", f"importing in rna_seq_analysis.py: {e}, make sure you are running python >= 3.7.6")
 
 
 class RnaSeqAnalysis():
@@ -29,13 +26,16 @@ class RnaSeqAnalysis():
                 start = timeit.default_timer()
                 threads = multiprocessing.cpu_count() -2
                 misc.log_to_file("info", f"Starting: indexing genome with STAR using {threads} out of {threads + 2} available threads")
-                cmd_StarIndex = f'''
-                STAR --runThreadN {threads} \\
-                --runMode genomeGenerate \\
-                --genomeDir {shortcuts.star_index_dir} \\
-                --genomeFastaFiles {shortcuts.reference_genome_file} \\
-                --sjdbGTFfile {shortcuts.annotation_gtf_file}'''
-                if misc.run_command(cmd_StarIndex, None, None, f"{shortcuts.star_index_dir}starIndex.complete"):
+                cmd_StarIndex = {   'cmd' : f'''STAR --runThreadN {threads} \\
+                                            --runMode genomeGenerate \\
+                                            --genomeDir {shortcuts.star_index_dir} \\
+                                            --genomeFastaFiles {shortcuts.reference_genome_file} \\
+                                            --sjdbGTFfile {shortcuts.annotation_gtf_file}''',           # TODO, gtf file must have same chromosome denotation as the fasta file, change this with sed '/s/^chr//' in.gtf > out.gtf
+                                    'text' : 'Indexing whole genome with STAR',
+                                    'file' : f'{shortcuts.star_index_dir}starIndex.complete'}
+
+
+                if misc.run_command(cmd_StarIndex):
                     elapsed = timeit.default_timer() - start
                     misc.log_to_file("info", f'Indexing whole genome with STAR succesfully completed in {misc.elapsed_time(elapsed)} - OK!')
                     input('press any key to exit')
@@ -62,7 +62,7 @@ class RnaSeqAnalysis():
                 threads = multiprocessing.cpu_count() - 2
                 misc.log_to_file("info", f'Starting: mapping reads ({options.tumor_id}) to genome with STAR using {threads} out of {threads + 2} available threads')
 
-                cmd_mapReads = f'''
+                cmd_mapReads = { 'cmd' : f'''
                 STAR --genomeDir {shortcuts.star_index_dir} \\
                 --readFilesIn {shortcuts.rna_reads_dir}{reads[0]} {shortcuts.rna_reads_dir}{reads[1]} \\
                 --runThreadN {threads} \\
@@ -95,15 +95,29 @@ class RnaSeqAnalysis():
                 --waspOutputMode SAMtag \\
                 --varVCFfile {shortcuts.gatk_vcfFile} \\
                 --outSAMattrRGline ID:{reads[0][:16]} SM:{options.tumor_id} LB:{reads[0][:16]} PL:"ILLUMINA" PU:{reads[0][:16]} \\
-                --twopassMode Basic'''
+                --twopassMode Basic''',
+                'text' : 'Mapping reads to genome',
+                'file' : f'{shortcuts.star_output_dir}{options.tumor_id}_Aligned.out.bam.complete'}
+
                 start = timeit.default_timer()
-                misc.run_command(cmd_mapReads, f'Mapping reads to genome', f'{shortcuts.star_output_dir}{options.tumor_id}_Aligned.out.bam', None)
-                cmd_sortsam = f"picard SortSam -I {shortcuts.star_output_dir}{options.tumor_id}_Aligned.out.bam -O {shortcuts.star_output_dir}{options.tumor_id}_Aligned_sorted.out.bam -SO coordinate"
-                misc.run_command(cmd_sortsam, "Sorting BAM with Picard SortSam", f"{shortcuts.star_output_dir}{options.tumor_id}_Aligned_sorted.out.bam", None)
-                cmd_samtools_index = f"samtools index {shortcuts.star_output_dir}{options.tumor_id}_Aligned_sorted.out.bam"
-                misc.run_command(cmd_samtools_index, "Indexing BAM with Samtools index", f"{shortcuts.star_output_dir}{options.tumor_id}_Aligned_sorted.out.bam.bai",  None)
-                cmd_wasp = f"samtools view -h {shortcuts.star_output_dir}{options.tumor_id}_Aligned_sorted.out.bam | LC_ALL=C egrep \"^@|vW:i:1\" | samtools view -bo {shortcuts.star_output_dir}{options.tumor_id}_WASP_pass.bam -"
-                misc.run_command(cmd_wasp, "Applying wasp filtering", f"{shortcuts.star_output_dir}{options.tumor_id}_WASP_pass.bam", f"{shortcuts.star_output_dir}map.complete")
+                misc.run_command(cmd_mapReads)
+
+                cmd_sortsam = { 'cmd' : f"picard SortSam -I {shortcuts.star_output_dir}{options.tumor_id}_Aligned.out.bam -O {shortcuts.star_output_dir}{options.tumor_id}_Aligned_sorted.out.bam -SO coordinate",
+                                'text' : 'Sorting BAM with Picard SortSam',
+                                'file' : f'{shortcuts.star_output_dir}{options.tumor_id}_Aligned_sorted.out.bam.complete' }
+                misc.run_command(cmd_sortsam)
+                
+                cmd_samtools_index = {  'cmd' : f"samtools index {shortcuts.star_output_dir}{options.tumor_id}_Aligned_sorted.out.bam",
+                                        'text' : 'Indexing BAM with Samtools index',
+                                        'file' : f'{shortcuts.star_output_dir}{options.tumor_id}_Aligned_sorted.out.bam.bai.complete' }
+                misc.run_command(cmd_samtools_index)
+                
+                # TODO piped command
+                cmd_wasp = {    'cmd' : f"samtools view -h {shortcuts.star_output_dir}{options.tumor_id}_Aligned_sorted.out.bam | LC_ALL=C egrep \"^@|vW:i:1\" | samtools view -bo {shortcuts.star_output_dir}{options.tumor_id}_WASP_pass.bam -",
+                                'text' : 'Applying wasp filtering',
+                                'file' : f'{shortcuts.star_output_dir}map.complete' }
+
+                misc.run_command(cmd_wasp)
                 elapsed = timeit.default_timer() - start
                 misc.log_to_file("info", f'All steps in mapping reads to gemome with STAR succesfully completed in {misc.elapsed_time(elapsed)} - OK!')
         except Exception as e:
@@ -115,21 +129,26 @@ class RnaSeqAnalysis():
         try:
             if not misc.step_allready_completed(f"{shortcuts.star_output_dir}ase.complete", f'ASEReadCounter for {options.tumor_id}'):
                 ref_dir = shortcuts.reference_genome_dir
-                misc.log_to_file("info", "Starting: Counting ASE reads using ASEReadCounter")
+                misc.log_to_file("INFO", "Starting: Counting ASE reads using ASEReadCounter")
                 start = timeit.default_timer()
-                cmd_ase = f'''
+                
+                cmd_ase = { 'cmd' : f'''
                 gatk ASEReadCounter -R {shortcuts.reference_genome_file} \\
                 --min-mapping-quality 10 \\
                 --min-depth-of-non-filtered-base 10 \\
                 --min-base-quality 2 \\
                 --disable-read-filter NotDuplicateReadFilter \\
-                --variant {shortcuts.haplotypecaller_output_dir}{options.tumor_id}/{options.tumor_id}_filtered_RD10_snps_tumor_het_annotated.vcf \\
+                --variant {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het_annotated.vcf \\
                 -I {shortcuts.star_output_dir}{options.tumor_id}_Aligned_sorted.out.bam \\
                 --output-format CSV \\
-                --output {shortcuts.star_output_dir}{options.tumor_id}_STAR_ASE.csv'''
-                misc.run_command(cmd_ase, None, f'{shortcuts.star_output_dir}{options.tumor_id}/ase.complete', f'{shortcuts.star_output_dir}ase.complete')
+                --output {shortcuts.star_output_dir}{options.tumor_id}_STAR_ASE.csv''',
+                'text' : 'Counting ASE reads using ASEReadCounter',
+                'file' :  f'{shortcuts.star_output_dir}ase.complete' }
+
+                misc.run_command(cmd_ase)
                 elapsed = timeit.default_timer() - start
-                misc.log_to_file(f'ASEReadCounter for {options.tumor_id} with STAR succesfully completed in {misc.elapsed_time(elapsed)} - OK!')
+                misc.log_to_file("info", f'ASEReadCounter for {options.tumor_id} with STAR succesfully completed in {misc.elapsed_time(elapsed)} - OK!')
+
         except Exception as e:
             misc.log_exception(".ASEReadCounter() in rna_seq_analysis.py:", e)
 
@@ -139,14 +158,14 @@ class RnaSeqAnalysis():
         into a string as key in the dict and the 'AD' matching the CHROM and POS is the value. The csv file created by gatk ASEReadCounter is opened
         and 4 new columns with values are written to the file. df.apply applies the lambda function in every row in the csv file.'''
 
-        # try:
+       
 
         start = timeit.default_timer()
-        misc.log_to_file(f"Starting: Creating CSV...")
+        misc.log_to_file("INFO", f"Starting: Creating CSV...")
         dict = {}
-        vcf_reader = vcfpy.Reader.from_path(f'{shortcuts.haplotypecaller_output_dir}{options.tumor_id}/{options.tumor_id}_filtered_RD10_snps_tumor_het_annotated.vcf', 'r')
+        vcf_reader = vcfpy.Reader.from_path(f'{shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het_annotated.vcf', 'r')
         variants_to_exclude = ['downstream_gene_variant', 'intergenic_region', 'intragenic_variant', 'intron_variant', 'splice_region_variant', 'splice_region_variant&intron_variant', 'upstream_gene_variant']
-
+        # Loop through each variant in the vcf-file and create a dict
         for i, record in enumerate(vcf_reader):
             contig = record.CHROM
             position = record.POS
@@ -156,45 +175,88 @@ class RnaSeqAnalysis():
             geneName = record.__dict__['INFO']['ANN'][0].split('|')[3]
             variantType = record.__dict__['INFO']['ANN'][0].split('|')[1] if not record.__dict__['INFO']['ANN'][0].split('|')[1] in variants_to_exclude else None
             dict[i] = [contig, position, refCount, altCount, totalCount, geneName, variantType]
-
+            # if i == 10000:
+            #     break
+           
         # Make DataFrame out of dict
         df_vcf = pd.DataFrame.from_dict(dict, orient="index", columns=["contig", "position", "DNA_refCount", "DNA_altCount", "DNA_totalCount", "geneName", "variantType"])
+        df_vcf.to_csv(f'{shortcuts.star_output_dir}{options.tumor_id}_2064-01_vcf.csv', sep=',', index=False)
+        sys.exit()
+        # Remove all excluded variants from dataframe (variantType = None)
+        #df_vcf.dropna(inplace=True)
+        print("df_vcf:", df_vcf)
+        
         # read exel file with cnv information
         if not path.isfile(f'{shortcuts.star_output_dir}{options.tumor_id}_CN.xlsx'):
-            misc.log_to_file(f"No file specifying copynumber, save {options.tumor_id}_CN.xlsx in {shortcuts.star_output_dir}")
+            misc.log_to_file(f"Error", f"No file specifying copynumber, save {options.tumor_id}_CN.xlsx in {shortcuts.star_output_dir}")
             sys.exit()
+        pd.set_option('display.max_rows', 100)
         df_cn = pd.read_excel(f'{shortcuts.star_output_dir}{options.tumor_id}_CN.xlsx')
-        df_cn = df_cn[['Chromosome', 'Start', 'End', 'Cn']]
+        df_cn = df_cn[['Chromosome', 'Start', 'End','Cn']]
+        df_cn[['Start', 'End', 'Cn']] = df_cn[['Start', 'End', 'Cn']].astype(int)
+
+        # Makes sure that Chromosome only has number (eg. 1 and not chr1)
+        df_cn['Chromosome'] = df_cn.apply(lambda row: row[0].replace('chr', ''), axis=1)
+
+        print("df_cn:\n\n", df_cn)
+
+
         # read csv from star output
         df = pd.read_csv(f'{shortcuts.star_output_dir}{options.tumor_id}_STAR_ASE.csv')
-
         df['Subgroup'] = options.subgroup
         df['Sample'] = options.tumor_id.replace('-', '_')
-        df_merge = pd.merge(df_vcf, df, on=["contig", "position"])
-        df_merge.insert(14, 'CN', True)
-        df_merge.insert(15, 'pValue_WGS_VAF', True)
-        df_merge.insert(16, 'RNA/DNA_ratio_WGS_VAF', True)
-        df_merge.insert(17, 'pValue_CNV', True)
-        df_merge.insert(18, 'RNA/DNA_ratio_CNV', True)
-
+        print("df:", df)
+        
+        
+        
+        #pd.set_option('display.max_rows', 15000)
+        df_merge = pd.merge(df_vcf, df, on=['contig', 'position'])
+        
+        # Insert new empty columns
+        df_merge[['CN', 'pValue_WGS_VAF', 'RNA/DNA_ratio_WGS_VAF', 'pValue_CNV', 'RNA/DNA_ratio_CNV']] = ''
+        
+        
+        # Rename columns from RNA-seq csv    
         df_merge.rename(columns={'contig' : "Chromosome", 'refAllele' : 'RNA_refAllele', 'altAllele' : 'RNA_altAllele', 'refCount': 'RNA_refCount', 'altCount': 'RNA_altCount', 'totalCount': 'RNA_totalCount'}, inplace=True)
+        
+        # Specify columns to be present in df_merge dataframe
         df_merge = df_merge[['Subgroup', 'Sample', 'geneName', 'variantType', 'Chromosome', 'position', 'variantID', 'RNA_refAllele', 'RNA_altAllele', 'RNA_refCount', 'RNA_altCount', 'RNA_totalCount', 'DNA_refCount', 'DNA_altCount', 'CN', 'pValue_WGS_VAF', 'RNA/DNA_ratio_WGS_VAF', 'pValue_CNV', 'RNA/DNA_ratio_CNV']]
         #                        0           1            2             3            4          5           6               7                8                9                10               11               12              13        14          15                   16                  17                 18
+        
+        
         df_merge[['RNA_refCount', 'RNA_altCount']] = df_merge[['RNA_refCount', 'RNA_altCount']].apply(pd.to_numeric)
-        df_merge['CN'] = df_merge.apply(lambda row: self.add_CNV(misc, df_cn, row), axis=1) # row[14]
-        df_merge.dropna(inplace=True)
-        df_merge['RNA_altCount'] = df_merge.apply(lambda row: 1 if int(row[10]) < 1 else int(row[10]), axis=1)
-        df_merge['DNA_altCount'] = df_merge.apply(lambda row: 1 if int(row[13]) < 1 else int(row[13]), axis=1)
-        df_merge['pValue_WGS_VAF'] = df_merge.apply(lambda row: f"{binom_test(int(row[9]), int(row[11]), int(row[12])/(int(row[12]) + int(row[13])))}", axis=1) #input: RNA_refCount, RNA_totalCount, DNA_refCount/(DNA_refCount + DNA_altCount)
-        df_merge['RNA/DNA_ratio_WGS_VAF'] = df_merge.apply(lambda row: f"{(int(row[9])/int(row[10]))/(int(row[12])/int(row[13]))}", axis=1) # (RNA_refCount/RNA_altCount)/(DNA_refCount/DNA_altCount)
-        df_merge['pValue_CNV'] = df_merge.apply(lambda row: self.calculate_pValue_CNV(misc, row), axis=1) #input: RNA_refCount, RNA_totalCount, CNV
-        df_merge['RNA/DNA_ratio_CNV'] = df_merge.apply(lambda row: self.calculate_RNA_DNA_ratio_CNV(misc, row), axis=1) # RNA_refAllele_ratio/CNV_ratio
+        # pd.set_option('display.max_rows', 100, 'display.max_columns', 20)
         df_merge.to_csv(f'{shortcuts.star_output_dir}{options.tumor_id}_STAR_ASE_completed.csv', sep=',', index=False)
-        print(df_merge.dtypes)
+        
+        df_merge['CN'] = df_merge.apply(lambda row: self.add_CNV(misc, df_cn, row), axis=1) # row[14]
+    
+        
+        df_merge['RNA_altCount'] = df_merge.apply(lambda row: 1 if int(row[10]) < 1 else int(row[10]), axis=1)
+        
+        
+        df_merge['DNA_altCount'] = df_merge.apply(lambda row: 1 if int(row[13]) < 1 else int(row[13]), axis=1)
+        
+        
+        df_merge['pValue_WGS_VAF'] = df_merge.apply(lambda row: f"{binom_test(int(row[9]), int(row[11]), int(row[12])/(int(row[12]) + int(row[13])))}", axis=1) #input: RNA_refCount, RNA_totalCount, DNA_refCount/(DNA_refCount + DNA_altCount)
+        
+        df_merge['RNA/DNA_ratio_WGS_VAF'] = df_merge.apply(lambda row: f"{(int(row[9])/int(row[10]))/(int(row[12])/int(row[13]))}", axis=1) # (RNA_refCount/RNA_altCount)/(DNA_refCount/DNA_altCount)
+        
+        df_merge.dropna(inplace=True)
+        # df_merge["CN"].fillna(0, inplace = True)
+        df_merge['pValue_CNV'] = df_merge.apply(lambda row: self.calculate_pValue_CNV(misc, row), axis=1) #input: RNA_refCount, RNA_totalCount, CNV
+        
+        df_merge['RNA/DNA_ratio_CNV'] = df_merge.apply(lambda row: self.calculate_RNA_DNA_ratio_CNV(misc, row), axis=1) # RNA_refAllele_ratio/CNV_ratio
+
+        
+
         # Drop rows that have both RNA_refCount and RNA_altCount < 10
-        df_merge.drop(df_merge[ (df_merge['RNA_refCount'] < 10) & (df_merge['RNA_altCount'] < 10)].index, inplace=True)
+        #df_merge.drop(df_merge[ (df_merge['RNA_refCount'] < 10) & (df_merge['RNA_altCount'] < 10)].index, inplace=True)
+        print("df_merge:", df_merge)
+        df_merge.to_csv(f'{shortcuts.star_output_dir}{options.tumor_id}_STAR_ASE_completed.csv', sep=',', index=False)
+        
+        
         elapsed = timeit.default_timer() - start
-        misc.log_to_file(f'Creating CSV completed in {misc.elapsed_time(elapsed)} - OK!')
+        misc.log_to_file("INFO", f'Creating CSV completed in {misc.elapsed_time(elapsed)} - OK!')
         sys.exit()
         # except Exception as e:
         #     misc.log_exception(".add_wgs_data_to_csv() in rna_seq_analysis.py:", e)
@@ -218,14 +280,19 @@ class RnaSeqAnalysis():
         for i in df_cn.index:
             if row[4] == df_cn["Chromosome"].iloc[i] and df_cn["Start"].iloc[i] <= row[5] < df_cn["End"].iloc[i]:
                 return df_cn["Cn"].iloc[i]
+    
 
     # --------------------------------------------------------------------------
     def calculate_RNA_DNA_ratio_CNV(self, misc, row):
         '''This function determines what CN-ratio value that should be used when calculating the VAF_ratio_CNV'''
 
+        # All below is copied from Minjun Yang's previous script
 
+        if row[14] == '':
+            return ''
+        
         # CN = 2 or CN = -4
-        if int(row[14]) == 2 or int(row[14]) == -4:
+        elif int(row[14]) == 2 or int(row[14]) == -4:
             return f"{int(row[9])/int(row[10])}" # (RNA_refCount/RNA_altCount)/1 : CNV_ratio: 1/1
 
         # CN = 3
@@ -263,15 +330,23 @@ class RnaSeqAnalysis():
             else:
                 return f"{(int(row[9])/int(row[10]))/0.25}" # (RNA_refCount/RNA_altCount)/0.25 : CNV_ratio: 1/4
 
+        else:
+            return ''
+
 
     def calculate_pValue_CNV(self, misc, row):
         '''This function determines what CN value that should be used when calculating the pValue_CNV'''
 
+        # All below is copied from Minjun Yang's previous script
+
         # -4 : AABB    4 : AAAB
 		# -5 : AAABB   5 AAAAB
 
+        if row[14] == '':
+            return ''
+
         # CN = 2 or CN = -4
-        if int(row[14]) == 2 or int(row[14]) == -4:
+        elif int(row[14]) == 2 or int(row[14]) == -4:
             return f"{binom_test(int(row[9]), int(row[11]), 0.5)}" # Input: RNA_refCount, RNA_totalCount, CNV_ratio: 1/2
 
         # CN = 3
@@ -309,3 +384,5 @@ class RnaSeqAnalysis():
             # if DNA_refCount < DNA_altCount
             else:
                 return f"{binom_test(int(row[9]), int(row[11]), 0.25)}" # Input: RNA_refCount, RNA_totalCount, CNV_ratio: 1/4
+        
+       
