@@ -6,7 +6,7 @@ This script automates everything from setting up anaconda to downloading referen
 ## Requirements
 - Platform: 
     - linux-64
-    - python >= 3.6
+    - python ≥ 2.7
     
     
 ## Installation and setup instructions
