@@ -35,7 +35,7 @@ DNA-seq reads: (in fastq.gz format) into $HOME/BASE/dna_seq/reads
 
 RNA-seq reads: (in fastq.gz format) into $HOME/BASE/rna_seq/reads
 
-or create soft links to the folder with "ln -s"
+or create soft links between these folders and the files with "ln -s"
 
 
 ### 4. Run main.py and follow instructions in program
@@ -50,7 +50,7 @@ e.g. "python3 $HOME/BASE/main.py -t 2064-01 -n 987-02 -sg Heh -T 38"
 ### Optional. Copy Excel document with Copy number information into $HOME/BASE/rna_seq/star/[tumor-id]/[tumor-id]_CN.xlsx
 
 If you have Copy number information, you can copy this document into $HOME/BASE/rna_seq/star/[tumor-id]/[tumor-id]_CN.xlsx 
-in order to get calculated pValue and from CNV
+in order to get calculated pValue and RNA/DNA ratio based on CNV
 
 ### 4. Cite BASE
 
