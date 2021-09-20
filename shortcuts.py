@@ -27,7 +27,7 @@ class Shortcuts():
         self.manta_variants_dir = f"{self.dna_seq_dir}manta/{options.tumor_id}/results/variants/"
 
         # Shortcuts to files used in DNA sequencing analysis
-        self.reference_genome_file = f"{self.reference_genome_dir}human_g1k_v37.fasta"
+        self.reference_genome_file = f"{self.reference_genome_dir}GRCh38.p13.genome.fa"
         self.reference_genome_exclude_template_file = f"{self.BASE_dir}excludeTemplate/human.hg38.excl.tsv"
         self.configManta_file = getenv("HOME")+"/anaconda3/envs/sequencing/bin/manta-1.6.0.centos6_x86_64/bin/configManta.py"
         self.runWorkflow_file = getenv("HOME")+f"/BASE/dna_seq/manta/{options.tumor_id}/runWorkflow.py"
@@ -40,19 +40,10 @@ class Shortcuts():
 
 
         # Shortcuts to files used in RNA sequencing analysis
-        self.annotation_gtf_file = f"{self.reference_genome_dir}gencode.v19.annotation.gtf"
+        self.annotation_gtf_file = f"{self.reference_genome_dir}gencode.v37.primary_assembly.annotation.gtf"
         self.gatk_vcfFile = f"{self.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het_annotated.vcf"
 
-        # Shortcuts to output lists (used for input in pipeline steps) (and also for validation if pipeline step i allready completed)
-        # not used anymore - self.alignedFiles_list = f"{self.aligned_output_dir}{options.tumor_id}/alignedFiles.txt"
-        self.sortedFiles_list = f"{self.sorted_output_dir}sortedFiles.txt"
-        self.mergedFiles_list = f"{self.merged_output_dir}{options.tumor_id}/mergedFiles.txt"
-        self.removeDuplicates_list = f"{self.removed_duplicates_output_dir}{options.tumor_id}/remove_duplicate.txt"
-        self.realignedFiles_list = f"{self.realigned_output_dir}{options.tumor_id}/realignedFiles.txt"
+        # Shortcuts to output lists (used for input in pipeline steps) (and also for validation if pipeline step i allready completed)  
         self.gatk_chunks_list = f"{self.haplotypecaller_output_dir}/chunks.list"
 
-        # Shortcuts to files used to validate if pipeline step is allready completed
-        self.bwa_index_complete = f"{self.reference_genome_dir}index.complete"
-        self.haplotypecaller_complete = f"{self.haplotypecaller_output_dir}{options.tumor_id}/haplotypeCaller.complete"
-        self.delly_complete = f"{self.delly_output_dir}{options.tumor_id}/delly.complete"
-        self.manta_complete = f"{self.manta_output_dir}{options.tumor_id}/manta.complete"
+      

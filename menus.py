@@ -22,21 +22,21 @@ class Menus():
             print("This program was created during a master thesis project\nabout B-cell precursor acute lymphoblastic leukemia (BCP-ALL) in 2020-2021.\n")
             print("Developer:\nJonas Andersson\nMaster's programme in biomedicine\nDivision of Clinical Genetics\nLund University, BMC C13\nSE-221 84 Lund, Sweden\n")
             print("Acknowledgment:\nSpecial thanks to Prof. Kajsa Paulsson and assistant researcher Minjun Yang\n")
-            print("Github: https://github.com/biomedswe/Biomedswe-Allele-Specific-Expression-analyser-BASE-")
+            print("Github: https://github.com/biomedswe/BASE")
             print("For correspondence please contact jonas.andersson@med.lu.se\n\n")
         except Exception as e:
             misc.log_exception('.info_script() in menus.py:', e)
 
     #---------------------------------------------------------------------------
-    def menu(self, misc, options):
+    def menu(self, misc, meny_options):
         '''This functions creates a general menu with n choices'''
         try:
             misc.clear_screen()
             self.info_script(misc)
-            print(options[1], "\n")
-            for i, option in enumerate(options[0], start=1):
+            print(meny_options[1], "\n")
+            for i, option in enumerate(meny_options[0], start=1):
                 print(f'{i}. {option}')
-            return misc.validate_choice(len(options[0]), options[2])
+            return misc.validate_choice(len(meny_options[0]), meny_options[2])
         except Exception as e:
             misc.log_exception('.menu() in menus.py:', e)
 

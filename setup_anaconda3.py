@@ -14,6 +14,8 @@ class SetupAnaconda3():
 
     #---------------------------------------------------------------------------
     def log_to_file(self, text):
+        '''This function handles the logging'''
+
         try:
             print('\n{0}'.format(text))
             logging.info('\n{0}'.format(text))
@@ -56,6 +58,7 @@ class SetupAnaconda3():
     #---------------------------------------------------------------------------
     def step_allready_completed(self, file, text):
         '''This function checks if a step is allready completed by checking if "file" allready exists, if so, returns True, else return False'''
+        
         try:
             if file:
                 if path.isfile(file):
@@ -76,7 +79,7 @@ class SetupAnaconda3():
 
         # Download Anaconda3
         self.log_to_file("Downloading anaconda from https://repo.anaconda.com/archive/Anaconda3-2020.11-Linux-x86_64.sh...")
-        self.run_command("wget https://repo.anaconda.com/archive/Anaconda3-2020.11-Linux-x86_64.sh -P $HOME", "Downloading Anaconda3-2020.11-Linux-x86_64.sh*", getenv("HOME")+'/Anaconda3-2020.11-Linux-x86_64.sh', None)
+        self.run_command("wget https://repo.anaconda.com/archive/Anaconda3-2020.11-Linux-x86_64.sh -P $HOME", "Downloading Anaconda3-2020.11-Linux-x86_64.sh", getenv("HOME")+'/Anaconda3-2020.11-Linux-x86_64.sh', None)
 
         # Install Anaconda3
         self.run_command("bash $HOME/Anaconda3-2020.11-Linux-x86_64.sh", "Installation of Anaconda3", getenv("HOME")+'/anaconda3/install.complete', getenv("HOME")+'/anaconda3/install.complete')
@@ -133,41 +136,38 @@ Vcfpy
 
             # Input for run_command
             cmd_env = {"cmd" : "conda create -n sequencing -c bioconda bedtools bcftools biopython bwa-mem2 gatk4 picard=2.25.2-0 python=3.7.6 samtools=1.9 star pandas vcfpy scipy snpeff=5.0 openpyxl",
-                       "text" : "Installing packages..."}
-
-            cmd_snpeff = {"cmd" : "jar -xf $HOME/anaconda3/envs/sequencing/share/snpeff-5.0-1/snpEff.jar"}
-            misc.run_command(cmd_snpeff)
-                       
+                       "program" : "setup",
+                       "text" : "Installing packages..."}           
 
             # handle if misc.run_command completes successfully
             if misc.run_command(cmd_env):
 
                 # Delly in bioconda didn't work so I had to do a workaround
                 cmd_download_delly = {"cmd": "wget https://github.com/dellytools/delly/releases/download/v0.8.7/delly_v0.8.7_linux_x86_64bit -P $HOME/anaconda3/envs/sequencing/bin",
+                                      "program" : "setup",
                                       "text" : "Downloading delly"}
-
                 misc.run_command(cmd_download_delly)
 
                 # Need to change permission to move delly in next step
-                cmd_chmod_delly = {"cmd" : "chmod a=xrw $HOME/anaconda3/envs/sequencing/bin/delly_v0.8.7_linux_x86_64bit",
+                cmd_chmod_delly = {"cmd" : "chmod a=xrw $HOME/anaconda3/envs/sequencing/bin/delly_v0.8.7_linux_x86_64bit*",
+                                   "program" : "setup",
                                    "text" : "Granting permission to move delly"}
-                
                 misc.run_command(cmd_chmod_delly)
 
-                cmd_mv = {"cmd" : "mv $HOME/anaconda3/envs/sequencing/bin/delly_v0.8.7_linux_x86_64bit $HOME/anaconda3/envs/sequencing/bin/delly",
+                cmd_mv = {"cmd" : "mv $HOME/anaconda3/envs/sequencing/bin/delly_v0.8.7_linux_x86_64bit* $HOME/anaconda3/envs/sequencing/bin/delly",
+                          "program" : "setup",
                           "text" :  "Moving Delly to $HOME/anaconda3/envs/sequencing/bin/delly"}
-
                 misc.run_command(cmd_mv)
 
                 # Manta in bioconda didn't work so I had to do a workaround
                 cmd_download_manta = {"cmd" : "wget https://github.com/Illumina/manta/releases/download/v1.6.0/manta-1.6.0.centos6_x86_64.tar.bz2 -P $HOME/anaconda3/envs/sequencing/bin",
+                                      "program" : "setup",
                                       "text" : "Downloading Manta"}
-
                 misc.run_command(cmd_download_manta)
 
                 cmd_unpack = {"cmd": "tar -xf $HOME/anaconda3/envs/sequencing/bin/manta-1.6.0.centos6_x86_64.tar.bz2 -C $HOME/anaconda3/envs/sequencing/bin/",
+                              "program" : "setup",
                               "text" : "Unpacking Manta"}
-
                 misc.run_command(cmd_unpack)
 
                 print("\n\n\nEnvironment named \"sequencing\" was successfully created\n")

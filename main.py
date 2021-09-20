@@ -34,6 +34,7 @@ def main():
     parser.add_argument("-n", "--normal_id", metavar="", required=True, help="Input clinical id of normal samples")
     parser.add_argument("-sg", "--subgroup", metavar="", required=True, help="Input subgroup of your sample (STR)")
     parser.add_argument("-T", "--threads", metavar="", required=True, help="Input number of CPU threads to use (INT)")
+    parser.add_argument("-v", "--validate", metavar="", required=False, help="Choose to validate BAM (True/False), default=False")
 
     # Assign a variable to all written arguments so that they can be passed to different classes etc
     options = parser.parse_args()
@@ -55,7 +56,7 @@ def main():
     # listens for ctrl + c
     signal.signal(signal.SIGINT, signal_handler)
 
-    misc.log_to_file("INFO", f"--tumor_id: {options.tumor_id} --normal_id: {options.normal_id} --subgroup: {options.subgroup} --thread: {options.threads}")
+    misc.log_to_file("INFO", f"--tumor_id: {options.tumor_id} --normal_id: {options.normal_id} --subgroup: {options.subgroup} --thread: {options.threads} --validate: {options.validate}")
    
 
      # Handle what happens if the user assigns more CPU threads than available
@@ -130,17 +131,18 @@ def main():
                     misc.clear_screen()
                     misc.validate_id(options, shortcuts)
                     dna_analysis.alignment(options, misc, shortcuts)
-                    if dna_analysis.validate_bam_dna(options, misc, shortcuts):
-                        dna_analysis.sort(options, misc, shortcuts)
-                        dna_analysis.merge(options, misc, shortcuts)
-                        dna_analysis.remove_duplicate(options, misc, shortcuts)
-                        dna_analysis.realign(options, misc, shortcuts)
-                        dna_analysis.gatk_haplotype(options, misc, shortcuts)
-                        dna_analysis.delly(options, misc, shortcuts)
-                        dna_analysis.manta(options, misc, shortcuts)
-                        elapsed = timeit.default_timer() - start
-                        misc.log_to_file("info", f'GDC DNA-Seq analysis pipeline successfully completed in {misc.elapsed_time(elapsed)} - OK!')
-                        sys.exit()
+        
+                    if options.validate == True: dna_analysis.validate_bam_dna(options, misc, shortcuts)
+                    dna_analysis.sort(options, misc, shortcuts)
+                    dna_analysis.merge(options, misc, shortcuts)
+                    dna_analysis.remove_duplicate(options, misc, shortcuts)
+                    dna_analysis.realign(options, misc, shortcuts)
+                    dna_analysis.gatk_haplotype(options, misc, shortcuts)
+                    dna_analysis.delly(options, misc, shortcuts)
+                    dna_analysis.manta(options, misc, shortcuts)
+                    elapsed = timeit.default_timer() - start
+                    misc.log_to_file("info", f'GDC DNA-Seq analysis pipeline successfully completed in {misc.elapsed_time(elapsed)} - OK!')
+                    sys.exit()
 
         # Rna analysis menu
         elif menu_choice == '3':
@@ -156,13 +158,13 @@ def main():
                 # Index reference genome
                 elif rna_choice == '1':
                     misc.log_to_file("info", "User input: index reference genome\n")
-                    rna_analysis.index_genome_rna(misc, shortcuts)
+                    rna_analysis.index_genome_rna(options, misc, shortcuts)
 
                 # Map reads to reference genome
                 elif rna_choice == '2':
                     misc.log_to_file("info", "User input: Map reads to reference genome\n")
-                    # rna_analysis.map_reads(options, misc, shortcuts)
-                    # rna_analysis.ASEReadCounter(options, misc, shortcuts)
+                    rna_analysis.map_reads(options, misc, shortcuts)
+                    rna_analysis.ASEReadCounter(options, misc, shortcuts)
                     rna_analysis.add_wgs_data_to_csv(options, misc, shortcuts)
                     sys.exit()
 
