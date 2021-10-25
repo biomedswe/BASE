@@ -37,7 +37,7 @@ class RnaSeqAnalysis():
                                 'text' : 'Indexing whole genome with STAR',
                                 'file' : f'{shortcuts.star_index_dir}starIndex.complete'}
             
-            
+            misc.run_command(cmd_StarIndex)
             elapsed = timeit.default_timer() - start
             misc.log_to_file("info", f'Indexing whole genome with STAR succesfully completed in {misc.elapsed_time(elapsed)} - OK!')
             input('press any key to exit')

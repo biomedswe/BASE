@@ -15,7 +15,7 @@ class ReferenceGenome():
             cmd_fasta_download = {"cmd" : f"wget ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_36/GRCh38.p13.genome.fa.gz -P {shortcuts.reference_genome_dir}",
                                   "program" : "setup",
                                   "text" : "Downloading GRCh38.p13.genome.fa.gz",
-                                  "file" : f"{shortcuts.reference_genome_file}.gz*"}
+                                  "file" : shortcuts.reference_genome_file}
             
             if misc.run_command(cmd_fasta_download):
                 misc.log_to_file("INFO", "Unzipping, please wait...")

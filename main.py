@@ -33,7 +33,7 @@ def main():
     parser.add_argument("-t", "--tumor_id", metavar="", required=True, help="Input clinical id of tumor samples")
     parser.add_argument("-n", "--normal_id", metavar="", required=True, help="Input clinical id of normal samples")
     parser.add_argument("-sg", "--subgroup", metavar="", required=True, help="Input subgroup of your sample (STR)")
-    parser.add_argument("-T", "--threads", metavar="", required=True, help="Input number of CPU threads to use (INT)")
+    parser.add_argument("-T", "--threads", metavar="", type=int, required=True, help="Input number of CPU threads to use (INT)")
     parser.add_argument("-v", "--validate", metavar="", required=False, help="Choose to validate BAM (True/False), default=False")
 
     # Assign a variable to all written arguments so that they can be passed to different classes etc
@@ -71,12 +71,13 @@ def main():
         input("Press any key to continue")
 
 
-
+    misc.log_to_file("info", "")
     misc.log_to_file("info", "-----Program starts-----\n")
     while True:
         # Main menu
         menu_choice = all_menus.menu(misc, all_menus.main_menu)
         misc.log_to_file("info", "Program at main menu")
+        
         if menu_choice == "":
             misc.log_to_file("info", "User input: exit program\n")
             break
@@ -93,6 +94,7 @@ def main():
             while True:
                 misc.log_to_file("info", "Program at DNA-analysis menu")
                 dna_menu_choice = all_menus.menu(misc, all_menus.dna_menu)
+                
                 if dna_menu_choice == '':
                     misc.log_to_file("info", "User input: return to main menu")
                     break
@@ -107,10 +109,12 @@ def main():
                         if reference_genome_menu_choice == '':
                             misc.log_to_file("info", "User input: return to DNA-analysis menu")
                             break
+                        
                         # Download reference genome
                         elif reference_genome_menu_choice == '1':
                             misc.log_to_file("info", "User input: 1. Download reference genome\n")
                             ref_genome.download(misc, shortcuts)
+                        
                         # Index reference genome
                         elif reference_genome_menu_choice == '2':
                             misc.log_to_file("info", "User input: 2. Index reference genome\n")
@@ -132,7 +136,8 @@ def main():
                     misc.validate_id(options, shortcuts)
                     dna_analysis.alignment(options, misc, shortcuts)
         
-                    if options.validate == True: dna_analysis.validate_bam_dna(options, misc, shortcuts)
+                    if options.validate: dna_analysis.validate_bam_dna(options, misc, shortcuts)
+                  
                     dna_analysis.sort(options, misc, shortcuts)
                     dna_analysis.merge(options, misc, shortcuts)
                     dna_analysis.remove_duplicate(options, misc, shortcuts)
@@ -151,6 +156,7 @@ def main():
                 misc.log_to_file("info", "Program at RNA-analysis menu")
                 misc.clear_screen()
                 rna_choice = all_menus.menu(misc, all_menus.rna_menu)
+                
                 if rna_choice == '':
                     misc.log_to_file("info", "User input: return to previous menu")
                     break

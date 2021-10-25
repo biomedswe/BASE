@@ -27,7 +27,7 @@ class Shortcuts():
         self.manta_variants_dir = f"{self.dna_seq_dir}manta/{options.tumor_id}/results/variants/"
 
         # Shortcuts to files used in DNA sequencing analysis
-        self.reference_genome_file = f"{self.reference_genome_dir}GRCh38.p13.genome.fa"
+        self.reference_genome_file = f"{self.reference_genome_dir}GRCh37.p13.genome.fa"
         self.reference_genome_exclude_template_file = f"{self.BASE_dir}excludeTemplate/human.hg38.excl.tsv"
         self.configManta_file = getenv("HOME")+"/anaconda3/envs/sequencing/bin/manta-1.6.0.centos6_x86_64/bin/configManta.py"
         self.runWorkflow_file = getenv("HOME")+f"/BASE/dna_seq/manta/{options.tumor_id}/runWorkflow.py"
@@ -40,7 +40,7 @@ class Shortcuts():
 
 
         # Shortcuts to files used in RNA sequencing analysis
-        self.annotation_gtf_file = f"{self.reference_genome_dir}gencode.v37.primary_assembly.annotation.gtf"
+        self.annotation_gtf_file = f"{self.reference_genome_dir}gencode.v19.chr_patch_hapl_scaff.annotation.gtf"
         self.gatk_vcfFile = f"{self.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het_annotated.vcf"
 
         # Shortcuts to output lists (used for input in pipeline steps) (and also for validation if pipeline step i allready completed)  

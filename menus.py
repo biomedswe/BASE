@@ -47,41 +47,27 @@ class Menus():
            This file is then used in the dna analysis'''
 
         try:
-            while True:
-                print("Create library list file.\n\n")
-                print("1. Single end sequencing\n")
-                print("2. Paired end sequencing\n")
-                choice = misc.validate_choice(2, "(leave blank to return to DNA-analysis menu)")
-                if choice == "":
-                    misc.log_to_file("info", "User input: return to DNA-analysis menu")
-                    return ""
-                elif misc.confirm_choice():
-                    misc.log_to_file("info", f'User input: confirmed choice: {choice}')
-                    misc.clear_screen()
-                    files = sorted(listdir(shortcuts.dna_reads_dir))
-                    with open(f"{shortcuts.dna_seq_dir}{options.tumor_id}_library.txt", 'w') as out_file:
-                        for line, library_id in enumerate(files, start=1):
-                            if choice == '1': # Single-end sequencing
-                                if options.tumor_id in library_id:
-                                    out_file.write(f"{options.tumor_id} {library_id.split('_')[0]} {library_id} N/A\n")
-                                else:
-                                    out_file.write(f"{options.normal_id} {library_id.split('_')[0]} {library_id} N/A\n")
+            misc.clear_screen()
+            files = sorted(listdir(shortcuts.dna_reads_dir))
+            with open(f"{shortcuts.dna_seq_dir}{options.tumor_id}_library.txt", 'w') as out_file:
+                for line, library_id in enumerate(files, start=1):
+                    
+                    if (line % 2) == 1: # not even
+                        
+                        if options.tumor_id in library_id:
+                            out_file.write(f"{options.tumor_id} {library_id.split('_')[0]} {library_id} ")
+                        
+                        else:
+                            out_file.write(f"{options.normal_id} {library_id.split('_')[0]} {library_id} ")
+                    
+                    else: # even
+                        out_file.write(f"{library_id}\n")
+                        
+                misc.log_to_file("info", "Library list file created!")
+                print("Now that you have created your list library file, you can run the analysis!\n")
+                input("Press any key to return to DNA-analysis menu...")
+                return
 
-                            elif choice == '2': # Paired-end sequencing
-                                if (line % 2) == 1: # not even
-                                    if options.tumor_id in library_id:
-                                        out_file.write(f"{options.tumor_id} {library_id.split('_')[0]} {library_id} ")
-                                    else:
-                                        out_file.write(f"{options.normal_id} {library_id.split('_')[0]} {library_id} ")
-                                else: # even
-                                    out_file.write(f"{library_id}\n")
-                    misc.log_to_file("info", "Library list file created!")
-                    print("Now that you have created your list library file, you can run the analysis!\n")
-                    input("Press any key to return to DNA-analysis menu...")
-                    return
-                else:
-                    misc.clear_screen()
-                    continue
         except TypeError as t:
             misc.log_exception("Missing tumor id and/or normal id!\nplease enter: \"-t <tumor-id> -n <normal-id>\" when running the script", t)
         except Exception as e:

@@ -1,15 +1,10 @@
 #!~/anaconda3/envs/sequencing/bin/python3
 
-from os import listdir, sys, mkdir, getenv, path, rename, remove
-from subprocess import run
-import argparse
+from os import listdir, sys, path, rename, remove
 import csv
 import multiprocessing as mp
-from sys import path_importer_cache
 import time
 import timeit
-import re
-from shutil import copy
 from functools import partial
 
 
@@ -45,10 +40,10 @@ class DnaSeqAnalysis():
             misc.run_command(cmd_bwa_index)
 
             # Create .dict file
-            cmd_create_dict = { 'cmd' : f"samtools dict {ref_file} -o {ref_file[:-2]}.dict",
+            cmd_create_dict = { 'cmd' : f"samtools dict {ref_file} -o {ref_file[:-2]}dict",
                                 'program' : 'bwa-mem2',
                                 'text' : 'Creating .dict with samtools dict',
-                                'file' : f"{ref_file}.dict.complete" }
+                                'file' : f"{ref_file[:-2]}dict.complete" }
             misc.run_command(cmd_create_dict)
 
             # Create .fai file
@@ -59,23 +54,20 @@ class DnaSeqAnalysis():
 
             # Splits ref_file.fai into chunks with 10 Megabases / chunk
             
-            cmd_split_fasta = { 'cmd' : f"bedtools makewindows -w 20000000 -g {ref_file}.fai > {chunks_dir}chunk.bed",
+            cmd_split_fasta = { 'cmd' : f"bedtools makewindows -w 10000000 -g {ref_file}.fai > {chunks_dir}chunk.bed",
                                 'text' : 'Spliting fa.fai with bedtools makewindows' }
             misc.run_command(cmd_split_fasta)
 
            
-            cmd_split_bed = {   'cmd' : f"split -l 3 {chunks_dir}chunk.bed {chunks_dir}chunk_",
+            cmd_split_bed = {   'cmd' : f"split -l 8 {chunks_dir}chunk.bed {chunks_dir}chunk_",
                                 'text' : 'Splitting chunk.bed' }
             misc.run_command(cmd_split_bed)
 
             # adds suffix .bed to split files
             [rename(f"{chunks_dir}{file}", f"{chunks_dir}{file}.bed") for file in listdir(chunks_dir) if not file.endswith("bed")]
+            # removes first unsplitted chunk.bed
             remove(f"{chunks_dir}chunk.bed")
 
-
-            # for file in listdir(chunks_dir):
-            #     if not file.endswith("bed"): rename(f"{chunks_dir}{file}", f"{chunks_dir}{file}.bed")
-            #     if file == "chunk.bed": remove(f"{chunks_dir}{file}")
             misc.log_to_file("INFO", 'Renaming chunk_* > chunk_*.bed succesfully completed - OK!')
             elapsed = timeit.default_timer() - start
             misc.log_to_file("INFO", f'Indexing reference genome successfully completed in {misc.elapsed_time(elapsed)} - OK!!')
@@ -98,6 +90,7 @@ class DnaSeqAnalysis():
                     clinical_id, library_id, read1, read2 = line.split()
                     read_group_header = f'\'@RG\\tID:{library_id}\\tSM:{clinical_id}\\tLB:{library_id}\\tPL:ILLUMINA\\tPU:{library_id}\''
                     
+                    # TODO remove single-end since it is not used i WGS
                     if read2 == 'N/A': # single-end
                         cmd_bwa = { 'cmd' : f'set -o pipefail && bwa-mem2 mem -R {read_group_header} {shortcuts.reference_genome_file} {shortcuts.dna_reads_dir}{read1} -t {options.threads} | samtools view -bS --threads 1 -o {shortcuts.aligned_output_dir}{library_id}.bam -', # samtools view converts SAM to BAM
                                     'program' : 'bwa-mem2',
@@ -105,7 +98,7 @@ class DnaSeqAnalysis():
                                     'file' : f'{shortcuts.aligned_output_dir}{library_id}.bam.complete'} 
 
                     else: # paired-end
-                        cmd_bwa = { 'cmd' : f'set -o pipefail && bwa-mem2 mem -R {read_group_header} {shortcuts.reference_genome_file} {shortcuts.dna_reads_dir}{read1} {shortcuts.dna_reads_dir}{read2} -t {options.threads} | samtools view -bS --threads 1 -o {shortcuts.aligned_output_dir}{library_id}.bam -',
+                        cmd_bwa = { 'cmd' : f'set -o pipefail && bwa-mem2 mem -R {read_group_header} {shortcuts.reference_genome_file} {shortcuts.dna_reads_dir}{read1} {shortcuts.dna_reads_dir}{read2} -t {options.threads} | samtools view -bS -o {shortcuts.aligned_output_dir}{library_id}.bam -',
                                     'program' : 'bwa-mem2',
                                     'text' : f"Aligning {library_id}.bam",
                                     'file' : f'{shortcuts.aligned_output_dir}{library_id}.bam.complete'}
@@ -122,11 +115,11 @@ class DnaSeqAnalysis():
             misc.log_to_file("INFO", f'Burrows Wheeler aligner succesfully completed in {misc.elapsed_time(elapsed)} - OK!')
         
         except OSError as e:
-            misc.log_to_file("ERROR", "You have to create a library file first", e)
+            misc.log_to_file("ERROR", f"You have to create a library file first {e}")
             sys.exit()
         
         except Exception as e:
-            misc.log_to_file("ERROR", "alignment() in dna_seq_analysis.py:", e)
+            misc.log_to_file("ERROR", f"alignment() in dna_seq_analysis.py: {e}")
             sys.exit()
 
 #---------------------------------------------------------------------------
@@ -143,7 +136,7 @@ class DnaSeqAnalysis():
                 path_to_sample = path.join(target_dir, sample)
                 
                 if path.isfile(path_to_sample) and sample.endswith('.bam'):
-                    sample = { 'cmd' : f'java -Xmx60g -jar $HOME/anaconda3/envs/sequencing/share/picard-2.25.2-0/picard.jar ValidateSamFile -I {path_to_sample} --MODE SUMMARY --IGNORE_WARNINGS true --MAX_OPEN_TEMP_FILES 2000 --MAX_RECORDS_IN_RAM 20000000 --TMP_DIR {path_to_sample}/tmp_validate',
+                    sample = { 'cmd' : f'java -Xmx60g -jar $HOME/anaconda3/envs/sequencing/share/picard-2.25.2-0/picard.jar ValidateSamFile -I {path_to_sample} --MODE SUMMARY --IGNORE_WARNINGS true --MAX_OPEN_TEMP_FILES 2500 --MAX_RECORDS_IN_RAM 20000000 --TMP_DIR {path_to_sample}/tmp_validate',
                                'program' : 'Picard ValidateSamFile',
                                'text' : f"Validating {sample}",
                                'file' : f'{path_to_sample}.validated'} 
@@ -159,17 +152,18 @@ class DnaSeqAnalysis():
             return True
 
         except Exception as e:
-            misc.log_to_file("ERROR", ".validate_bam_dna() in dna_seq_analysis.py:", e)
+            misc.log_to_file("ERROR", f".validate_bam_dna() in dna_seq_analysis.py: {e}")
             sys.exit()
 
     #---------------------------------------------------------------------------
     def sort(self, options, misc, shortcuts):
         '''This function sorts aligned bam files in parallel with mp.Pool'''
-
+        # TODO cgange to different memory using modes
         try:
             misc.create_directory([f"{shortcuts.sorted_output_dir}"])
+            misc.log_to_file("INFO", f'Starting: Sambamba sort Using {options.threads} out of {mp.cpu_count()} available threads')
             start = timeit.default_timer()
-            misc.log_to_file("INFO", "Starting: sorting SAM/BAM files using Picard Sortsam")
+            
             
             # Empty strings to store the output
             cmd_sort = []
@@ -182,28 +176,24 @@ class DnaSeqAnalysis():
                 path_to_sample = path.join(target_dir, sample)
                 
                 if path.isfile(path_to_sample) and sample.endswith('.bam'):
-                    input = { 'cmd' : f'sambamba sort {path_to_sample} -o {shortcuts.sorted_output_dir}{sample} -p -t 12 -m 65GB --tmpdir {shortcuts.sorted_output_dir}tmp',
+                    input = { 'cmd' : f'sambamba sort {path_to_sample} -o {shortcuts.sorted_output_dir}{sample} -p -t {options.threads//3} -m 60GB --tmpdir {shortcuts.sorted_output_dir}tmp',
                                'program' : 'Sambamba sort',
                                'text' : f"Sorting {sample}",
                                'file' : f'{shortcuts.sorted_output_dir}{sample}.complete',
                                'old_file': f'{path_to_sample}'} 
 
-                    # input = { 'cmd' : f'java -Xmx60g -jar $HOME/anaconda3/envs/sequencing/share/picard-2.25.2-0/picard.jar SortSam -I {path_to_sample} -O {shortcuts.sorted_output_dir}{sample} --SORT_ORDER coordinate --MAX_RECORDS_IN_RAM 11000000 --TMP_DIR {shortcuts.sorted_output_dir}tmp',
-                    #            'program' : 'Picard SortSam',
-                    #            'text' : f"Sorting {sample}",
-                    #            'file' : f'{shortcuts.sorted_output_dir}{sample}.complete',
-                    #            'old_file': f'{path_to_sample}'} 
+                   
                     cmd_sort.append(input)
                
             with mp.Pool(processes=3) as pool:
                 pool.map(partial(misc.run_command),cmd_sort)
             elapsed = timeit.default_timer() - start
-            misc.log_to_file("INFO", f'Picard SortSam succesfully completed in {misc.elapsed_time(elapsed)} - OK!')
+            misc.log_to_file("INFO", f'Sambamba sort succesfully completed in {misc.elapsed_time(elapsed)} - OK!')
            
             
            
         except Exception as e:
-            misc.log_to_file("ERROR", ".sort() in dna_seq_analysis.py:", e)
+            misc.log_to_file("ERROR", f".sort() in dna_seq_analysis.py: {e}")
             sys.exit()
 
     #---------------------------------------------------------------------------
@@ -212,8 +202,8 @@ class DnaSeqAnalysis():
 
         try:
             misc.create_directory([f"{shortcuts.merged_output_dir}"])
+            misc.log_to_file("INFO", f'Starting: Sambamba merge Using {options.threads} out of {mp.cpu_count()} available threads')
             start = timeit.default_timer()
-            misc.log_to_file("INFO", "Starting: merging SAM/BAM files using Picard MergeSamFiles")  
             cmd_merge = []
             tumor = ""
             normal = ""
@@ -227,10 +217,7 @@ class DnaSeqAnalysis():
                 if path.isfile(path_to_sample) and sample.endswith('.bam'):
 
                     if f"{options.tumor_id}." in sample:
-                        tumor += f"{path_to_sample} " 
-
-                        # For picard MergeSamFiles
-                        # tumor += f"-I {path_to_sample} " 
+                        tumor += f"{path_to_sample} "  
 
                     else:
                         misc.run_command({'cmd' : f'mv {path_to_sample} {shortcuts.merged_output_dir}/{options.normal_id}.bam',
@@ -239,39 +226,18 @@ class DnaSeqAnalysis():
 
             
             # Sambamba merge
-            input = {'cmd' : f'sambamba merge -t 38 {shortcuts.merged_output_dir}{options.tumor_id}.bam {tumor}',
+            input = {'cmd' : f'sambamba merge -t {options.threads} {shortcuts.merged_output_dir}{options.tumor_id}.bam {tumor}',
                      'program' : 'Sambamba merge',
                      'text' : f'Merging {options.tumor_id}.bam',
                      'file' : f'{shortcuts.merged_output_dir}{options.tumor_id}.bam.complete',
                      'old_file' : f'{shortcuts.sorted_output_dir}*.bam'}
 
-            # Picard MergeSamFiles
-            # input = {'cmd' : f'picard MergeSamFiles {tumor} -O {shortcuts.merged_output_dir}{options.tumor_id}.bam --USE_THREADING True',
-            #          'program' : 'Picard MergeSamFiles',
-            #          'text' : f'Merging {options.tumor_id}.bam',
-            #          'file' : f'{shortcuts.merged_output_dir}{options.tumor_id}.bam.complete',
-            #          'old_file' : f'{shortcuts.sorted_output_dir}*.bam'}
 
 
             
             misc.run_command(input)
-
-
-            # cmd_merge.extend([{ 'cmd' : f'picard MergeSamFiles {tumor} -O {shortcuts.merged_output_dir}{options.tumor_id}.bam',
-            #                     'program' : 'Picard MergeSamFiles',
-            #                     'text' : f'Merging {options.tumor_id}.bam',
-            #                     'file' : f'{shortcuts.merged_output_dir}{options.tumor_id}.bam.complete',
-            #                     'old_file' : f'{shortcuts.sorted_output_dir}{options.tumor_id}/*.bam}'},
-
-                            #  {  'cmd' : f'picard MergeSamFiles {normal} -O {shortcuts.merged_output_dir}{options.normal_id}.bam',
-                            #     'program' : 'Picard MergeSamFiles',
-                            #     'text' : f'Merging {options.normal_id}.bam',
-                            #     'file' : f'{shortcuts.merged_output_dir}{options.normal_id}.bam.complete'}])
-
-            # with mp.Pool(processes=2) as pool:
-            #     pool.map(partial(misc.run_command), cmd_merge)
             elapsed = timeit.default_timer() - start
-            misc.log_to_file("INFO", f'Picard MergeSamFiles succesfully completed in {misc.elapsed_time(elapsed)} - OK!')
+            misc.log_to_file("INFO", f'Sambamba merge succesfully completed in {misc.elapsed_time(elapsed)} - OK!')
 
            
         except Exception as e:
@@ -284,24 +250,20 @@ class DnaSeqAnalysis():
 
         try:
             misc.create_directory([f"{shortcuts.removed_duplicates_output_dir}"])
+            misc.log_to_file("INFO", f'Starting: Sambamba markdup Using {options.threads} out of {mp.cpu_count()} available threads')
             start = timeit.default_timer()
-            misc.log_to_file("INFO", "Starting: removing duplicates in SAM/BAM files using Picard MarkDuplicates")
             cmd_removedup = []
             target_dir = shortcuts.merged_output_dir
             for sample in listdir(target_dir):
                 path_to_sample = path.join(target_dir, sample)
             
                 if path.isfile(path_to_sample) and sample.endswith('.bam'):
-                    cmd_removedup.append({ 'cmd' : f'sambamba markdup --sort-buffer-size 153600 -t 19 --tmpdir {shortcuts.removed_duplicates_output_dir}tmp --overflow-list-size 2000000 -p {path_to_sample} {shortcuts.removed_duplicates_output_dir}{sample}',
+                    cmd_removedup.append({ 'cmd' : f'sambamba markdup --sort-buffer-size 307200 -t {options.threads//2} --tmpdir {shortcuts.removed_duplicates_output_dir}tmp --overflow-list-size 2000000 -p {path_to_sample} {shortcuts.removed_duplicates_output_dir}{sample}',
                             'program' : 'Sambamba MarkDuplicates',
                             'text' : f'Removing duplicates for {sample}',
                             'file' : f'{shortcuts.removed_duplicates_output_dir}{sample}.complete',
                             'old_file': f'{path_to_sample}' })    
-                    # cmd_removedup.append({ 'cmd' : f'picard -Xmx85g MarkDuplicates -I {path_to_sample} -O {shortcuts.removed_duplicates_output_dir}{sample} --ASSUME_SORTED -M {shortcuts.removed_duplicates_output_dir}marked_dup_metrics_{sample}.txt --TMP_DIR {shortcuts.removed_duplicates_output_dir}tmp',
-                    #         'program' : 'Picard MarkDuplicates',
-                    #         'text' : f'Removing duplicates for {sample}',
-                    #         'file' : f'{shortcuts.removed_duplicates_output_dir}{sample}.complete',
-                    #         'old_file': f'{shortcuts.merged_output_dir}*.bam'})    
+                  
     
             
             # Runs multiprocessing
@@ -309,10 +271,10 @@ class DnaSeqAnalysis():
                 pool.map(partial(misc.run_command), cmd_removedup)
             
             elapsed = timeit.default_timer() - start
-            misc.log_to_file("INFO", f'Picard MarkDuplicates succesfully completed in {misc.elapsed_time(elapsed)} - OK!')
+            misc.log_to_file("INFO", f'Sambamba markdup succesfully completed in {misc.elapsed_time(elapsed)} - OK!')
             
         except Exception as e:
-            misc.log_to_file("ERROR", ".remove_duplicate() in dna_seq_analysis.py:", e)
+            misc.log_to_file("ERROR", f".remove_duplicate() in dna_seq_analysis.py: {e}")
             sys.exit()
 
     #---------------------------------------------------------------------------
@@ -329,18 +291,18 @@ class DnaSeqAnalysis():
             for sample in listdir(target_dir):
                 path_to_sample = path.join(target_dir, sample)
                 if path.isfile(path_to_sample) and sample.endswith('.bam'):
-                     cmd_index.append({ 'cmd' : f'samtools index {path_to_sample}',
-                            'program' : 'realign index',
-                            'text' : f'Indexing {sample}',
-                            'file' : f'{path_to_sample}.bai.complete'})  
+                    #  cmd_index.append({ 'cmd' : f'samtools index {path_to_sample}',
+                    #         'program' : 'realign index',
+                    #         'text' : f'Indexing {sample}',
+                    #         'file' : f'{path_to_sample}.bai.complete'})  
                      cmd_leftAlignIndels.append({ 'cmd' : f'gatk LeftAlignIndels -R {shortcuts.reference_genome_file} -I {path_to_sample} -O {shortcuts.realigned_output_dir}{sample}',
                             'program' : 'realign',
                             'text' : f'Realigning {sample}',
                             'file' : f'{shortcuts.realigned_output_dir}{sample}.complete',
                             'old_file': f'{shortcuts.removed_duplicates_output_dir}*.bam'})  
                 
-            with mp.Pool(processes=2) as pool:
-                pool.map(partial(misc.run_command), cmd_index)
+            # with mp.Pool(processes=2) as pool:
+            #     pool.map(partial(misc.run_command), cmd_index)
                 
             with mp.Pool(processes=2) as pool:
                 pool.map(partial(misc.run_command), cmd_leftAlignIndels)
@@ -349,7 +311,7 @@ class DnaSeqAnalysis():
             misc.log_to_file("INFO", f'gatk LeftAlignIndels succesfully completed in {misc.elapsed_time(elapsed)} - OK!')
             
         except Exception as e:
-            misc.log_to_file("ERROR", ".realign() in dna_seq_analysis.py:", e)
+            misc.log_to_file("ERROR", f".realign() in dna_seq_analysis.py: {e}")
             sys.exit()
 
     #---------------------------------------------------------------------------
@@ -383,7 +345,7 @@ class DnaSeqAnalysis():
             elapsed = timeit.default_timer() - start
             misc.log_to_file("INFO", f'gatk haplotypecaller step 1 (multiprocessing) succesfully completed in {misc.elapsed_time(elapsed)} - OK!')
         except Exception as e:
-            misc.log_to_file("ERROR", ".gatk_haplotype step 1 (snv calling) in dna_seq_analysis.py:", e)
+            misc.log_to_file("ERROR", f".gatk_haplotype step 1 (snv calling) in dna_seq_analysis.py: {e}")
 
         try:
             # Merge all vcf files
@@ -393,7 +355,7 @@ class DnaSeqAnalysis():
                             'file' : f'{shortcuts.haplotypecaller_output_dir}{options.tumor_id}.vcf.complete'} 
             misc.run_command(cmd_merge)
         except Exception as e:
-            misc.log_to_file("ERROR", ".gatk_haplotype step 2 (merge vcf) in dna_seq_analysis.py:", e)
+            misc.log_to_file("ERROR", f".gatk_haplotype step 2 (merge vcf) in dna_seq_analysis.py: {e}")
 
         try:
             # Remove all reads with read depth less than 10, selects only snps, exludes normal samples
@@ -405,7 +367,7 @@ class DnaSeqAnalysis():
            
             misc.run_command(cmd_filter_read_depth)
         except Exception as e:
-            misc.log_to_file("ERROR", ".gatk_haplotype step 3 in dna_seq_analysis.py:", e)
+            misc.log_to_file("ERROR", f".gatk_haplotype step 3 in dna_seq_analysis.py: {e}")
 
 
         try:
@@ -417,13 +379,14 @@ class DnaSeqAnalysis():
 
             misc.run_command(cmd_filter_het)
         except Exception as e:
-            misc.log_to_file("ERROR", ".gatk_haplotype step 4 (select heterozygous genotype, excludes GT=1/2) in dna_seq_analysis.py:", e)
+            misc.log_to_file("ERROR", f".gatk_haplotype step 4 (select heterozygous genotype, excludes GT=1/2) in dna_seq_analysis.py: {e}")
 
 
         try:
+            # TODO remebmber to change back to -v GRCh38.99
             # Annotate vcf file
             cmd_annotate = {    'cmd' : f'''java -Xmx4g -jar $HOME/anaconda3/envs/sequencing/share/snpeff-5.0-1/snpEff.jar \\
-                                        -v GRCh38.99 -canon -noInteraction -noNextProt -noMotif -strict \\
+                                        -v GRCh37.p13.RefSeq -canon -noInteraction -noNextProt -noMotif -strict \\
                                         -onlyProtein {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het.vcf \\
                                         > {shortcuts.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het_annotated.vcf''',
                                 'program' : 'gatk HaplotypeCaller',
@@ -432,7 +395,7 @@ class DnaSeqAnalysis():
                                         
             misc.run_command(cmd_annotate)
         except Exception as e:
-            misc.log_to_file("ERROR", ".gatk_haplotype step 5 (annotate vcf file) in dna_seq_analysis.py:", e)
+            misc.log_to_file("ERROR", f".gatk_haplotype step 5 (annotate vcf file) in dna_seq_analysis.py: {e}")
 
 
         try:
@@ -448,7 +411,7 @@ class DnaSeqAnalysis():
                 elapsed = timeit.default_timer() - start
                 misc.log_to_file("INFO", f'All steps in GATK HaplotypeCaller succesfully completed in {misc.elapsed_time(elapsed)} - OK!')
         except Exception as e:
-            misc.log_to_file("ERROR", ".gatk_haplotype step 6 (IndexFeatureFile) in dna_seq_analysis.py:", e)
+            misc.log_to_file("ERROR", f".gatk_haplotype step 6 (IndexFeatureFile) in dna_seq_analysis.py: {e}")
 
 
     #---------------------------------------------------------------------------
@@ -501,7 +464,7 @@ class DnaSeqAnalysis():
             misc.log_to_file("INFO", f'Delly SNV calling succesfully completed in {misc.elapsed_time(elapsed)} - OK!')
         
         except Exception as e:
-            misc.log_to_file("ERROR", ".delly() in dna_seq_analysis.py:", e)
+            misc.log_to_file("ERROR", f".delly() in dna_seq_analysis.py: {e}")
             sys.exit()
 
         #---------------------------------------------------------------------------
@@ -530,7 +493,7 @@ class DnaSeqAnalysis():
                                        'file' : f"{shortcuts.manta_output_dir}configManta_file.complete" }
             misc.run_command(cmd_create_config_file)
 
-            cmd_runWorkflow = { 'cmd' : f"{shortcuts.runWorkflow_file} -m local -j 8",
+            cmd_runWorkflow = { 'cmd' : f"{shortcuts.runWorkflow_file} -m local -j {options.threads}",
                                 'text' : "Manta running workflow (step 2)",
                                 'file' : f"{shortcuts.manta_variants_dir}somaticSV.vcf.gz.complete" }
             misc.run_command(cmd_runWorkflow)
@@ -549,5 +512,5 @@ class DnaSeqAnalysis():
             misc.log_to_file("INFO", f'Manta SNV calling succesfully completed in {misc.elapsed_time(elapsed)} - OK!')
     
         except Exception as e:
-            misc.log_to_file("ERROR", ".manta() in dna_seq_analysis.py:", e)
+            misc.log_to_file("ERROR", f".manta() in dna_seq_analysis.py: {e}")
             sys.exit()
