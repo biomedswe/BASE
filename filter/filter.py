@@ -4,73 +4,30 @@ import argparse
 
 
 def filter_csv(options):
+    '''Final filter of csv after "ASEReadCounter" and "add_wgs_data_to_csv" functions. You can specify the pValue and the lower and upper threshold for RNA/DNA ratio for both WGS and CNV data'''
     df = pd.read_csv(options.input)
 
 
-
-
-    # create an empty dict
-    genes = {}
-    jonas_genes1 = []
-    jonas_genes2 = []
-
-
-
-    # counters for validation
-    tot = 0
-    sig = 0
-
-    # assign geneName as dict key and 2 empty placeholders for counting total genes and significant genes
+    # create a dict with all genes as key
+    variants = {}
     for index, row in df.iterrows():
-        genes[row.loc['geneName']] = [0,0]
+        variants[row.loc['geneName']] = [0,0]
 
-    # iterate trough rows in df. if conditions are fullfilled for that geneName, add +1 for total count and +1 for count that fullfills condition, i.e., is significant.
-    # else just add total count for that geneName
-
-    # dict will show: geneName : {[total counts, matching counts]}
-
+    # iterate trough rows in df. if conditions are fullfilled, add the geneName as key and +1 for total variant and +1 for those that fullfill condition, i.e., significant.
+    # dict will show: variantType : {[total counts, matching counts]}
     for index, row in df.iterrows():
         if row.loc['pValue_WGS_VAF'] <= float(options.pvalue) and row.loc['pValue_CNV'] <= float(options.pvalue) and not float(options.lower_foldchange) < row.loc['RNA/DNA_ratio_WGS_VAF'] < float(options.upper_foldchange) and not float(options.lower_foldchange) < row.loc['RNA/DNA_ratio_CNV'] <  float(options.upper_foldchange):
-            genes[row.loc['geneName']][0] += 1
-            genes[row.loc['geneName']][1] += 1
-            tot += 1
-            sig += 1
+            variants[row.loc['geneName']][0] += 1
+            variants[row.loc['geneName']][1] += 1
         else:
-            genes[row.loc['geneName']][0] += 1
-            tot += 1
-    print("tot:", tot, "sig:", sig)
+            variants[row.loc['geneName']][0] += 1
 
-
-    # Thiw is just used to compare my gene list to minjuns earlier results
-    for index, row in df.iterrows():
-        if genes[row.loc['geneName']][1] >= (genes[row.loc['geneName']][0]/2):
-            jonas_genes1.append(row.loc['geneName'])
-            if row.loc['geneName'] not in jonas_genes2:
-                jonas_genes2.append(row.loc['geneName'])
-
-
-
-
-    # overlap = 0
-    # print("jonas:", len(jonas_genes1), len(jonas_genes2))
-    # with open("HeH_2064-01.txt", "r") as minjun:
-    #     minjun_list = minjun.read().splitlines()
-    #     for gene in minjun_list:
-    #         if gene in jonas_genes2:
-    #             overlap += 1
-    # print(overlap, "/",len(minjun_list))
 
     for index, row in df.iterrows():
         # if not significant. (if significant gene entries are not bigger than 50% of total entries)
-        if not genes[row.loc['geneName']][1] >= (genes[row.loc['geneName']][0]/2): # if not significant > total/2
+        if not variants[row.loc['geneName']][1] > (variants[row.loc['geneName']][0]/2): # if not significant > total/2
             df.drop(index, inplace=True)
 
-
-
-
-
-    # df.drop_duplicates(subset ="geneName", inplace=True)
-    # print(df)
     # print filtered file to csv
     df.to_csv(options.output, sep=',', index=False)
 
