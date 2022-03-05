@@ -1,4 +1,4 @@
-# sequencing_project
+# About
 Biomedswe Allele-Specific Expression analyser (BASE) v.1.0. 2021
 
 This program was created during a Masters thesis project about B-cell precursor acute lymphoblastic leukemia (BCP-ALL) in 2020-2021.                                             
@@ -9,7 +9,7 @@ Lund University, BMC C13
 SE-221 84 Lund, Sweden                                                                                                                                                                                                                          
 Acknowledgment:                                                                                                         
 Special thanks to Prof. Kajsa Paulsson and assistant researcher Minjun Yang
------------------------------------------------------------------------------------------------------------------------------------------------
+
 
 BASE automates everything from setting up anaconda to downloading reference genome and performing DNA and RNA analysis to get a result about ASE
 
