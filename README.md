@@ -44,7 +44,8 @@ Index the genome using tools like Samtools, BWA, and STAR.
 Create a folder structure for the analysis.
 
 
-# WGS Data Processing
+
+### WGS Data Processing
 To process WGS data, run DNA_alignment.py with the required arguments.
 
 python DNA_alignment.py --read1 path/to/read1.fastq --read2 path/to/read2.fastq --output_prefix sample_name [--sample_ploidy 2]
@@ -58,7 +59,7 @@ Align reads to the reference genome.
 Perform duplicate marking and indexing.
 Run CNV and SNV callers to analyze genomic variations.
 
-# RNA-seq Data Processing for ASE Analysis
+### RNA-seq Data Processing for ASE Analysis
 After WGS data processing, run RNA_alignment.py to get ASE analysis results.
 
 python RNA_alignment.py --read1 path/to/rna_read1.fastq --read2 path/to/rna_read2.fastq --output_prefix sample_name
@@ -71,7 +72,7 @@ Align RNA-seq reads using STAR.
 Run the GATK ASEReadCounter for allele-specific expression counting.
 Add WGS information and perform ASE analysis to obtain ASE analysis results.
 
-# Notes
+### Notes
 Ensure all scripts and the config.ini file are in the same directory or adjust paths accordingly.
 The scripts assume a Unix-like environment with tools like wget, gunzip, and standard Bash commands available.
 For detailed instructions on each script's functionality and options, refer to the script's inline comments or documentation sections.
