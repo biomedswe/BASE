@@ -1,66 +1,81 @@
 # About
 Biomedswe Allele-Specific Expression analyser (BASE) v.1.0. 2021
 
-This program was created during a Masters thesis project about B-cell precursor acute lymphoblastic leukemia (BCP-ALL) in 2020-2021.                                             
-Developer: Jonas Andersson                                                                                                         
+
+Developer: Minjun Yang, Jonas Andersson                                                                                                         
 Master's programme in biomedicine                                                                                       
 Division of Clinical Genetics                                                                                           
 Lund University, BMC C13                                                                                                
 SE-221 84 Lund, Sweden                                                                                                                                                                                                                          
-Acknowledgment:                                                                                                         
-Special thanks to Prof. Kajsa Paulsson and assistant researcher Minjun Yang
+# BASE
+
+This toolkit provides a set of scripts to process WGS and RNA-seq data for genomic and transcriptomic analyses. The workflow includes downloading reference sequences, indexing, folder structure setup, DNA alignment for WGS data, and RNA alignment for ASE analysis.
+
+## Setup
+
+### Configuring Third-Party Programs
+
+1. Before running the scripts, ensure all third-party programs (e.g., GATK, BWA, Samtools, etc.) are installed on your system.
+2. Set the paths to these programs in the `config.ini` file. An example configuration is provided below:
+
+    ```ini
+    [third_party_programs]
+    gatk_path = /path/to/gatk
+    bwa_path = /path/to/bwa
+    samtools_path = /path/to/samtools
+    STAR_path = /path/to/STAR
+    bedtools_path = /path/to/bedtools
+    ...
+    ```
+
+    Replace `/path/to/...` with the actual paths to the installed third-party programs.
+
+### Initial Setup
+
+Run `reference_genome.py` to download reference sequences, index files, and set up the necessary folder structure.
+
+```bash
+python reference_genome.py
+
+This script will:
+
+Download the reference genome and annotation files.
+Index the genome using tools like Samtools, BWA, and STAR.
+Create a folder structure for the analysis.
 
 
-BASE automates everything from setting up anaconda to downloading reference genome and performing DNA and RNA analysis to get a result about ASE
+# WGS Data Processing
+To process WGS data, run DNA_alignment.py with the required arguments.
 
-## Requirements
-- Platform: 
-    - linux-64
-    - python ≥ 2.7
-    
-    
-## Installation and setup instructions
-Open bash (Unix shell) and type the following:
+python DNA_alignment.py --read1 path/to/read1.fastq --read2 path/to/read2.fastq --output_prefix sample_name [--sample_ploidy 2]
 
-### 1. Clone the git archive:
+--read1 and --read2: Paths to the paired-end FASTQ files.
+--output_prefix: A prefix for output files (typically the sample name).
+--sample_ploidy (optional): The ploidy of the sample, default is 2. It is recommended to specify this for your project.
+This script will:
 
+Align reads to the reference genome.
+Perform duplicate marking and indexing.
+Run CNV and SNV callers to analyze genomic variations.
 
-```
-git clone https://github.com/biomedswe/BASE.git $HOME/BASE
-```
+# RNA-seq Data Processing for ASE Analysis
+After WGS data processing, run RNA_alignment.py to get ASE analysis results.
 
-### 2. Run setup_anaconda3.py and follow instructions in program
-Please note that you must have python: ≥ 2.7 installed first.
+python RNA_alignment.py --read1 path/to/rna_read1.fastq --read2 path/to/rna_read2.fastq --output_prefix sample_name
 
-Type the following in the shell:
-```
-python2 $HOME/BASE/setup_anaconda3.py
-```
+--read1 and --read2: Paths to the RNA-seq paired-end FASTQ files.
+--output_prefix: A prefix for output files (typically the sample name).
+This script will:
 
-Let Anaconda3 install at default location
+Align RNA-seq reads using STAR.
+Run the GATK ASEReadCounter for allele-specific expression counting.
+Add WGS information and perform ASE analysis to obtain ASE analysis results.
 
-### 3. Copy your DNA-seq/RNA-seq reads into the right folders
+# Notes
+Ensure all scripts and the config.ini file are in the same directory or adjust paths accordingly.
+The scripts assume a Unix-like environment with tools like wget, gunzip, and standard Bash commands available.
+For detailed instructions on each script's functionality and options, refer to the script's inline comments or documentation sections.
 
-DNA-seq reads: (in fastq.gz format) into $HOME/BASE/dna_seq/reads 
-
-RNA-seq reads: (in fastq.gz format) into $HOME/BASE/rna_seq/reads
-
-or create soft links between these folders and the files with "ln -s"
-
-
-### 4. Run main.py and follow instructions in program
-Type the following in the shell:
-```
-python3 $HOME/BASE/main.py -t <tumor clinical id> -n <normal clinical id> -sg <sub group> -T <number of threads to use>
-
-e.g. "python3 $HOME/BASE/main.py -t 2064-01 -n 987-02 -sg Heh -T 38"
-
-```
-
-### Optional. Copy Excel document with Copy number information into $HOME/BASE/rna_seq/star/[tumor-id]/[tumor-id]_CN.xlsx
-
-If you have Copy number information, you can copy this document into $HOME/BASE/rna_seq/star/[tumor-id]/[tumor-id]_CN.xlsx 
-in order to get calculated pValue and RNA/DNA ratio based on CNV
 
 ### 4. Cite BASE
 
