@@ -1,9 +1,8 @@
 # About
-Biomedswe Allele-Specific Expression analyser (BASE) v.1.0. 2021
+Biomedswe Allele-Specific Expression analyser (BASE) v.2.0. 2024
 
 
-Developer: Minjun Yang, Jonas Andersson                                                                                                         
-Master's programme in biomedicine                                                                                       
+Developer: Minjun Yang, Jonas Andersson                                                                                                                                                                                                
 Division of Clinical Genetics                                                                                           
 Lund University, BMC C13                                                                                                
 SE-221 84 Lund, Sweden                                                                                                                                                                                                                          
