@@ -75,11 +75,6 @@ Before you can run BASE, you need to ensure that your environment is set up corr
   BiocManager::install("Rsamtools")
   ```
 
-  
-
-
-
-
 Please ensure all the required software and packages are installed before proceeding with the project setup and execution.
 
 
@@ -105,18 +100,14 @@ Please ensure all the required software and packages are installed before procee
 
 ### Initial Setup
 
-  Run `reference_genome.py` to download reference sequences, index files, and set up the necessary folder structure.
-
+  Run `reference_genome.py` to download reference sequences, index files, and set up the necessary folder structure.   
   ```bash
   python reference_genome.py
   ```
-
-This script will:
-
-Download the reference genome and annotation files.
-Index the genome using tools like Samtools, BWA, and STAR.
-Create a folder structure for the analysis.
-
+  This script will:   
+  Download the reference genome and annotation files.   
+  Index the genome using tools like Samtools, BWA, and STAR.   
+  Create a folder structure for the analysis.   
 
 
 ### Notes
@@ -128,14 +119,16 @@ Ensure all scripts and the config.ini file are in the same directory or adjust p
 ## Usage 
 ### WGS Data Processing
 To process WGS data, run DNA_alignment.py with the required arguments.
-```
-python DNA_alignment.py --read1 path/to/read1.fastq --read2 path/to/read2.fastq --output_prefix sample_name [--sample_ploidy 2]
-```
---read1 and --read2: Paths to the paired-end FASTQ files.
---output_prefix: A prefix for output files (typically the sample name).
---sample_ploidy (optional): The ploidy of the sample, default is 2. It is recommended to specify this for your project.
-This script will:
-Run WGS reads alignment, copy number variations calling and exonic SNVs calling.
+  ```
+  python DNA_alignment.py --read1 path/to/read1.fastq --read2 path/to/read2.fastq --output_prefix sample_name [--sample_ploidy 2]
+  ```
+  
+  --read1 and --read2: Paths to the paired-end FASTQ files.   
+  --output_prefix: A prefix for output files (typically the sample name).   
+  --sample_ploidy (optional): The ploidy of the sample, default is 2. It is recommended to specify this for your project.   
+  
+  This script will:   
+  Run WGS reads alignment, copy number variations calling and exonic SNVs calling.
 
 ### RNA-seq Data Processing for ASE Analysis
 After WGS data processing, run RNA_alignment.py to get ASE analysis results.
