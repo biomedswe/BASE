@@ -161,7 +161,7 @@ This comprehensive file delineates the results of the ASE (Allele-Specific Expre
 Review Results: Open and review the generated .tab file using a text editor or data analysis tool of your choice (e.g., Excel, R, Python pandas DataFrame). Each row corresponds to a gene analyzed, with columns providing the statistical analysis results and relevant genomic information.
 
 
-# About
+## About
 Biomedswe Allele-Specific Expression analyser (BASE) v.2.0. 2024
 
 Developer: Minjun Yang, Jonas Andersson, Efe Aydın                                                                                                                                                                                              
@@ -169,7 +169,7 @@ Division of Clinical Genetics
 Lund University, BMC C13                                                                                                
 SE-221 84 Lund, Sweden 
 
-### 4. Citation
+## Citation
 
 Jonas Andersson, Efe Aydın, Rebeqa Gunnarsson, Henrik Lilljebjörn, Thoas Fioretos, Bertil Johansson, Kajsa Paulsson & Minjun Yang. Characterizing the allele-specific gene expression landscape in high hyperdiploid acute lymphoblastic leukemia with BASE.
     
