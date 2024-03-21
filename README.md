@@ -13,16 +13,81 @@ This toolkit provides a set of scripts to process WGS and RNA-seq data for genom
 ## Setup
 
 ### Prerequisites
-- Python 3.8
-- Pip
-- numpy==1.23.4
-- pandas==1.5.3
-- matplotlib==3.3.2
-- joblib==1.2.0
-- scikit-learn==1.2.2
-- cyvcf2==0.30.18
-- pysam==0.15.2
-- scipy==1.9.1
+
+
+Before you can run BASE, you need to ensure that your environment is set up correctly. The following are required:
+
+- **Python**: The core of this project is written in Python, so you'll need Python installed on your computer. We recommend using Python 3.7 or newer to ensure compatibility with all dependencies. You can download Python from the [official Python website](https://www.python.org/downloads/).
+
+- **Virtual Environment (Optional, but recommended)**: Using a virtual environment for Python projects helps manage dependencies and avoid conflicts with other projects. You can create a virtual environment using Python's built-in `venv` module (for Python 3.3 and newer) or with `virtualenv` for older versions of Python.
+
+  To create a virtual environment using `venv`, run the following command in your terminal (replace `myenv` with your preferred environment name):
+  ```bash
+  python3 -m venv myenv
+  ```
+  To activate the virtual environment, on Windows, run:
+  ```
+  myenv\Scripts\activate.bat
+  ```
+  On Unix or MacOS, run:
+  ```
+  source myenv/bin/activate
+  ```
+  
+For the Prerequisites section of your README.md, focusing on the Python package information, you might structure it like this:
+
+markdown
+Copy code
+### Prerequisites
+
+To run this Python project, you'll need to have a few things set up on your system. Make sure you meet the following requirements:
+
+- **Python**: The core of this project is written in Python, so you'll need Python installed on your computer. We recommend using Python 3.7 or newer to ensure compatibility with all dependencies. You can download Python from the [official Python website](https://www.python.org/downloads/).
+
+- **Virtual Environment (Optional, but recommended)**: Using a virtual environment for Python projects helps manage dependencies and avoid conflicts with other projects. You can create a virtual environment using Python's built-in `venv` module (for Python 3.3 and newer) or with `virtualenv` for older versions of Python.
+
+  To create a virtual environment using `venv`, run the following command in your terminal (replace `myenv` with your preferred environment name):
+  ```bash
+  python3 -m venv myenv
+To activate the virtual environment, on Windows, run:
+
+bash
+Copy code
+myenv\Scripts\activate.bat
+On Unix or MacOS, run:
+
+bash
+Copy code
+source myenv/bin/activate
+Required Python Packages: This project depends on several external Python packages. These dependencies are listed in the requirements.txt file included in the project. The following is a brief overview of some key packages:
+
+numpy: A fundamental package for scientific computing with Python.
+pandas: An open-source data analysis and manipulation tool.
+matplotlib: A comprehensive library for creating static, animated, and interactive visualizations in Python.
+scikit-learn: Simple and efficient tools for predictive data analysis.
+pysam: A module for reading, manipulating, and writing genomic data sets.
+scipy: An open-source software for mathematics, science, and engineering.
+To install all required packages, navigate to the root directory of this project and run the following command:
+
+```
+pip install -r requirements.txt
+```
+This command will automatically install all the dependencies listed in the requirements.txt file, ensuring that your project environment is correctly set up and ready to run the BASE.
+  
+
+- **R**: If you don't have R installed, you can download and install it from [The Comprehensive R Archive Network (CRAN)](https://cran.r-project.org/). We recommend using the latest version of R to ensure compatibility with all packages.
+
+- **Required R Packages**:
+  - `dplyr`: A grammar of data manipulation, providing a consistent set of verbs that help you solve the most common data manipulation challenges.
+  - `outliers`: A collection of some tests commonly used for identifying outliers.
+  - `future.apply`: Implementations of apply function variations that leverage the 'future' framework for asynchronous computing.
+  - `facets`: An R package for allele-specific copy number analysis of tumors.
+  - `DNAcopy`: A package for analyzing copy number data.
+  - `GenomicRanges`: Representation and manipulation of genomic intervals and variables defined along a genome.
+  - `Rsamtools`: Provides an interface to the 'samtools', 'bcftools', and 'tabix' utilities for manipulating SAM, BAM, and VCF files.
+
+Please ensure all the required software and packages are installed before proceeding with the project setup and execution.
+
 
 
 ### Configuring Third-Party Programs
