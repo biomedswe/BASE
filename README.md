@@ -168,8 +168,8 @@ Division of Clinical Genetics
 Lund University, BMC C13                                                                                                
 SE-221 84 Lund, Sweden 
 
-### 4. Cite BASE
+### 4. Citation
 
-Please refer to this repository when using BASE in your project
+Jonas Andersson, Efe Aydın, Rebeqa Gunnarsson, Henrik Lilljebjörn, Thoas Fioretos, Bertil Johansson, Kajsa Paulsson & Minjun Yang. Characterizing the allele-specific gene expression landscape in high hyperdiploid acute lymphoblastic leukemia with BASE.
     
  
