@@ -14,12 +14,11 @@ This toolkit provides a set of scripts to process WGS and RNA-seq data for genom
 
 ### Prerequisites
 
-
 Before you can run BASE, you need to ensure that your environment is set up correctly. The following are required:
 
-- **Python**: The core of this project is written in Python, so you'll need Python installed on your computer. We recommend using Python 3.7 or newer to ensure compatibility with all dependencies. You can download Python from the [official Python website](https://www.python.org/downloads/).
+- **Python**: The core of this project is written in Python, so you'll need Python installed on your computer. We recommend using Python 3.7 or newer to ensure compatibility with all dependencies.
 
-- **Virtual Environment (Optional, but recommended)**: Using a virtual environment for Python projects helps manage dependencies and avoid conflicts with other projects. You can create a virtual environment using Python's built-in `venv` module (for Python 3.3 and newer) or with `virtualenv` for older versions of Python.
+- **Virtual Environment (Optional, but recommended)**: Using a virtual environment for Python projects helps manage dependencies and avoid conflicts with other projects. You can create a virtual environment using Python's built-in `venv` module or with `virtualenv` for older versions of Python.
 
   To create a virtual environment using `venv`, run the following command in your terminal (replace `myenv` with your preferred environment name):
   ```bash
@@ -33,32 +32,7 @@ Before you can run BASE, you need to ensure that your environment is set up corr
   ```
   source myenv/bin/activate
   ```
-  
-For the Prerequisites section of your README.md, focusing on the Python package information, you might structure it like this:
 
-markdown
-Copy code
-### Prerequisites
-
-To run this Python project, you'll need to have a few things set up on your system. Make sure you meet the following requirements:
-
-- **Python**: The core of this project is written in Python, so you'll need Python installed on your computer. We recommend using Python 3.7 or newer to ensure compatibility with all dependencies. You can download Python from the [official Python website](https://www.python.org/downloads/).
-
-- **Virtual Environment (Optional, but recommended)**: Using a virtual environment for Python projects helps manage dependencies and avoid conflicts with other projects. You can create a virtual environment using Python's built-in `venv` module (for Python 3.3 and newer) or with `virtualenv` for older versions of Python.
-
-  To create a virtual environment using `venv`, run the following command in your terminal (replace `myenv` with your preferred environment name):
-  ```bash
-  python3 -m venv myenv
-To activate the virtual environment, on Windows, run:
-
-bash
-Copy code
-myenv\Scripts\activate.bat
-On Unix or MacOS, run:
-
-bash
-Copy code
-source myenv/bin/activate
 Required Python Packages: This project depends on several external Python packages. These dependencies are listed in the requirements.txt file included in the project. The following is a brief overview of some key packages:
 
 numpy: A fundamental package for scientific computing with Python.
@@ -73,7 +47,6 @@ To install all required packages, navigate to the root directory of this project
 pip install -r requirements.txt
 ```
 This command will automatically install all the dependencies listed in the requirements.txt file, ensuring that your project environment is correctly set up and ready to run the BASE.
-  
 
 - **R**: If you don't have R installed, you can download and install it from [The Comprehensive R Archive Network (CRAN)](https://cran.r-project.org/). We recommend using the latest version of R to ensure compatibility with all packages.
 
@@ -87,7 +60,6 @@ This command will automatically install all the dependencies listed in the requi
   - `Rsamtools`: Provides an interface to the 'samtools', 'bcftools', and 'tabix' utilities for manipulating SAM, BAM, and VCF files.
 
 Please ensure all the required software and packages are installed before proceeding with the project setup and execution.
-
 
 
 ### Configuring Third-Party Programs
