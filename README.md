@@ -25,6 +25,7 @@ Before you can run BASE, you need to ensure that your environment is set up corr
   ```
   source myenv/bin/activate
   ```
+  
 - **Required Python Packages**:
   - `numpy`: version 1.23.4
   - `scipy`: version 1.9.1
@@ -35,15 +36,14 @@ Before you can run BASE, you need to ensure that your environment is set up corr
   - `pysam`: version 0.15.2
   - `cyvcf2`: version 0.30.18
   
-  To install all required packages, navigate to the root directory of this project and run the following command:
+   ```
+   pip install -r requirements.txt
+   ```
+   This command will automatically install all the dependencies listed in the requirements.txt file, ensuring that your project environment is correctly set up and ready to 
+   run the BASE.
 
-```
-pip install -r requirements.txt
-```
-This command will automatically install all the dependencies listed in the requirements.txt file, ensuring that your project environment is correctly set up and ready to run the BASE.
 
-
-- **R**: If you don't have R installed, you can download and install it from [The Comprehensive R Archive Network (CRAN)](https://cran.r-project.org/). We recommend using the latest version of R to ensure compatibility with all packages.
+- **R**: If you don't have R installed, you can download and install it from [The Comprehensive R Archive Network (CRAN)](https://cran.r-project.org/). We recommend using the latest version of R to ensure compatibility with all packages.   
 
 - **Required R Packages**:
   - `dplyr`: A grammar of data manipulation, providing a consistent set of verbs that help you solve the most common data manipulation challenges.
@@ -53,6 +53,32 @@ This command will automatically install all the dependencies listed in the requi
   - `DNAcopy`: A package for analyzing copy number data.
   - `GenomicRanges`: Representation and manipulation of genomic intervals and variables defined along a genome.
   - `Rsamtools`: Provides an interface to the 'samtools', 'bcftools', and 'tabix' utilities for manipulating SAM, BAM, and VCF files.
+  
+  To install all required packages, You will be using the R console for entering the commands provided below.
+  Install CRAN Packages
+  ```
+  install.packages("dplyr")
+  install.packages("outliers")
+  install.packages("future.apply")
+  ```
+  To install packages from Bioconductor, you first need to ensure that you have the BiocManager package installed. If not, you can install it using the following command:
+  Install Bioconductor Packages
+  ```
+  if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+  ```
+  Once BiocManager is installed, you can proceed to install the Bioconductor packages with the following commands:
+  ```
+  BiocManager::install("facets")
+  BiocManager::install("DNAcopy")
+  BiocManager::install("GenomicRanges")
+  BiocManager::install("Rsamtools")
+  ```
+
+  
+
+
+
 
 Please ensure all the required software and packages are installed before proceeding with the project setup and execution.
 
@@ -74,12 +100,16 @@ Please ensure all the required software and packages are installed before procee
 
     Replace `/path/to/...` with the actual paths to the installed third-party programs.
 
+
+ detailed instructions on each script's functionality and options, refer to the script's inline comments or documentation sections.
+
 ### Initial Setup
 
-Run `reference_genome.py` to download reference sequences, index files, and set up the necessary folder structure.
+  Run `reference_genome.py` to download reference sequences, index files, and set up the necessary folder structure.
 
-```bash
-python reference_genome.py
+  ```bash
+  python reference_genome.py
+  ```
 
 This script will:
 
@@ -87,9 +117,15 @@ Download the reference genome and annotation files.
 Index the genome using tools like Samtools, BWA, and STAR.
 Create a folder structure for the analysis.
 
-```
 
 
+### Notes
+The scripts assume a Unix-like environment with tools like wget, gunzip, and standard Bash commands available.
+Ensure all scripts and the config.ini file are in the same directory or adjust paths accordingly.
+
+
+
+## Usage 
 ### WGS Data Processing
 To process WGS data, run DNA_alignment.py with the required arguments.
 ```
@@ -99,10 +135,7 @@ python DNA_alignment.py --read1 path/to/read1.fastq --read2 path/to/read2.fastq 
 --output_prefix: A prefix for output files (typically the sample name).
 --sample_ploidy (optional): The ploidy of the sample, default is 2. It is recommended to specify this for your project.
 This script will:
-
-Align reads to the reference genome.
-Perform duplicate marking and indexing.
-Run CNV and SNV callers to analyze genomic variations.
+Run WGS reads alignment, copy number variations calling and exonic SNVs calling.
 
 ### RNA-seq Data Processing for ASE Analysis
 After WGS data processing, run RNA_alignment.py to get ASE analysis results.
@@ -115,13 +148,8 @@ python RNA_alignment.py --read1 path/to/rna_read1.fastq --read2 path/to/rna_read
 This script will:
 
 Align RNA-seq reads using STAR.
-Run the GATK ASEReadCounter for allele-specific expression counting.
-Add WGS information and perform ASE analysis to obtain ASE analysis results.
+Run RNA reads alignment, expressed heterozygous SNVs coverage counting and allele-specific expression analysis.
 
-### Notes
-Ensure all scripts and the config.ini file are in the same directory or adjust paths accordingly.
-The scripts assume a Unix-like environment with tools like wget, gunzip, and standard Bash commands available.
-For detailed instructions on each script's functionality and options, refer to the script's inline comments or documentation sections.
 
 # About
 Biomedswe Allele-Specific Expression analyser (BASE) v.2.0. 2024
