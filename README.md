@@ -6,6 +6,8 @@ This toolkit provides a set of scripts to process WGS and RNA-seq data for genom
 ## Setup
 
 ### Prerequisites
+- **Operating System**:
+This software is designed to run on Linux-based systems. Compatibility with other operating systems (such as Windows or macOS) is not guaranteed and may require additional configuration or software to emulate a Linux environment.   
 
 Before you can run BASE, you need to ensure that your environment is set up correctly. The following are required:
 
