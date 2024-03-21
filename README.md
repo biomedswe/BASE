@@ -128,23 +128,24 @@ To process WGS data, run DNA_alignment.py with the required arguments.
   --output_prefix: A prefix for output files (typically the sample name).   
   --sample_ploidy (optional): The ploidy of the sample, default is 2. It is recommended to specify this for your project.   
   
-  This script will:   
-  Run WGS reads alignment, copy number variations calling and exonic SNVs calling.
+
+  The process involves WGS reads alignment, copy number variations calling and exonic SNVs calling.
 
 ### RNA-seq Data Processing for ASE Analysis
 After WGS data processing, run RNA_alignment.py to get ASE analysis results.
 
-```
-python RNA_alignment.py --read1 path/to/rna_read1.fastq --read2 path/to/rna_read2.fastq --output_prefix sample_name
-```
---read1 and --read2: Paths to the RNA-seq paired-end FASTQ files.
---output_prefix: A prefix for output files (typically the sample name).
-This script will:
+  ```
+  python RNA_alignment.py --read1 path/to/rna_read1.fastq --read2 path/to/rna_read2.fastq --output_prefix sample_name
+  ```
+  
+  --read1 and --read2: Paths to the RNA-seq paired-end FASTQ files.   
+  --output_prefix: A prefix for output files (typically the sample name).   
 
-Align RNA-seq reads using STAR.
-Run RNA reads alignment, expressed heterozygous SNVs coverage counting and allele-specific expression analysis.
+  The process involves RNA-seq read alignment, expressed variant reads counting and performing allele-specific expression (ASE) analysis by examining the allele copy numbers of the gene under examination.
 
 ## Result
+The BASE will generate an output file named following the pattern {output_prefix}.ASEAnalysisResults.tab. This file will contain the results of the ASE analysis, including allele copy number information for the genes analyzed.
+
 This comprehensive file delineates the results of the ASE (Allele-Specific Expression) analysis for individual genes, encapsulating aspects such as   
 - Gene symbols,  
 - GENCODE identifiers,   
