@@ -60,13 +60,13 @@ Before you can run BASE, you need to ensure that your environment is set up corr
 - **R**: If you don't have R installed, you can download and install it from [The Comprehensive R Archive Network (CRAN)](https://cran.r-project.org/). We recommend using the latest version of R to ensure compatibility with all packages.   
 
 - **Required R Packages**:
-  - `dplyr`: A grammar of data manipulation, providing a consistent set of verbs that help you solve the most common data manipulation challenges.
-  - `outliers`: A collection of some tests commonly used for identifying outliers.
-  - `future.apply`: Implementations of apply function variations that leverage the 'future' framework for asynchronous computing.
-  - `facets`: An R package for allele-specific copy number analysis of tumors.
-  - `DNAcopy`: A package for analyzing copy number data.
-  - `GenomicRanges`: Representation and manipulation of genomic intervals and variables defined along a genome.
-  - `Rsamtools`: Provides an interface to the 'samtools', 'bcftools', and 'tabix' utilities for manipulating SAM, BAM, and VCF files.
+  - `dplyr`: version: 1.0.9
+  - `outliers`: version: 0.15
+  - `future.apply`: version: 1.11.1
+  - `facets`: version: 0.6.2
+  - `DNAcopy`: version: 1.68.0
+  - `GenomicRanges`: version: 1.46.1
+  - `Rsamtools`: version: 2.10.0
   
   To install all required packages, You will be using the R console for entering the commands provided below.
   Install CRAN Packages
