@@ -1,11 +1,4 @@
-# About
-Biomedswe Allele-Specific Expression analyser (BASE) v.2.0. 2024
-
-
-Developer: Minjun Yang, Jonas Andersson                                                                                                                                                                                                
-Division of Clinical Genetics                                                                                           
-Lund University, BMC C13                                                                                                
-SE-221 84 Lund, Sweden                                                                                                                                                                                                                          
+                                                                                                                                                                                                            
 # BASE
 
 This toolkit provides a set of scripts to process WGS and RNA-seq data for genomic and transcriptomic analyses. The workflow includes downloading reference sequences, indexing, folder structure setup, DNA alignment for WGS data, and RNA alignment for ASE analysis.
@@ -32,21 +25,23 @@ Before you can run BASE, you need to ensure that your environment is set up corr
   ```
   source myenv/bin/activate
   ```
-
-Required Python Packages: This project depends on several external Python packages. These dependencies are listed in the requirements.txt file included in the project. The following is a brief overview of some key packages:
-
-numpy: A fundamental package for scientific computing with Python.
-pandas: An open-source data analysis and manipulation tool.
-matplotlib: A comprehensive library for creating static, animated, and interactive visualizations in Python.
-scikit-learn: Simple and efficient tools for predictive data analysis.
-pysam: A module for reading, manipulating, and writing genomic data sets.
-scipy: An open-source software for mathematics, science, and engineering.
-To install all required packages, navigate to the root directory of this project and run the following command:
+- **Required Python Packages**:
+  - `numpy`: version 1.23.4
+  - `scipy`: version 1.9.1
+  - `pandas`: version 1.5.3
+  - `matplotlib`: version 3.3.2
+  - `joblib`: version 1.2.0
+  - `scikit-learn`: version 1.2.2
+  - `pysam`: version 0.15.2
+  - `cyvcf2`: version 0.30.18
+  
+  To install all required packages, navigate to the root directory of this project and run the following command:
 
 ```
 pip install -r requirements.txt
 ```
 This command will automatically install all the dependencies listed in the requirements.txt file, ensuring that your project environment is correctly set up and ready to run the BASE.
+
 
 - **R**: If you don't have R installed, you can download and install it from [The Comprehensive R Archive Network (CRAN)](https://cran.r-project.org/). We recommend using the latest version of R to ensure compatibility with all packages.
 
@@ -128,6 +123,13 @@ Ensure all scripts and the config.ini file are in the same directory or adjust p
 The scripts assume a Unix-like environment with tools like wget, gunzip, and standard Bash commands available.
 For detailed instructions on each script's functionality and options, refer to the script's inline comments or documentation sections.
 
+# About
+Biomedswe Allele-Specific Expression analyser (BASE) v.2.0. 2024
+
+Developer: Minjun Yang, Jonas Andersson, Efe Aydın                                                                                                                                                                                              
+Division of Clinical Genetics                                                                                           
+Lund University, BMC C13                                                                                                
+SE-221 84 Lund, Sweden 
 
 ### 4. Cite BASE
 
