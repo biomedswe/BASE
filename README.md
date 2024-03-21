@@ -91,8 +91,6 @@ Before you can run BASE, you need to ensure that your environment is set up corr
   BiocManager::install("Rsamtools")
   ```
 
-Please ensure all the required software and packages are installed before proceeding with the project setup and execution.
-
 
 ### Configuring Third-Party Programs
 
@@ -109,10 +107,11 @@ Please ensure all the required software and packages are installed before procee
     ...
     ```
 
-    Replace `/path/to/...` with the actual paths to the installed third-party programs.
+    Replace `/path/to/...` with the actual paths to the installed third-party programs.   
+   
 
+Please ensure all the required software and packages are installed before proceeding with the project setup and execution.
 
- detailed instructions on each script's functionality and options, refer to the script's inline comments or documentation sections.
 
 ### Initial Setup
 
@@ -165,7 +164,7 @@ The BASE will generate an output file named following the pattern {output_prefix
 This comprehensive file delineates the results of the ASE (Allele-Specific Expression) analysis for individual genes, encapsulating aspects such as   
 - Gene symbols,  
 - GENCODE identifiers,   
-- Chromosome numebr of the gene under examination,   
+- Chromosome number of the gene under examination,   
 - genomic coordinates of the gene under examination,  
 - Haplotype reads count derived from Whole Genome Sequencing (WGS) data,  
 - Haplotype reads count derived from RNA sequencing (RNAseq) data,   
