@@ -47,9 +47,9 @@ Create a folder structure for the analysis.
 
 ### WGS Data Processing
 To process WGS data, run DNA_alignment.py with the required arguments.
-
+```
 python DNA_alignment.py --read1 path/to/read1.fastq --read2 path/to/read2.fastq --output_prefix sample_name [--sample_ploidy 2]
-
+```
 --read1 and --read2: Paths to the paired-end FASTQ files.
 --output_prefix: A prefix for output files (typically the sample name).
 --sample_ploidy (optional): The ploidy of the sample, default is 2. It is recommended to specify this for your project.
@@ -62,8 +62,9 @@ Run CNV and SNV callers to analyze genomic variations.
 ### RNA-seq Data Processing for ASE Analysis
 After WGS data processing, run RNA_alignment.py to get ASE analysis results.
 
+```
 python RNA_alignment.py --read1 path/to/rna_read1.fastq --read2 path/to/rna_read2.fastq --output_prefix sample_name
-
+```
 --read1 and --read2: Paths to the RNA-seq paired-end FASTQ files.
 --output_prefix: A prefix for output files (typically the sample name).
 This script will:
