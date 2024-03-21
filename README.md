@@ -42,6 +42,7 @@ Download the reference genome and annotation files.
 Index the genome using tools like Samtools, BWA, and STAR.
 Create a folder structure for the analysis.
 
+```
 
 
 ### WGS Data Processing
