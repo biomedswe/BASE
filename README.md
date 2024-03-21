@@ -9,23 +9,22 @@ This toolkit provides a set of scripts to process WGS and RNA-seq data for genom
 
 Before you can run BASE, you need to ensure that your environment is set up correctly. The following are required:
 
-- **Python**: The core of this project is written in Python, so you'll need Python installed on your computer. We recommend using Python 3.7 or newer to ensure compatibility with all dependencies.
+- **Python**: The core of this project is written in Python, so you'll need Python installed on your computer. We recommend using Python 3.8 or newer to ensure compatibility with all dependencies.
 
 - **Virtual Environment (Optional, but recommended)**: Using a virtual environment for Python projects helps manage dependencies and avoid conflicts with other projects. You can create a virtual environment using Python's built-in `venv` module or with `virtualenv` for older versions of Python.
 
   To create a virtual environment using `venv`, run the following command in your terminal (replace `myenv` with your preferred environment name):
   ```bash
-  python3 -m venv myenv
+  python3 -m venv your_env_name
   ```
   To activate the virtual environment, on Windows, run:
   ```
-  myenv\Scripts\activate.bat
+    python3 -m venv your_env_name\Scripts\activate.bat
   ```
   On Unix or MacOS, run:
   ```
-  source myenv/bin/activate
+  source your_env_name/bin/activate
   ```
-  
 - **Required Python Packages**:
   - `numpy`: version 1.23.4
   - `scipy`: version 1.9.1
@@ -34,13 +33,28 @@ Before you can run BASE, you need to ensure that your environment is set up corr
   - `joblib`: version 1.2.0
   - `scikit-learn`: version 1.2.2
   - `pysam`: version 0.15.2
-  - `cyvcf2`: version 0.30.18
-  
-   ```
+  - `cyvcf2`: version 0.30.18       
+
+  Install the packages:
+  ```
    pip install -r requirements.txt
-   ```
+  ```
    This command will automatically install all the dependencies listed in the requirements.txt file, ensuring that your project environment is correctly set up and ready to 
-   run the BASE.
+   run the BASE.   
+
+   If you have Conda installed,
+   Create a new environment to avoid conflicts:
+   conda create -n your_env_name python=3.8
+   conda activate your_env_name
+   ```
+   conda create -n your_env_name python=3.8
+   conda activate your_env_name
+   ```
+   Install the packages:
+   ```
+   conda install numpy=1.23.4 scipy=1.9.1 pandas=1.5.3 matplotlib=3.3.2 joblib=1.2.0 scikit-learn=1.2.2 pysam=0.15.2 cyvcf2=0.30.18
+   ```
+   Replace your_env_name with your preferred environment name.   
 
 
 - **R**: If you don't have R installed, you can download and install it from [The Comprehensive R Archive Network (CRAN)](https://cran.r-project.org/). We recommend using the latest version of R to ensure compatibility with all packages.   
