@@ -145,17 +145,17 @@ Align RNA-seq reads using STAR.
 Run RNA reads alignment, expressed heterozygous SNVs coverage counting and allele-specific expression analysis.
 
 ## Result
-This comprehensive file delineates the results of the ASE (Allele-Specific Expression) analysis for individual genes, encapsulating aspects such as 
-gene symbols, 
-GENCODE identifiers, 
-Chromosome numebr of the gene under examination, 
-genomic coordinates of the gene under examination,
-Haplotype reads count derived from Whole Genome Sequencing (WGS) data,
-Haplotype reads count derived from RNA sequencing (RNAseq) data, 
-Total and allele-specific copy numbers of the gene under examination, 
-The number of informative (expressed) heterozygous SNVs of the gene under examination, 
-P-values: those calculated from ASE analysis leveraging WGS/RNAseq read counts, those predicated on the assumption of equal expression across both alleles (model 1), those derived from the genomic allele ratio (model 2),
-ASE odds ratios informed by models 1 and 2.
+This comprehensive file delineates the results of the ASE (Allele-Specific Expression) analysis for individual genes, encapsulating aspects such as   
+- Gene symbols,  
+- GENCODE identifiers,   
+- Chromosome numebr of the gene under examination,   
+- genomic coordinates of the gene under examination,  
+- Haplotype reads count derived from Whole Genome Sequencing (WGS) data,  
+- Haplotype reads count derived from RNA sequencing (RNAseq) data,   
+- Total and allele-specific copy numbers of the gene under examination,   
+- The number of informative (expressed) heterozygous SNVs of the gene under examination,   
+- P-values: those calculated from ASE analysis leveraging WGS/RNAseq read counts, those predicated on the assumption of equal expression across both alleles (model 1), those - derived from the genomic allele ratio (model 2),  
+- ASE odds ratios informed by models 1 and 2.  
 
 Review Results: Open and review the generated .tab file using a text editor or data analysis tool of your choice (e.g., Excel, R, Python pandas DataFrame). Each row corresponds to a gene analyzed, with columns providing the statistical analysis results and relevant genomic information.
 
