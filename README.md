@@ -155,7 +155,7 @@ This comprehensive file delineates the results of the ASE (Allele-Specific Expre
 - Haplotype reads count derived from RNA sequencing (RNAseq) data,   
 - Total and allele-specific copy numbers of the gene under examination,   
 - The number of informative (expressed) heterozygous SNVs of the gene under examination,   
-- P-values: those calculated from ASE analysis leveraging WGS/RNAseq read counts, those predicated on the assumption of equal expression across both alleles (model 1), those - derived from the genomic allele ratio (model 2),  
+- P values: those calculated from ASE analysis leveraging WGS/RNAseq read counts, those predicated on the assumption of equal expression across both alleles (model 1), those - derived from the genomic allele ratio (model 2),  
 - ASE odds ratios informed by models 1 and 2.  
 
 Review Results: Open and review the generated .tab file using a text editor or data analysis tool of your choice (e.g., Excel, R, Python pandas DataFrame). Each row corresponds to a gene analyzed, with columns providing the statistical analysis results and relevant genomic information.
