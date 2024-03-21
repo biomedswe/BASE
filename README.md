@@ -12,6 +12,19 @@ This toolkit provides a set of scripts to process WGS and RNA-seq data for genom
 
 ## Setup
 
+### Prerequisites
+- Python 3.8
+- Pip
+- numpy==1.23.4
+- pandas==1.5.3
+- matplotlib==3.3.2
+- joblib==1.2.0
+- scikit-learn==1.2.2
+- cyvcf2==0.30.18
+- pysam==0.15.2
+- scipy==1.9.1
+
+
 ### Configuring Third-Party Programs
 
 1. Before running the scripts, ensure all third-party programs (e.g., GATK, BWA, Samtools, etc.) are installed on your system.
