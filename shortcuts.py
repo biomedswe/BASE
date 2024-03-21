@@ -1,49 +1,44 @@
-from os import getenv, sys
+import os
+import configparser
 
-class Shortcuts():
-    '''This class contains shortcuts to key files and folders neccessary for the program'''
+class Shortcuts:
+    def __init__(self, config_file="config.ini"):
+        config = configparser.ConfigParser()
+        config.read(config_file)
 
-    def __init__(self, options):
-
+        self.gatk_path = config.get("third_party_programs", "gatk_path")
+        self.bwa_path = config.get("third_party_programs", "bwa_path")
+        self.samtools_path = config.get("third_party_programs", "samtools_path")
+        self.sambamba_path = config.get("third_party_programs", "sambamba_path")
+        self.STAR_path = config.get("third_party_programs", "STAR_path")
+        self.bedtools_path = config.get("third_party_programs", "bedtools_path")
+        self.bcftools_path = config.get("third_party_programs", "bcftools_path")
+        self.tabix_path = config.get("third_party_programs", "tabix_path")
+        self.Rscript_path = config.get("third_party_programs", "Rscript_path")
+        self.bgzip_path = config.get("third_party_programs", "bgzip_path")
+        
         # Shortcut to main folders
-        self.BASE_dir = getenv("HOME")+"/BASE/"
-        self.dna_seq_dir = f"{self.BASE_dir}dna_seq/"
-        self.rna_seq_dir =  f"{self.BASE_dir}rna_seq/"
-
-        # Shortcuts to input folders
-        self.dna_reads_dir  = f"{self.dna_seq_dir}reads/{options.tumor_id}/"
+        self.BASE_dir = os.getenv("HOME") + "/BASE/"
+        self.Rcode_dir = f"{self.BASE_dir}Rcode/"
         self.reference_genome_dir = f"{self.BASE_dir}reference_genome/"
-        self.reference_genome_chunks_dir = f"{self.reference_genome_dir}chunks/"
-
-        # Shortcuts to output folders in DNA sequencing analysis
-        self.aligned_output_dir = f"{self.dna_seq_dir}aligned/{options.tumor_id}/"
-        self.sorted_output_dir = f"{self.dna_seq_dir}sorted/{options.tumor_id}/"
-        self.merged_output_dir = f"{self.dna_seq_dir}merged/{options.tumor_id}/"
-        self.removed_duplicates_output_dir = f"{self.dna_seq_dir}removed_duplicates/{options.tumor_id}/"
-        self.realigned_output_dir = f"{self.dna_seq_dir}realigned/{options.tumor_id}/"
-        self.haplotypecaller_output_dir = f"{self.dna_seq_dir}gatk_haplotypecaller/{options.tumor_id}/"
-        self.delly_output_dir = f"{self.dna_seq_dir}delly/{options.tumor_id}/"
-        self.manta_output_dir = f"{self.dna_seq_dir}manta/{options.tumor_id}/"
-        self.manta_variants_dir = f"{self.dna_seq_dir}manta/{options.tumor_id}/results/variants/"
-
-        # Shortcuts to files used in DNA sequencing analysis
-        self.reference_genome_file = f"{self.reference_genome_dir}GRCh37.p13.genome.fa"
-        self.reference_genome_exclude_template_file = f"{self.BASE_dir}excludeTemplate/human.hg38.excl.tsv"
-        self.configManta_file = getenv("HOME")+"/anaconda3/envs/sequencing/bin/manta-1.6.0.centos6_x86_64/bin/configManta.py"
-        self.runWorkflow_file = getenv("HOME")+f"/BASE/dna_seq/manta/{options.tumor_id}/runWorkflow.py"
-
-        # Shortcuts to folders used in RNA sequencing analysis
-        self.rna_reads_dir  = f"{self.rna_seq_dir}reads/{options.tumor_id}/"
-        self.star_output_dir = f"{self.rna_seq_dir}star/{options.tumor_id}/"
-        self.star_index_dir =  f"{self.reference_genome_dir}star_index/{options.tumor_id}/"
-
-
-
-        # Shortcuts to files used in RNA sequencing analysis
-        self.annotation_gtf_file = f"{self.reference_genome_dir}gencode.v19.chr_patch_hapl_scaff.annotation.gtf"
-        self.gatk_vcfFile = f"{self.haplotypecaller_output_dir}{options.tumor_id}_filtered_RD10_snps_tumor_het_annotated.vcf"
-
-        # Shortcuts to output lists (used for input in pipeline steps) (and also for validation if pipeline step i allready completed)  
-        self.gatk_chunks_list = f"{self.haplotypecaller_output_dir}/chunks.list"
-
-      
+        self.reference_cnv_dir = f"{self.BASE_dir}reference_genome/cnv_region/"
+        self.star_index_dir = f"{self.BASE_dir}star_index/"
+        self.tmp = f"{self.BASE_dir}tmp/"
+        
+        # Running data folder structure
+        self.aligned_output_dir = f"{self.BASE_dir}dna_aligned/"
+        self.rna_seq_dir = f"{self.BASE_dir}rna_aligned/"
+        
+        # Reference hg38.analysisSet folder
+        self.reference_genome_file = f"{self.reference_genome_dir}hg38.analysisSet.fa"
+        self.annotation_gtf_file = f"{self.reference_genome_dir}gencode.v43.basic.annotation.gtf"
+        self.annotation_exon_file = f"{self.reference_genome_dir}gencode.v43.basic.exon.bed"
+        
+        # CNV calling training set folder
+        self.reference_genome_cnv_region = f"{self.reference_cnv_dir}cnv_ref.bed"
+        self.reference_cnv_panel = f"{self.reference_cnv_dir}cnv_ref_panel_hg38c.npz"
+        self.reference_cnv_trainingset = f"{self.reference_cnv_dir}MeanShiftClustering.joblib"
+        self.reference_cnv_trainingset_raw = f"{self.reference_cnv_dir}hg38_cnv.trainset_raw.gz"
+        
+        # R script for CNV calling
+        self.CNV_calling_path = f"{self.Rcode_dir}cov2seg.r"
