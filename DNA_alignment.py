@@ -171,19 +171,33 @@ class DNA_alignment:
             ]
             self.misc.run_command(" ".join(haplotypecaller_cmd))
             
-            filtered_vcf = os.path.join(self.shortcuts.aligned_output_dir, f"{output_prefix}.filtered.hc.vcf")
+            hc_running_vcf = os.path.join(self.shortcuts.aligned_output_dir, f"{output_prefix}.hc.running.vcf")
             filter_cmd = [
                 self.shortcuts.gatk_path,
                 "VariantFiltration",
                 "-R", self.shortcuts.reference_genome_file,
                 "-V", output_vcf,
-                "-O", filtered_vcf,
-                "--filter-expression", "\"DP > 15 && QD > 2 && MQ > 35 && MQRankSum > -12.5 && ReadPosRankSum > -8 && FS < 60\"",
+                "-O", hc_running_vcf,
+                "--filter-expression", "\"DP > 15 && QD > 2.0 && MQ > 35.0 && MQRankSum > -12.5 && ReadPosRankSum > -8.0 && FS < 60.0\"",
                 "--filter-name", "\"SNV_FILTER\""
             ]
             self.misc.run_command(" ".join(filter_cmd))
             self.misc.log_to_file("INFO", "GATK HaplotypeCaller execution and filtering completed successfully.")
-            
+
+
+            filtered_vcf = os.path.join(self.shortcuts.aligned_output_dir, f"{output_prefix}.filtered.hc.vcf")
+            selectvariants_cmd = [
+                self.shortcuts.gatk_path,
+                "SelectVariants",
+                "-R", self.shortcuts.reference_genome_file,
+                "-V", hc_running_vcf,
+                "-O", filtered_vcf,
+                "--select-type-to-include", "SNP"
+            ]
+            self.misc.run_command(" ".join(selectvariants_cmd))
+            self.misc.log_to_file("INFO", "Selecting only SNPs from the VCF completed successfully.")
+
+
             index_cmd = [
                 self.shortcuts.gatk_path,
                 "IndexFeatureFile",
@@ -197,7 +211,16 @@ class DNA_alignment:
             self.misc.run_command(bgzip_command)
             tabix_command = f"{self.shortcuts.tabix_path} -p vcf {compressed_vcf_path}"
             self.misc.run_command(tabix_command)            
-  
+
+            filtered_het_vcf = os.path.join(self.shortcuts.aligned_output_dir, f"{output_prefix}.filtered_het.hc.vcf")
+            bcftools_command = f"{self.shortcuts.bcftools_path} view -i 'GT=\"0/1\"' -g het {compressed_vcf_path} > {filtered_het_vcf}"
+            self.misc.run_command(bcftools_command)
+            
+            index_het_vcf_command = f"{self.shortcuts.gatk_path} IndexFeatureFile -I {filtered_het_vcf}"
+            self.misc.run_command(index_het_vcf_command)
+            self.misc.log_to_file("INFO", "Indexing of heterozygous filtered VCF completed successfully.")
+            
+
         except Exception as e:
             self.misc.log_exception(self, e, "Error in run_snv_haplotypecaller_for_target")
             
