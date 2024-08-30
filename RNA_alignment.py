@@ -10,7 +10,7 @@ from ASE_analysis import ASEAnalysis
 class RNA_alignment:
     def __init__(self):
         self.shortcuts = Shortcuts()
-        self.misc = Misc(dry_run=True)
+        self.misc = Misc(dry_run=False)
         
     def align_reads_with_star(self, read1, read2, output_prefix):
         try:
@@ -23,7 +23,6 @@ class RNA_alignment:
             star_cmd = [
                 self.shortcuts.STAR_path,
                 "--genomeDir", self.shortcuts.star_index_dir,
-                "--readFilesIn", read1, read2,
                 "--runThreadN", "32",
                 "--alignIntronMax", "1000000",
                 "--alignIntronMin", "20",
@@ -34,10 +33,9 @@ class RNA_alignment:
                 "--chimMainSegmentMultNmax", "1",
                 "--chimOutType", "Junctions SeparateSAMold WithinBAM SoftClip",
                 "--chimSegmentMin", "15",
-                "--limitSjdbInsertNsj", "1200000",
-                "--outFileNamePrefix", os.path.join(output_dir, output_prefix + "."),
+                "--limitSjdbInsertNsj", "1200000",                
                 "--outSAMtype", "BAM", "Unsorted",
-                "--readFilesCommand", "zcat"
+                "--readFilesCommand", "zcat",
                 "--outFilterMatchNminOverLread", "0.33",
                 "--outFilterMismatchNmax", "999",
                 "--outFilterMismatchNoverLmax", "0.1",
@@ -46,11 +44,12 @@ class RNA_alignment:
                 "--outFilterType", "BySJout",
                 "--outSAMattributes", "NH HI AS nM NM MD XS ch vA vG vW",
                 "--outSAMstrandField", "intronMotif",
-                "--outSAMtype", "BAM Unsorted",
                 "--outSAMunmapped", "Within",
                 "--quantMode", "TranscriptomeSAM GeneCounts",
                 "--waspOutputMode", "SAMtag",
+                "--readFilesIn", read1, read2,
                 "--varVCFfile", vcf_file,
+                "--outFileNamePrefix", os.path.join(output_dir, output_prefix + "."),
                 "--outSAMattrRGline", f"ID:{output_prefix} SM:{output_prefix} LB:{output_prefix} PL:ILLUMINA PU:{output_prefix}",
                 "--twopassMode", "Basic"
             ]
@@ -62,7 +61,7 @@ class RNA_alignment:
             unsorted_bam = os.path.join(output_dir, f"{output_prefix}.Aligned.out.bam")
             sorted_bam = os.path.join(output_dir, f"{output_prefix}.STAR_WASP.bam")
             sort_cmd = [
-                self.shortcuts.samtools_path, "sort", "-@ 8", "-m 5G", "-o", sorted_bam, unsorted_bam
+                self.shortcuts.samtools_path, "sort", "-@ 4", "-m 5G", "-o", sorted_bam, unsorted_bam
             ]
             self.misc.run_command(" ".join(sort_cmd))
             
