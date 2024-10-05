@@ -186,6 +186,6 @@ SE-221 84 Lund, Sweden
 
 ## Citation
 
-Jonas Andersson, Efe Aydın, Rebeqa Gunnarsson, Henrik Lilljebjörn, Thoas Fioretos, Bertil Johansson, Kajsa Paulsson & Minjun Yang. Characterizing the allele-specific gene expression landscape in high hyperdiploid acute lymphoblastic leukemia with BASE.
+Andersson, J., Aydın, E., Gunnarsson, R. et al. Characterizing the allele-specific gene expression landscape in high hyperdiploid acute lymphoblastic leukemia with BASE. Sci Rep 14, 23181 (2024). https://doi.org/10.1038/s41598-024-73743-8
     
  
